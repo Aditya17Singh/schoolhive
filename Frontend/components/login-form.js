@@ -184,14 +184,6 @@ export default function LoginForm() {
             Login
           </button>
         </form>
-
-        {/* Create Account Link */}
-        <p className="mt-4 text-sm text-center text-gray-600">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-blue-600 hover:underline">
-            Create an account
-          </Link>
-        </p>
       </div>
     </div>
   );
