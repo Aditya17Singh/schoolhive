@@ -13,6 +13,7 @@ const noticeRoutes = require("./routes/noticeRoutes");
 const complaintRoutes = require("./routes/complaintRoutes");
 const statsRoutes = require("./routes/statsRoutes");
 const schoolRoutes = require("./routes/schoolRoute");
+const loginRoutes = require("./routes/loginRoutes");  
 
 const app = express();
 
@@ -35,7 +36,7 @@ app.use("/api/notices", noticeRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/schools", schoolRoutes);
-
+app.use("/api", loginRoutes);  
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)

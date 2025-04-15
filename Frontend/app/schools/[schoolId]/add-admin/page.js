@@ -10,6 +10,7 @@ export default function AdminCreatePage() {
   const [status, setStatus] = useState('');
   const [adminData, setAdminData] = useState({
     name: '',
+    mobile: '',
     email: '',
     password: '',
     role: 'admin',
@@ -68,6 +69,20 @@ export default function AdminCreatePage() {
             value={adminData.name}
             onChange={handleInputChange}
             placeholder="Enter full name"
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="mobile" className="block text-sm font-medium text-gray-700 mb-1">
+            Mobile Number
+          </label>
+          <input
+            name="mobile"
+            value={adminData.mobile}
+            onChange={handleInputChange}
+            placeholder="Enter mobile number"
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />

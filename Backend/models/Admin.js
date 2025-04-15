@@ -8,7 +8,8 @@ const AdminSchema = new Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'superAdmin'], default: 'admin' },
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: true },
+  mobile: { type: String, required: true, unique: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model("Admin", AdminSchema);

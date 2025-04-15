@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const [role, setRole] = useState("admin");
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [schoolCode, setSchoolCode] = useState("");
   const [admissionNumber, setAdmissionNumber] = useState("");
@@ -16,12 +16,12 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
   
     if (
-      (role === "admin" && (!username || !mobile || !password)) ||
+      (role === "admin" && (!name || !mobile || !password)) ||
       (role === "student" && (!schoolCode || !admissionNumber || !password)) ||
       (role === "employee" && (!schoolCode || !employeeId || !password))
     ) {
@@ -31,29 +31,39 @@ export default function LoginForm() {
   
     setError("");
   
-    let credentials = {};
-    
+    let payload = { role, password };
+  
     if (role === "admin") {
-      credentials = { username, mobile, password };
+      payload = { name, mobile, password, role };
     } else if (role === "student") {
-      credentials = { schoolCode, admissionNumber, password };
+      payload = { schoolCode, admissionNumber, password, role };
     } else if (role === "employee") {
-      credentials = { schoolCode, employeeId, password };
+      payload = { schoolCode, employeeId, password, role };
     }
   
-    const result = await signIn("credentials", {
-      redirect: false,
-      ...credentials,
-    });
+    try {
+      const res = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // If using cookies for JWT
+        body: JSON.stringify(payload),
+      });
   
-    if (result?.error) {
-      setError("Invalid credentials");
-    } else {
-      router.push("/dashboard");
+      const data = await res.json();
+  
+      if (!res.ok) {
+        setError(data.message || "Login failed");
+      } else {
+        // You can store JWT in localStorage/cookies here
+        // localStorage.setItem("token", data.token); // or handle cookie automatically
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong");
     }
   };
-  
-  
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 sm:px-6 lg:px-8">
       <div className="container max-w-md mx-auto space-y-6 rounded-lg bg-white p-8 shadow-lg">
@@ -81,15 +91,16 @@ export default function LoginForm() {
             <>
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700">
-                  Username
+                  Name
                 </label>
                 <input
                   type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter username"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter name"
                   className="mt-1 w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
+
               </div>
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700">

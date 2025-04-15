@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -10,13 +10,22 @@ export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/"); // Redirect if not logged in
+    }
+  }, [status, router]);
+
   if (status === "loading") {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
+      </div>
+    );
   }
 
-  if (!session) {
-    router.replace("/"); // Redirect if not logged in
-    return null;
+  if (status === "unauthenticated") {
+    return null; // Prevent rendering during redirect
   }
 
   const user = session.user;
@@ -28,29 +37,64 @@ export default function DashboardLayout({ children }) {
         <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
         <ul>
           <li className="mb-4">
-            <Link href="/dashboard/profile" className="text-lg hover:text-blue-400">Profile</Link>
+            <Link
+              href="/dashboard/profile"
+              className="text-lg hover:text-blue-400"
+            >
+              Profile
+            </Link>
           </li>
 
           {/* Admin Only Links */}
           {user.role === "admin" && (
             <>
               <li className="mb-4">
-                <Link href="/dashboard/classes" className="text-lg hover:text-blue-400">Classes</Link>
+                <Link
+                  href="/dashboard/classes"
+                  className="text-lg hover:text-blue-400"
+                >
+                  Classes
+                </Link>
               </li>
               <li className="mb-4">
-                <Link href="/dashboard/subjects" className="text-lg hover:text-blue-400">Subjects</Link>
+                <Link
+                  href="/dashboard/subjects"
+                  className="text-lg hover:text-blue-400"
+                >
+                  Subjects
+                </Link>
               </li>
               <li className="mb-4">
-                <Link href="/dashboard/teachers" className="text-lg hover:text-blue-400">Teachers</Link>
+                <Link
+                  href="/dashboard/teachers"
+                  className="text-lg hover:text-blue-400"
+                >
+                  Teachers
+                </Link>
               </li>
               <li className="mb-4">
-                <Link href="/dashboard/students" className="text-lg hover:text-blue-400">Students</Link>
+                <Link
+                  href="/dashboard/students"
+                  className="text-lg hover:text-blue-400"
+                >
+                  Students
+                </Link>
               </li>
               <li className="mb-4">
-                <Link href="/dashboard/notices" className="text-lg hover:text-blue-400">Notices</Link>
+                <Link
+                  href="/dashboard/notices"
+                  className="text-lg hover:text-blue-400"
+                >
+                  Notices
+                </Link>
               </li>
               <li className="mb-4">
-                <Link href="/dashboard/complaints" className="text-lg hover:text-blue-400">Complaints</Link>
+                <Link
+                  href="/dashboard/complaints"
+                  className="text-lg hover:text-blue-400"
+                >
+                  Complaints
+                </Link>
               </li>
             </>
           )}
