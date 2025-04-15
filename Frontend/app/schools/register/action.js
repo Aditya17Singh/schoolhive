@@ -10,8 +10,8 @@ export async function registerSchool(body) {
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Something went wrong');
-
-    return { success: true, data };
+    
+    return { success: true, schoolId: data.schoolId }; 
   } catch (err) {
     return { success: false, error: err.message };
   }

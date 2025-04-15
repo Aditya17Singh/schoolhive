@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { registerSchool } from './action';
+import { useRouter } from 'next/navigation';
 
 export default function SchoolRegisterPage() {
   const [status, setStatus] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,44 +17,87 @@ export default function SchoolRegisterPage() {
     const result = await registerSchool(data);
 
     if (result.success) {
-      setStatus('✅ School and Admin created successfully!');
+      const newSchoolId = result.schoolId;
+      router.push(`/schools/${newSchoolId}/add-admin`);
     } else {
       setStatus(`❌ Error: ${result.error || 'Unknown error'}`);
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow rounded-xl">
-      <h2 className="text-2xl font-bold mb-6">Register School + Admin</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input name="name" placeholder="School Name" required className="input" />
-        <input name="code" placeholder="School Code" required className="input" />
-        <input name="contactEmail" type="email" placeholder="School Email" required className="input" />
-        <input name="contactPhone" placeholder="Phone Number" className="input" />
-        <input name="address" placeholder="Address" className="input" />
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
+        <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">Register a New School</h2>
 
-        <hr className="my-4" />
-
-        <input name="adminName" placeholder="Admin Name" required className="input" />
-        <input name="adminEmail" type="email" placeholder="Admin Email" required className="input" />
-        <input name="adminPassword" type="password" placeholder="Admin Password" required className="input" />
-
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
-          disabled={status === 'Submitting...'}
-        >
-          Register
-        </button>
-
-        {status === 'Submitting...' && (
-          <div className="flex justify-center my-4">
-            <div className="w-6 h-6 border-4 border-t-4 border-blue-600 border-solid rounded-full animate-spin"></div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">School Name</label>
+            <input
+              name="name"
+              required
+              placeholder="Enter full school name"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
-        )}
 
-        {status && status !== 'Submitting...' && <p className="text-center mt-4">{status}</p>}
-      </form>
+          <div>
+            <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">School Code</label>
+            <input
+              name="code"
+              required
+              placeholder="Unique school code"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
+            <input
+              name="contactEmail"
+              type="email"
+              required
+              placeholder="school@example.com"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="contactPhone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <input
+              name="contactPhone"
+              placeholder="e.g. +91 9876543210"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            <input
+              name="address"
+              placeholder="Full address"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={status === 'Submitting...'}
+            className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all"
+          >
+            {status === 'Submitting...' ? 'Registering...' : 'Register School'}
+          </button>
+
+          {status && status !== 'Submitting...' && (
+            <p
+              className={`text-center font-medium ${
+                status.includes('✅') ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
+              {status}
+            </p>
+          )}
+        </form>
+      </div>
     </div>
   );
 }
