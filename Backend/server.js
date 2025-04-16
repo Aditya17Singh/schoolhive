@@ -12,6 +12,8 @@ const subjectRoutes = require("./routes/subjectRoutes");
 const noticeRoutes = require("./routes/noticeRoutes");
 const complaintRoutes = require("./routes/complaintRoutes");
 const statsRoutes = require("./routes/statsRoutes");
+const schoolRoutes = require("./routes/schoolRoute");
+const loginRoutes = require("./routes/loginRoutes");  
 
 const app = express();
 
@@ -25,7 +27,7 @@ app.use(cors());
 app.use(express.json());
 
 
-app.use("/api/admins", adminRoutes);
+app.use("/api/schools", adminRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/teachers", teacherRoutes);
 app.use("/api/students", studentRoutes);
@@ -33,6 +35,8 @@ app.use("/api/subjects", subjectRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/schools", schoolRoutes);
+app.use("/api", loginRoutes);  
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)

@@ -1,3 +1,4 @@
+const bcrypt = require("bcryptjs");
 const Admin = require("../models/Admin");
 
 // Get all admins
@@ -21,16 +22,40 @@ exports.getAdminById = async (req, res) => {
     }
 };
 
-// Create an admin
+// Create an admin for a specific school
 exports.createAdmin = async (req, res) => {
     try {
-        const newAdmin = new Admin(req.body);
-        await newAdmin.save();
-        res.status(201).json(newAdmin);
+      const { schoolId } = req.params;
+      const { name, email, password, role, mobile } = req.body;
+  
+      if (!schoolId) {
+        return res.status(400).json({ error: "School ID is required" });
+      }
+  
+      // Check if an admin already exists with same mobile (optional)
+      const existingAdmin = await Admin.findOne({ schoolId, mobile });
+      if (existingAdmin) {
+        return res.status(400).json({ error: "Admin with this mobile already exists" });
+      }
+  
+      // ✅ Hash the password before saving
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      const newAdmin = new Admin({
+        schoolId,
+        name,
+        email,
+        password: hashedPassword, // Store hashed password
+        mobile,
+        role: role || "admin",
+      });
+  
+      await newAdmin.save();
+      res.status(201).json(newAdmin);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error.message });
     }
-};
+  };
 
 // Update admin
 exports.updateAdmin = async (req, res) => {
