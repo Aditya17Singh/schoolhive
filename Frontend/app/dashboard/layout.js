@@ -1,34 +1,39 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function DashboardLayout({ children }) {
-  const { data: session, status } = useSession();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.replace("/"); // Redirect if not logged in
-    }
-  }, [status, router]);
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
 
-  if (status === "loading") {
+    if (!token || !userData) {
+      router.replace("/"); // redirect if not authenticated
+    } else {
+      setUser(JSON.parse(userData));
+      setLoading(false);
+    }
+  }, []);
+
+  const handleSignOut = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.replace("/");
+  };
+
+  if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         Loading...
       </div>
     );
   }
-
-  if (status === "unauthenticated") {
-    return null; // Prevent rendering during redirect
-  }
-
-  const user = session.user;
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -102,7 +107,7 @@ export default function DashboardLayout({ children }) {
           {/* Logout */}
           <li className="mt-6">
             <button
-              onClick={() => signOut({ redirect: true, callbackUrl: "/" })}
+              onClick={handleSignOut}
               className="text-lg text-red-500 hover:text-red-700 font-semibold cursor-pointer transition duration-200 ease-in-out"
             >
               Sign Out

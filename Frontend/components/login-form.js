@@ -34,7 +34,7 @@ export default function LoginForm() {
     let payload = { role, password };
   
     if (role === "admin") {
-      payload = { name, mobile, password, role };
+      payload = { name, mobile, password, role, schoolCode };
     } else if (role === "student") {
       payload = { schoolCode, admissionNumber, password, role };
     } else if (role === "employee") {
@@ -51,12 +51,14 @@ export default function LoginForm() {
   
       const data = await res.json();
   
-      if (!res.ok) {
-        setError(data.message || "Login failed");
-      } else {
-        // You can store JWT in localStorage/cookies here
-        // localStorage.setItem("token", data.token); // or handle cookie automatically
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        // Redirect to dashboard
         router.push("/dashboard");
+        } else {
+          setError(data.message || "Login failed");
       }
     } catch (err) {
       console.error(err);
@@ -91,6 +93,18 @@ export default function LoginForm() {
             <>
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700">
+                  School Code
+                </label>
+                <input
+                  type="text"
+                  value={schoolCode}
+                  onChange={(e) => setSchoolCode(e.target.value)}
+                  placeholder="Enter school code"
+                  className="mt-1 w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">
                   Name
                 </label>
                 <input
@@ -100,7 +114,6 @@ export default function LoginForm() {
                   placeholder="Enter name"
                   className="mt-1 w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
-
               </div>
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700">

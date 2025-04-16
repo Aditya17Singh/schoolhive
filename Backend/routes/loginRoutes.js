@@ -5,7 +5,6 @@ const jwt = require("jsonwebtoken");
 
 const Admin = require("../models/Admin");
 const Student = require("../models/Student");
-const Employee = require("../models/Employee");
 
 // secret for JWT
 const JWT_SECRET = process.env.JWT_SECRET || "yoursecretkey";
@@ -22,9 +21,6 @@ router.post("/login", async (req, res) => {
       } else if (role === "student") {
         const { schoolCode, admissionNumber } = req.body;
         user = await Student.findOne({ schoolCode, admissionNumber });
-      } else if (role === "employee") {
-        const { schoolCode, employeeId } = req.body;
-        user = await Employee.findOne({ schoolCode, employeeId });
       } else {
         return res.status(400).json({ message: "Invalid role" });
       }      

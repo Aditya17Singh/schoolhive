@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  const [user, setUser] = useState(null);
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalClasses: 0,
@@ -16,14 +18,30 @@ export default function Dashboard() {
   const [editingNotice, setEditingNotice] = useState(null);
 
   useEffect(() => {
-    fetchStatsAndNotices();
-  }, [session]);
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
 
-  const fetchStatsAndNotices = async () => {
+    if (!token || !userData) {
+      router.push("/"); // redirect to login if not logged in
+    } else {
+      setUser(JSON.parse(userData));
+      fetchStatsAndNotices(token);
+    }
+  }, []);
+
+  const fetchStatsAndNotices = async (token) => {
     try {
       const [statsRes, noticesRes] = await Promise.all([
-        fetch("http://localhost:5000/api/stats", { credentials: "include" }),
-        fetch("http://localhost:5000/api/notices", { credentials: "include" }),
+        fetch("http://localhost:5000/api/stats", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+        fetch("http://localhost:5000/api/notices", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
       ]);
 
       const statsData = await statsRes.json();
@@ -38,44 +56,59 @@ export default function Dashboard() {
     }
   };
 
-  // Delete Notice
   const handleDelete = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     if (!window.confirm("Are you sure you want to delete this notice?")) return;
 
     try {
       const res = await fetch(`http://localhost:5000/api/notices/${id}`, {
         method: "DELETE",
-        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (res.ok) {
-        setNotices((prevNotices) => prevNotices.filter((notice) => notice._id !== id));
+        setNotices((prevNotices) =>
+          prevNotices.filter((notice) => notice._id !== id)
+        );
       }
     } catch (error) {
       console.error("Error deleting notice:", error);
     }
   };
 
-  // Edit Notice
   const handleEdit = (notice) => {
     setEditingNotice(notice);
   };
 
-  // Save Edited Notice
   const handleSaveEdit = async () => {
-    if (!editingNotice) return;
+    const token = localStorage.getItem("token");
+    if (!token || !editingNotice) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/notices/${editingNotice._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ title: editingNotice.title, description: editingNotice.description }),
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/notices/${editingNotice._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title: editingNotice.title,
+            description: editingNotice.description,
+          }),
+        }
+      );
 
       if (res.ok) {
         setNotices((prevNotices) =>
-          prevNotices.map((n) => (n._id === editingNotice._id ? editingNotice : n))
+          prevNotices.map((n) =>
+            n._id === editingNotice._id ? editingNotice : n
+          )
         );
         setEditingNotice(null);
       }
@@ -84,19 +117,19 @@ export default function Dashboard() {
     }
   };
 
-  if (status === "loading" || loading) {
+  if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  if (!session) {
+  if (!user) {
     return <div className="flex items-center justify-center min-h-screen">Unauthorized. Please login.</div>;
   }
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold text-blue-800 mb-6">Welcome, {session.user.name}!</h1>
+      <h1 className="text-3xl font-bold text-blue-800 mb-6">Welcome, {user.name}!</h1>
 
-      {/* Dashboard Stats */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <StatCard title="Total Students" value={stats.totalStudents} color="text-blue-600" />
         <StatCard title="Total Classes" value={stats.totalClasses} color="text-green-600" />
@@ -104,11 +137,11 @@ export default function Dashboard() {
         <StatCard title="Fee Collection" value={`₹${stats.feeCollection}`} color="text-red-600" />
       </div>
 
-      {/* Notices Section */}
+      {/* Notices */}
       <div className="bg-white shadow-lg rounded-lg p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Latest Notices</h2>
-          <button onClick={fetchStatsAndNotices} className="bg-blue-500 text-white px-4 py-2 rounded-md">
+          <button onClick={() => fetchStatsAndNotices(localStorage.getItem("token"))} className="bg-blue-500 text-white px-4 py-2 rounded-md">
             Refresh Notices
           </button>
         </div>
@@ -122,25 +155,17 @@ export default function Dashboard() {
                     <input
                       type="text"
                       value={editingNotice.title}
-                      onChange={(e) =>
-                        setEditingNotice({ ...editingNotice, title: e.target.value })
-                      }
+                      onChange={(e) => setEditingNotice({ ...editingNotice, title: e.target.value })}
                       className="w-full border p-2 mb-2"
                     />
                     <textarea
                       value={editingNotice.description}
-                      onChange={(e) =>
-                        setEditingNotice({ ...editingNotice, description: e.target.value })
-                      }
+                      onChange={(e) => setEditingNotice({ ...editingNotice, description: e.target.value })}
                       className="w-full border p-2"
                     />
                     <div className="flex justify-end space-x-2 mt-2">
-                      <button onClick={handleSaveEdit} className="bg-green-500 text-white px-3 py-1 rounded">
-                        Save
-                      </button>
-                      <button onClick={() => setEditingNotice(null)} className="bg-gray-400 text-white px-3 py-1 rounded">
-                        Cancel
-                      </button>
+                      <button onClick={handleSaveEdit} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
+                      <button onClick={() => setEditingNotice(null)} className="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button>
                     </div>
                   </div>
                 ) : (
@@ -152,14 +177,10 @@ export default function Dashboard() {
                 )}
 
                 <div className="flex space-x-2">
-                  {session?.user?.role === "admin" && (
+                  {user?.role === "admin" && (
                     <>
-                      <button onClick={() => handleEdit(notice)} className="bg-yellow-500 text-white px-3 py-1 rounded">
-                        Edit
-                      </button>
-                      <button onClick={() => handleDelete(notice._id)} className="bg-red-500 text-white px-3 py-1 rounded">
-                        Delete
-                      </button>
+                      <button onClick={() => handleEdit(notice)} className="bg-yellow-500 text-white px-3 py-1 rounded">Edit</button>
+                      <button onClick={() => handleDelete(notice._id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
                     </>
                   )}
                 </div>
