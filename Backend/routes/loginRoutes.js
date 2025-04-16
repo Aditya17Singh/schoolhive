@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 
 const Admin = require("../models/Admin");
 const Student = require("../models/Student");
+const School = require("../models/School"); 
 
 // secret for JWT
 const JWT_SECRET = process.env.JWT_SECRET || "yoursecretkey";
@@ -14,13 +15,26 @@ router.post("/login", async (req, res) => {
 
   try {
     let user;
+    let schoolName = "";
 
     if (role === "admin") {
-        const { name, mobile } = req.body;
-        user = await Admin.findOne({ name, mobile });
+        const { name, mobile, schoolCode  } = req.body;
+        const school = await School.findOne({ code: schoolCode });
+
+        user = await Admin.findOne({ name, mobile, schoolId: school._id });
+
+        if (user) {
+          const school = await School.findOne({ code: schoolCode });
+          schoolName = school?.name || "";
+        }
       } else if (role === "student") {
         const { schoolCode, admissionNumber } = req.body;
         user = await Student.findOne({ schoolCode, admissionNumber });
+
+        if (user) {
+          const school = await School.findOne({ code: schoolCode });
+          schoolName = school?.name || "";
+        }
       } else {
         return res.status(400).json({ message: "Invalid role" });
       }      
@@ -44,14 +58,6 @@ router.post("/login", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // Option 1: Send JWT in HTTP-only cookie (secure)
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    });
-
     // Option 2: Or send in JSON (if using localStorage)
     res.json({
       token,
@@ -59,6 +65,7 @@ router.post("/login", async (req, res) => {
         id: user._id,
         name: user.name,
         role,
+        schoolName
       },
     });
   } catch (err) {
