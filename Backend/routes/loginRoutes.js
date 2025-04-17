@@ -18,16 +18,23 @@ router.post("/login", async (req, res) => {
     let schoolName = "";
 
     if (role === "admin") {
-        const { name, mobile, schoolCode  } = req.body;
-        const school = await School.findOne({ code: schoolCode });
-
-        user = await Admin.findOne({ name, mobile, schoolId: school._id });
-
-        if (user) {
-          const school = await School.findOne({ code: schoolCode });
-          schoolName = school?.name || "";
-        }
-      } else if (role === "student") {
+      const { name, mobile, schoolCode } = req.body;
+    
+      const school = await School.findOne({ code: schoolCode });
+      if (!school) {
+        return res.status(404).json({ message: "School not found" });
+      }
+      console.log(Admin , 'Admin');
+      
+    
+      user = await Admin.findOne({ name, mobile, schoolId: school._id });
+      if (!user) {
+        return res.status(401).json({ message: "Admin not found" });
+      }
+    
+      schoolName = school.name;
+    }
+     else if (role === "student") {
         const { schoolCode, admissionNumber } = req.body;
         user = await Student.findOne({ schoolCode, admissionNumber });
 
@@ -51,6 +58,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       {
         id: user._id,
+        schoolId: user.schoolId,
         role,
         name: user.name,
       },

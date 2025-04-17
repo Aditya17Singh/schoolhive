@@ -20,7 +20,7 @@ export default function DashboardLayout({ children }) {
       setLoading(false);
     }
   }, []);
-  
+
   const handleSignOut = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -39,8 +39,11 @@ export default function DashboardLayout({ children }) {
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
       <div className="bg-blue-800 text-white w-64 p-6 shadow-lg hidden md:block">
-      <h2 className="text-2xl font-bold mb-6">{user.schoolName || "Dashboard"}</h2>
-      <ul>
+        <Link href="/dashboard">
+          <h2 className="text-2xl font-bold mb-6 cursor-pointer hover:underline">
+            {user.schoolName || "Dashboard"}
+          </h2>
+        </Link>      <ul>
           <li className="mb-4">
             <Link
               href="/dashboard/profile"

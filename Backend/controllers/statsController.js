@@ -1,22 +1,25 @@
-const Student = require("../models/Student");
 const Class = require("../models/Class");
-const Teacher = require("../models/Teacher");
-const Payment = require("../models/Payment");
 
 exports.getStats = async (req, res) => {
   try {
-    const totalStudents = await Student.countDocuments();
-    const totalClasses = await Class.countDocuments();
-    const totalTeachers = await Teacher.countDocuments();
-    const feeCollection = await Payment.aggregate([
-      { $group: { _id: null, total: { $sum: "$amount" } } },
-    ]);
+    const schoolId = req.user?.schoolId;
+
+    if (!schoolId) {
+      return res.json({
+        totalStudents: 0,
+        totalClasses: 0,
+        totalTeachers: 0,
+        feeCollection: 0,
+      });
+    }
+
+    const totalClasses = await Class.countDocuments({ schoolId });
 
     res.json({
-      totalStudents,
+      totalStudents: 0,        // Temporary
       totalClasses,
-      totalTeachers,
-      feeCollection: feeCollection[0]?.total || 0,
+      totalTeachers: 0,        // Temporary
+      feeCollection: 0,        // Temporary
     });
   } catch (error) {
     console.error("Error fetching stats:", error);
