@@ -5,12 +5,14 @@ const Student = require("../models/Student");
 // Get All Classes with Sections
 exports.getAllClasses = async (req, res) => {
   try {
-    const classes = await Class.find().populate("subjects students");
+    const schoolId = req.user.schoolId; // from decoded JWT
+    const classes = await Class.find({ schoolId }).populate("subjects students");
     res.json(classes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Get Class by ID with Section, Subjects, and Students
 exports.getClassById = async (req, res) => {
@@ -25,9 +27,10 @@ exports.getClassById = async (req, res) => {
 
 // Create a New Class with Section
 exports.createClass = async (req, res) => {
-  try {
+  try {    
     const { name, section } = req.body;
-    const newClass = new Class({ name, section });
+    const schoolId = req.user.schoolId;    
+    const newClass = new Class({ name, section, schoolId });
     await newClass.save();
     res.status(201).json(newClass);
   } catch (error) {

@@ -14,12 +14,17 @@ export default function AddClass() {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem("token");
+
       const res = await fetch("http://localhost:5000/api/classes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ name: className, section }),
       });
+
 
       if (!res.ok) {
         const error = await res.json();
