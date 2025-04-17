@@ -20,6 +20,10 @@ export default function ClassList() {
     password: "",
   });
 
+  // CSV File Inputs
+  const [classFile, setClassFile] = useState(null);
+  const [studentFile, setStudentFile] = useState(null);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -144,6 +148,78 @@ export default function ClassList() {
     fetchStudents(classId);
   };
 
+  const handleBulkClassUpload = async (e) => {
+    const file = e.target.files[0];
+    setClassFile(file);
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const text = reader.result;
+      const rows = text.split("\n").map((row) => row.split(","));
+      const classData = rows.map((row) => ({
+        name: row[0],
+        section: row[1],
+      }));
+
+      for (const cls of classData) {
+        try {
+          const res = await fetch("http://localhost:5000/api/classes", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify(cls),
+          });
+          if (!res.ok) throw new Error("Failed to add class");
+        } catch (error) {
+          console.error("Error adding class", error);
+        }
+      }
+      alert("Classes added successfully!");
+      fetchClasses();
+    };
+    reader.readAsText(file);
+  };
+
+  const handleBulkStudentUpload = async (e) => {
+    const file = e.target.files[0];
+    setStudentFile(file);
+    if (!file || !selectedClass) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const text = reader.result;
+      const rows = text.split("\n").map((row) => row.split(","));
+      const studentData = rows.map((row) => ({
+        name: row[0],
+        admissionNumber: row[1],
+        email: row[2],
+        password: row[3],
+      }));
+
+      for (const student of studentData) {
+        try {
+          const res = await fetch(`http://localhost:5000/api/classes/${selectedClass}/students`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify(student),
+          });
+          if (!res.ok) throw new Error("Failed to add student");
+        } catch (error) {
+          console.error("Error adding student", error);
+        }
+      }
+      alert("Students added successfully!");
+      fetchStudents(selectedClass);
+    };
+    reader.readAsText(file);
+  };
+
   if (loading) return <p className="p-6">Loading classes...</p>;
 
   return (
@@ -158,25 +234,33 @@ export default function ClassList() {
           {/* Add Class */}
           <form onSubmit={handleAddClass} className="mb-6">
             <div className="flex space-x-2 mb-2">
-              <input
-                type="text"
+              <select
                 name="name"
-                placeholder="Class Name"
                 value={classForm.name}
                 onChange={(e) => handleInputChange(e, setClassForm)}
                 className="flex-1 p-2 border rounded"
                 required
-              />
-              <input
-                type="text"
+              >
+                <option value="">Select Class</option>
+                {["Nursery", "LKG", "UKG", "1", "2", "3", "4", "5", "6", "7", "8", "9"].map((cls) => (
+                  <option key={cls} value={cls}>{cls}</option>
+                ))}
+              </select>
+
+              <select
                 name="section"
-                placeholder="Section"
                 value={classForm.section}
                 onChange={(e) => handleInputChange(e, setClassForm)}
                 className="flex-1 p-2 border rounded"
                 required
-              />
+              >
+                <option value="">Select Section</option>
+                {["A", "B", "C", "D", "E", "F"].map((sec) => (
+                  <option key={sec} value={sec}>{sec}</option>
+                ))}
+              </select>
             </div>
+
             <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded w-full">
               ➕ Add Class
             </button>
@@ -199,6 +283,7 @@ export default function ClassList() {
             </select>
           </div>
         </div>
+
 
         {/* RIGHT SIDE: Student Actions */}
         <div className="bg-white p-6 shadow-md rounded-lg">
@@ -224,6 +309,16 @@ export default function ClassList() {
               </button>
             </form>
           )}
+
+          {/* Bulk Upload for Students */}
+          <div className="mt-6">
+            <label className="block font-medium mb-2">Bulk Upload Students (CSV)</label>
+            <input
+              type="file"
+              onChange={handleBulkStudentUpload}
+              className="w-full border px-3 py-2 rounded"
+            />
+          </div>
 
           {/* View Students */}
           {selectedClass && (
