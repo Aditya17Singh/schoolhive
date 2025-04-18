@@ -27,9 +27,16 @@ exports.getClassById = async (req, res) => {
 
 // Create a New Class with Section
 exports.createClass = async (req, res) => {
-  try {    
+  try {
     const { name, section } = req.body;
-    const schoolId = req.user.schoolId;    
+    const schoolId = req.user.schoolId;
+
+    // Check if class with same name, section, and schoolId already exists
+    const existingClass = await Class.findOne({ name, section, schoolId });
+    if (existingClass) {
+      return res.status(400).json({ error: "Class with this name and section already exists." });
+    }
+
     const newClass = new Class({ name, section, schoolId });
     await newClass.save();
     res.status(201).json(newClass);

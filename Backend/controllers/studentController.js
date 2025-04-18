@@ -1,4 +1,6 @@
 const Student = require("../models/Student");
+const Class = require("../models/Class");
+const School = require("../models/School");
 
 // ✅ Get all students in a specific class
 exports.getStudentsByClass = async (req, res) => {
@@ -29,19 +31,28 @@ exports.createStudent = async (req, res) => {
   }
 };
 
-// ✅ Create a student and assign to a specific class
 exports.createStudentInClass = async (req, res) => {
   try {
-    const { name, admissionNumber, email, password, phone } = req.body;
+    const { name, admissionNumber, email, phone } = req.body;
     const classId = req.params.classId;
 
+    // Step 1: Find the class
+    const classDoc = await Class.findById(classId).populate("schoolId");
+    if (!classDoc) return res.status(404).json({ error: "Class not found" });
+
+    const schoolCode = classDoc.schoolId.code; // assuming School model has `code` field
+
+    // Step 2: Generate password
+    const password = schoolCode + admissionNumber;
+
+    // Step 3: Create and save student
     const newStudent = new Student({
       name,
       admissionNumber,
       email,
-      password,
       phone,
-      class: classId, // Assign student to class
+      password, // auto-generated
+      class: classId,
     });
 
     await newStudent.save();
