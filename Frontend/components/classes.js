@@ -263,8 +263,9 @@ export default function ClassList() {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`px-4 py-2 rounded shadow-md text-white ${toast.type === "error" ? "bg-red-600" : "bg-green-600"
-              }`}
+            className={`px-4 py-2 rounded shadow-md text-white ${
+              toast.type === "error" ? "bg-red-600" : "bg-green-600"
+            }`}
           >
             {toast.message}
           </div>
@@ -289,8 +290,23 @@ export default function ClassList() {
                 required
               >
                 <option value="">Select Class</option>
-                {["Nursery", "LKG", "UKG", "1", "2", "3", "4", "5", "6", "7", "8", "9"].map((cls) => (
-                  <option key={cls} value={cls}>{cls}</option>
+                {[
+                  "Nursery",
+                  "LKG",
+                  "UKG",
+                  "1",
+                  "2",
+                  "3",
+                  "4",
+                  "5",
+                  "6",
+                  "7",
+                  "8",
+                  "9",
+                ].map((cls) => (
+                  <option key={cls} value={cls}>
+                    {cls}
+                  </option>
                 ))}
               </select>
 
@@ -303,18 +319,25 @@ export default function ClassList() {
               >
                 <option value="">Select Section</option>
                 {["A", "B", "C", "D", "E", "F"].map((sec) => (
-                  <option key={sec} value={sec}>{sec}</option>
+                  <option key={sec} value={sec}>
+                    {sec}
+                  </option>
                 ))}
               </select>
             </div>
 
-            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded w-full">
+            <button
+              type="submit"
+              className="bg-green-600 text-white px-4 py-2 rounded w-full"
+            >
               ➕ Add Class
             </button>
           </form>
-          
+
           <div>
-            <label className="block font-medium mb-2">Search or Select a Class</label>
+            <label className="block font-medium mb-2">
+              Search or Select a Class
+            </label>
             <input
               type="text"
               value={search}
@@ -328,8 +351,14 @@ export default function ClassList() {
                 <p className="text-red-600">Please add a class first.</p>
               ) : (
                 filteredClasses.map((cls) => (
-                  <div key={cls._id} className="flex items-center justify-between border-b py-2">
-                    <div onClick={() => handleClassSelection(cls._id)} className="cursor-pointer">
+                  <div
+                    key={cls._id}
+                    className="flex items-center justify-between border-b py-2"
+                  >
+                    <div
+                      onClick={() => handleClassSelection(cls._id)}
+                      className="cursor-pointer"
+                    >
                       {cls.name} - {cls.section}
                     </div>
                     <button
@@ -346,9 +375,7 @@ export default function ClassList() {
               )}
             </div>
           </div>
-
         </div>
-
 
         {/* RIGHT SIDE: Student Actions */}
         <div className="bg-white p-6 shadow-md rounded-lg">
@@ -357,10 +384,10 @@ export default function ClassList() {
             <p className="text-red-600">Please select a class first.</p>
           ) : (
             <form onSubmit={handleAddStudent}>
-              {["name", "admissionNumber", "email", "password"].map((field) => (
+              {["name", "admissionNumber", "email"].map((field) => (
                 <input
                   key={field}
-                  type={field === "password" ? "password" : "text"}
+                  type="text"
                   name={field}
                   placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
                   value={studentForm[field]}
@@ -369,7 +396,19 @@ export default function ClassList() {
                   required
                 />
               ))}
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded w-full">
+
+              <input
+                type="password"
+                name="password"
+                placeholder="Optional Password"
+                value={studentForm.password}
+                onChange={(e) => handleInputChange(e, setStudentForm)}
+                className="w-full p-2 border rounded mb-2"
+              />
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+              >
                 ➕ Add Student
               </button>
             </form>
@@ -377,7 +416,9 @@ export default function ClassList() {
 
           {/* Bulk Upload for Students */}
           <div className="mt-6">
-            <label className="block font-medium mb-2">Bulk Upload Students (CSV)</label>
+            <label className="block font-medium mb-2">
+              Bulk Upload Students (CSV)
+            </label>
             <input
               type="file"
               onChange={handleBulkStudentUpload}
