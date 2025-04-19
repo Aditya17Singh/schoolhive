@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from 'next/image';
 
 export default function DashboardLayout({ children }) {
   const [user, setUser] = useState(null);
@@ -14,7 +15,7 @@ export default function DashboardLayout({ children }) {
     const userData = localStorage.getItem("user");
 
     if (!token || !userData) {
-      router.replace("/"); // redirect if not authenticated
+      router.replace("/");
     } else {
       setUser(JSON.parse(userData));
       setLoading(false);
@@ -30,7 +31,8 @@ export default function DashboardLayout({ children }) {
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        Loading...
+        <Image src="/site-logo.webp" alt="Site Logo" width={100} height={100} className="animate-pulse"
+        />
       </div>
     );
   }
@@ -43,7 +45,8 @@ export default function DashboardLayout({ children }) {
           <h2 className="text-2xl font-bold mb-6 cursor-pointer hover:underline">
             {user.schoolName || "Dashboard"}
           </h2>
-        </Link>      <ul>
+        </Link>
+        <ul>
           <li className="mb-4">
             <Link
               href="/dashboard/profile"
