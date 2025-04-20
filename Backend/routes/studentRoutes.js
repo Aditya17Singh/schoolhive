@@ -10,5 +10,6 @@ router.delete("/:id", studentController.deleteStudent);
 router.get("/class/:classId", studentController.getStudentsByClass);
 router.post("/class/:classId", studentController.createStudentInClass);
 router.post("/api/classes/:classId/students", studentController.createStudentInClass);
+router.delete("/", studentController.deleteAllStudentsBySchoolCode);
 
 module.exports = router;

@@ -1,22 +1,50 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 
 export default function NoticesPage() {
-  const { data: session, status } = useSession();
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState("");
   const [notices, setNotices] = useState([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("token");
+
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (e) {
+        console.error("Error parsing user from localStorage:", e);
+      }
+    }
+
+    if (storedToken) {
+      setToken(storedToken);
+    }
+
+    setCheckingAuth(false);
+  }, []);
 
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/notices");
+        const res = await fetch("http://localhost:5000/api/notices", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         if (res.ok) {
           const data = await res.json();
           setNotices(data);
+        } else {
+          console.error("Failed to fetch notices");
         }
       } catch (error) {
         console.error("Error fetching notices:", error);
@@ -25,11 +53,14 @@ export default function NoticesPage() {
       }
     };
 
-    fetchNotices();
-  }, []);
+    if (token) {
+      fetchNotices();
+    }
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!title || !description) {
       alert("Please enter both title and description");
       return;
@@ -40,19 +71,31 @@ export default function NoticesPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        credentials: "include",
-        body: JSON.stringify({ title, description }),
+        body: JSON.stringify({
+          title,
+          description,
+          schoolCode: user?.schoolCode,
+        }),
       });
 
       if (res.ok) {
         alert("Notice added successfully!");
         setTitle("");
         setDescription("");
+
         // Refresh notices
-        const updatedRes = await fetch("http://localhost:5000/api/notices");
-        const updatedNotices = await updatedRes.json();
-        setNotices(updatedNotices);
+        const updatedRes = await fetch("http://localhost:5000/api/notices", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (updatedRes.ok) {
+          const updatedNotices = await updatedRes.json();
+          setNotices(updatedNotices);
+        }
       } else {
         const error = await res.json();
         alert("Error: " + error.message);
@@ -62,11 +105,11 @@ export default function NoticesPage() {
     }
   };
 
-  if (status === "loading" || loading) {
+  if (checkingAuth || loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  if (!session || session.user.role !== "admin") {
+  if (!user || user.role !== "admin") {
     return <div className="flex items-center justify-center min-h-screen">Unauthorized</div>;
   }
 
@@ -106,7 +149,9 @@ export default function NoticesPage() {
           <li key={notice._id} className="bg-white p-4 rounded-lg shadow-md mb-4">
             <h3 className="text-lg font-semibold">{notice.title}</h3>
             <p className="text-gray-700">{notice.description}</p>
-            <p className="text-sm text-gray-500">Posted on: {new Date(notice.date).toLocaleString()}</p>
+            <p className="text-sm text-gray-500">
+              Posted on: {new Date(notice.date).toLocaleString()}
+            </p>
           </li>
         ))}
       </ul>

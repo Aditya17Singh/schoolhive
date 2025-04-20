@@ -46,15 +46,20 @@ exports.createStudentInClass = async (req, res) => {
 };
 
 
-// ✅ Other existing CRUD functions remain the same
 exports.getAllStudents = async (req, res) => {
   try {
-    const students = await Student.find().populate("class");
+    const { schoolCode } = req.query;
+
+    const query = schoolCode ? { schoolCode } : {};
+
+    const students = await Student.find(query).populate("class");
+
     res.json(students);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.getStudentById = async (req, res) => {
   try {
@@ -85,3 +90,21 @@ exports.deleteStudent = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// ✅ Delete all students by schoolCode
+exports.deleteAllStudentsBySchoolCode = async (req, res) => {
+  try {
+    const { schoolCode } = req.query;
+
+    if (!schoolCode) {
+      return res.status(400).json({ error: "schoolCode is required" });
+    }
+
+    const result = await Student.deleteMany({ schoolCode });
+
+    res.json({ message: `${result.deletedCount} students deleted successfully.` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
