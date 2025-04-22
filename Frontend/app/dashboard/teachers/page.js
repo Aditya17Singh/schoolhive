@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 export default function TeacherDashboard() {
   const [teachers, setTeachers] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({});
   const [showModal, setShowModal] = useState(false);
@@ -27,18 +28,39 @@ export default function TeacherDashboard() {
       setTotal(data.total);
     } catch (error) {
       console.error(error);
-      // optional toast here
+    }
+  };
+
+  const fetchSubjects = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/subjects", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to fetch subjects");
+      const data = await res.json();
+      setSubjects(data);
+    } catch (error) {
+      console.error(error);
     }
   };
 
   useEffect(() => {
     fetchTeachers();
-  }, [page, search]);
+  }, [fetchTeachers, page, search]);
+
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "photo" && files?.length) {
       setForm((f) => ({ ...f, photoUrl: URL.createObjectURL(files[0]) }));
+    } else if (name === "subjects") {
+      const selected = Array.from(e.target.selectedOptions, (opt) => opt.value);
+      setForm((f) => ({ ...f, subjects: selected }));
     } else {
       setForm((f) => ({ ...f, [name]: value }));
     }
@@ -64,12 +86,11 @@ export default function TeacherDashboard() {
 
       setForm({});
       setShowModal(false);
-      fetchTeachers(); // refresh list
+      fetchTeachers();
       setSelectedTeacher(null);
       setEditMode(false);
     } catch (error) {
       console.error(error);
-      // optional toast
     }
   };
 
@@ -87,10 +108,9 @@ export default function TeacherDashboard() {
 
       if (!res.ok) throw new Error("Failed to delete teacher");
 
-      fetchTeachers(); // refresh list after deletion
+      fetchTeachers();
     } catch (error) {
       console.error(error);
-      // optional toast
     }
   };
 
@@ -99,12 +119,12 @@ export default function TeacherDashboard() {
     return nameArray
       .map((part) => part.charAt(0).toUpperCase())
       .join("")
-      .slice(0, 2); // Get the first 2 initials
+      .slice(0, 2);
   };
 
   const openEditModal = (teacher) => {
     setSelectedTeacher(teacher);
-    setForm({ ...teacher }); // pre-fill form with teacher data
+    setForm({ ...teacher });
     setEditMode(true);
     setShowModal(true);
   };
@@ -144,92 +164,35 @@ export default function TeacherDashboard() {
             </button>
             <h3 className="text-xl font-semibold mb-4">{editMode ? "Edit Teacher" : "Add Teacher"}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                name="employeeId"
-                onChange={handleChange}
-                value={form.employeeId || ""}
-                placeholder="Employee ID"
-                className="border p-2 rounded"
-              />
-              <input
-                name="email"
-                onChange={handleChange}
-                value={form.email || ""}
-                placeholder="Email"
-                className="border p-2 rounded"
-              />
-              <input
-                name="firstName"
-                onChange={handleChange}
-                value={form.firstName || ""}
-                placeholder="First Name"
-                className="border p-2 rounded"
-              />
-              <input
-                name="lastName"
-                onChange={handleChange}
-                value={form.lastName || ""}
-                placeholder="Last Name"
-                className="border p-2 rounded"
-              />
-              <input
-                name="phone"
-                onChange={handleChange}
-                value={form.phone || ""}
-                placeholder="Phone"
-                className="border p-2 rounded"
-              />
-              <input
-                name="address"
-                onChange={handleChange}
-                value={form.address || ""}
-                placeholder="Address"
-                className="border p-2 rounded"
-              />
-              <input
-                name="birthDate"
-                onChange={handleChange}
-                value={form.birthDate || ""}
-                type="date"
-                className="border p-2 rounded"
-              />
-              <select
-                name="gender"
-                onChange={handleChange}
-                value={form.gender || ""}
-                className="border p-2 rounded"
-              >
+              <input name="employeeId" onChange={handleChange} value={form.employeeId || ""} placeholder="Employee ID" className="border p-2 rounded" />
+              <input name="email" onChange={handleChange} value={form.email || ""} placeholder="Email" className="border p-2 rounded" />
+              <input name="firstName" onChange={handleChange} value={form.firstName || ""} placeholder="First Name" className="border p-2 rounded" />
+              <input name="lastName" onChange={handleChange} value={form.lastName || ""} placeholder="Last Name" className="border p-2 rounded" />
+              <input name="phone" onChange={handleChange} value={form.phone || ""} placeholder="Phone" className="border p-2 rounded" />
+              <input name="address" onChange={handleChange} value={form.address || ""} placeholder="Address" className="border p-2 rounded" />
+              <input name="birthDate" onChange={handleChange} value={form.birthDate || ""} type="date" className="border p-2 rounded" />
+              <select name="gender" onChange={handleChange} value={form.gender || ""} className="border p-2 rounded">
                 <option value="">Select Gender</option>
                 <option>Male</option>
                 <option>Female</option>
                 <option>Other</option>
               </select>
-              <input
-                name="bloodType"
-                onChange={handleChange}
-                value={form.bloodType || ""}
-                placeholder="Blood Type"
-                className="border p-2 rounded"
-              />
-              <input
-                type="file"
-                name="photo"
-                onChange={handleChange}
-                className="border p-2 rounded"
-              />
-              
+              <input name="bloodType" onChange={handleChange} value={form.bloodType || ""} placeholder="Blood Type" className="border p-2 rounded" />
+              <input type="file" name="photo" onChange={handleChange} className="border p-2 rounded" />
+              <select name="subjects" multiple value={form.subjects || []} onChange={handleChange} className="border p-2 rounded">
+                {subjects.map((s) => (
+                  <option key={s._id} value={s._id}>{s.name}</option>
+                ))}
+              </select>
             </div>
-            <button
-              onClick={handleSubmit}
-              className="mt-6 bg-green-600 text-white py-2 px-6 rounded hover:bg-green-700"
-            >
+            <button onClick={handleSubmit} className="mt-6 bg-green-600 text-white py-2 px-6 rounded hover:bg-green-700">
               {editMode ? "Update Teacher" : "Create Teacher"}
             </button>
           </div>
         </div>
       )}
 
-      {/* Teacher List (Table) */}
+      {/* Teacher List */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-300 shadow-sm">
           <thead>
@@ -239,6 +202,7 @@ export default function TeacherDashboard() {
               <th className="py-3 px-4 text-left">Employee ID</th>
               <th className="py-3 px-4 text-left">Phone</th>
               <th className="py-3 px-4 text-left">Blood Type</th>
+              <th className="py-3 px-4 text-left">Subjects</th>
               <th className="py-3 px-4 text-left">Actions</th>
             </tr>
           </thead>
@@ -247,16 +211,10 @@ export default function TeacherDashboard() {
               <tr key={t._id} className="border-b hover:bg-gray-50">
                 <td className="py-3 px-4 text-center">
                   {t.photoUrl ? (
-                    <img
-                      src={t.photoUrl}
-                      alt="avatar"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
+                    <img src={t.photoUrl} alt="avatar" className="w-10 h-10 rounded-full object-cover" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                      <span className="text-white text-sm">
-                        {getInitials(`${t.firstName} ${t.lastName}`)}
-                      </span>
+                      <span className="text-white text-sm">{getInitials(`${t.firstName} ${t.lastName}`)}</span>
                     </div>
                   )}
                 </td>
@@ -265,18 +223,11 @@ export default function TeacherDashboard() {
                 <td className="py-3 px-4">{t.phone}</td>
                 <td className="py-3 px-4">{t.bloodType}</td>
                 <td className="py-3 px-4">
-                  <button
-                    onClick={() => openEditModal(t)}
-                    className="text-blue-500 hover:text-blue-700 mr-2"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(t._id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    Delete
-                  </button>
+                  {t.subjects?.map((subj) => subj.name).join(", ") || "-"}
+                </td>
+                <td className="py-3 px-4">
+                  <button onClick={() => openEditModal(t)} className="text-blue-500 hover:text-blue-700 mr-2">Edit</button>
+                  <button onClick={() => handleDelete(t._id)} className="text-red-500 hover:text-red-700">Delete</button>
                 </td>
               </tr>
             ))}
@@ -286,20 +237,8 @@ export default function TeacherDashboard() {
 
       {/* Pagination */}
       <div className="mt-6 flex justify-center gap-2">
-        <button
-          disabled={page === 1}
-          onClick={() => setPage((p) => p - 1)}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Prev
-        </button>
-        <button
-          disabled={page * 10 >= total}
-          onClick={() => setPage((p) => p + 1)}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
+        <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50">Prev</button>
+        <button disabled={page * 10 >= total} onClick={() => setPage((p) => p + 1)} className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50">Next</button>
       </div>
     </div>
   );

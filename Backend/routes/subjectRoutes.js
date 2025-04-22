@@ -1,11 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const subjectController = require("../controllers/subjectController"); // Ensure this exists
+const subjectController = require("../controllers/subjectController");
+const verifyToken = require("../middleware/verifyToken");
 
-router.get("/", subjectController.getAllSubjects);
-router.get("/:id", subjectController.getSubjectById);
-router.post("/", subjectController.createSubject);
-router.put("/:id", subjectController.updateSubject);
-router.delete("/:id", subjectController.deleteSubject);
+// Subject Routes
+router.get("/", verifyToken, subjectController.getAllSubjects);
+router.get("/:id", verifyToken, subjectController.getSubjectById);
+router.post("/", verifyToken, subjectController.createSubject);
+router.put("/:id", verifyToken, subjectController.updateSubject);
+router.delete("/:id", verifyToken, subjectController.deleteSubject);
 
 module.exports = router;
