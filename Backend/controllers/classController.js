@@ -103,10 +103,20 @@ exports.addStudentToClass = async (req, res) => {
 // Delete a Class
 exports.deleteClass = async (req, res) => {
   try {
-    const deletedClass = await Class.findByIdAndDelete(req.params.id);
-    if (!deletedClass) return res.status(404).json({ error: "Class not found" });
-    res.json({ message: "Class deleted successfully" });
+    const classId = req.params.id;
+
+    // 1. Delete all students in this class
+    await Student.deleteMany({ class: classId });
+
+    // 2. Delete the class itself
+    const deletedClass = await Class.findByIdAndDelete(classId);
+    if (!deletedClass) {
+      return res.status(404).json({ error: "Class not found" });
+    }
+
+    res.json({ message: "Class and related students deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+

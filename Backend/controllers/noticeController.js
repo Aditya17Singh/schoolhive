@@ -2,7 +2,16 @@ const Notice = require("../models/Notice");
 
 exports.getAllNotices = async (req, res) => {
   try {
-    const notices = await Notice.find();
+    // Ensure the 'schoolCode' is available in req.user (set by the verifyToken middleware)
+    const { schoolCode } = req.user;  // 'schoolCode' should now be available here
+
+    if (!schoolCode) {
+      return res.status(400).json({ message: "School code is missing from user data" });
+    }
+
+    // Fetch notices filtered by the admin's schoolCode
+    const notices = await Notice.find({ schoolCode });
+
     res.json(notices);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -11,7 +20,16 @@ exports.getAllNotices = async (req, res) => {
 
 exports.createNotice = async (req, res) => {
   try {
-    const newNotice = new Notice(req.body);
+    const { schoolCode } = req.user;  // Ensure that 'req.user' contains 'schoolCode'
+    const { title, description } = req.body;
+
+    const newNotice = new Notice({
+      title,
+      description,
+      schoolCode,  // Attach the schoolCode to the notice
+      issuedBy: req.user._id,  // Assuming the admin is authenticated and we have their ID
+    });
+
     await newNotice.save();
     res.status(201).json(newNotice);
   } catch (error) {

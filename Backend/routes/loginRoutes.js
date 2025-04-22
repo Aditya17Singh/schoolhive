@@ -16,35 +16,35 @@ router.post("/login", async (req, res) => {
   try {
     let user;
     let schoolName = "";
+    let schoolCode = "";
 
     if (role === "admin") {
-      const { name, mobile, schoolCode } = req.body;
-    
-      const school = await School.findOne({ code: schoolCode });
+      const { name, mobile, schoolCode: inputSchoolCode } = req.body;
+
+      const school = await School.findOne({ code: inputSchoolCode });
       if (!school) {
         return res.status(404).json({ message: "School not found" });
       }
-      console.log(Admin , 'Admin');
-      
-    
+
       user = await Admin.findOne({ name, mobile, schoolId: school._id });
       if (!user) {
         return res.status(401).json({ message: "Admin not found" });
       }
-    
-      schoolName = school.name;
-    }
-     else if (role === "student") {
-        const { schoolCode, admissionNumber } = req.body;
-        user = await Student.findOne({ schoolCode, admissionNumber });
 
-        if (user) {
-          const school = await School.findOne({ code: schoolCode });
-          schoolName = school?.name || "";
-        }
-      } else {
-        return res.status(400).json({ message: "Invalid role" });
-      }      
+      schoolName = school.name;
+      schoolCode = school.code;
+    } else if (role === "student") {
+      const { schoolCode: inputSchoolCode, admissionNumber } = req.body;
+      user = await Student.findOne({ schoolCode: inputSchoolCode, admissionNumber });
+
+      if (user) {
+        const school = await School.findOne({ code: inputSchoolCode });
+        schoolName = school?.name || "";
+        schoolCode = inputSchoolCode;
+      }
+    } else {
+      return res.status(400).json({ message: "Invalid role" });
+    }
 
     if (!user) {
       return res.status(401).json({ message: "User not found" });
@@ -61,19 +61,21 @@ router.post("/login", async (req, res) => {
         schoolId: user.schoolId,
         role,
         name: user.name,
+        schoolCode
       },
       JWT_SECRET,
       { expiresIn: "1d" }
     );
 
-    // Option 2: Or send in JSON (if using localStorage)
     res.json({
       token,
       user: {
         id: user._id,
         name: user.name,
         role,
-        schoolName
+        schoolId: user.schoolId,
+        schoolName,
+        schoolCode, // ✅ Now included
       },
     });
   } catch (err) {
@@ -81,5 +83,6 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 module.exports = router;
