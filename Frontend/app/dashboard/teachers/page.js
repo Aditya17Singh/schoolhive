@@ -1,5 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // top of your file
+import Image from "next/image";
 
 export default function TeacherDashboard() {
   const [teachers, setTeachers] = useState([]);
@@ -11,11 +14,14 @@ export default function TeacherDashboard() {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const router = useRouter();
 
-  const fetchTeachers = async () => {
+  const fetchTeachers = useCallback(async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/teachers?page=${page}&search=${encodeURIComponent(search)}`,
+        `http://localhost:5000/api/teachers?page=${page}&search=${encodeURIComponent(
+          search
+        )}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -29,7 +35,7 @@ export default function TeacherDashboard() {
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [page, search]);
 
   const fetchSubjects = async () => {
     try {
@@ -40,9 +46,10 @@ export default function TeacherDashboard() {
       });
       if (!res.ok) throw new Error("Failed to fetch subjects");
       const data = await res.json();
+
       setSubjects(data);
     } catch (error) {
-      console.error(error);
+      console.error("Subjects fetch failed:", error);
     }
   };
 
@@ -72,6 +79,31 @@ export default function TeacherDashboard() {
       ? `http://localhost:5000/api/teachers/${selectedTeacher._id}`
       : "http://localhost:5000/api/teachers";
 
+    // If the photo has been updated, handle image upload
+    let uploadedPhotoUrl = form.photoUrl;
+
+    if (form.photo) {
+      const formData = new FormData();
+      formData.append("photo", form.photo);
+      try {
+        const res = await fetch("http://localhost:5000/api/upload", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error("Failed to upload image");
+        const data = await res.json();
+        uploadedPhotoUrl = data.url; // Assuming the server returns the image URL
+      } catch (error) {
+        console.error("Image upload failed:", error);
+      }
+    }
+
+    const updatedForm = { ...form, photoUrl: uploadedPhotoUrl };
+
     try {
       const res = await fetch(url, {
         method: method,
@@ -79,7 +111,7 @@ export default function TeacherDashboard() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(updatedForm),
       });
 
       if (!res.ok) throw new Error("Failed to create/update teacher");
@@ -90,12 +122,14 @@ export default function TeacherDashboard() {
       setSelectedTeacher(null);
       setEditMode(false);
     } catch (error) {
-      console.error(error);
+      console.error("Teacher submission failed:", error);
     }
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this teacher?");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this teacher?"
+    );
     if (!confirmDelete) return;
 
     try {
@@ -162,30 +196,101 @@ export default function TeacherDashboard() {
             >
               &times;
             </button>
-            <h3 className="text-xl font-semibold mb-4">{editMode ? "Edit Teacher" : "Add Teacher"}</h3>
+            <h3 className="text-xl font-semibold mb-4">
+              {editMode ? "Edit Teacher" : "Add Teacher"}
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input name="employeeId" onChange={handleChange} value={form.employeeId || ""} placeholder="Employee ID" className="border p-2 rounded" />
-              <input name="email" onChange={handleChange} value={form.email || ""} placeholder="Email" className="border p-2 rounded" />
-              <input name="firstName" onChange={handleChange} value={form.firstName || ""} placeholder="First Name" className="border p-2 rounded" />
-              <input name="lastName" onChange={handleChange} value={form.lastName || ""} placeholder="Last Name" className="border p-2 rounded" />
-              <input name="phone" onChange={handleChange} value={form.phone || ""} placeholder="Phone" className="border p-2 rounded" />
-              <input name="address" onChange={handleChange} value={form.address || ""} placeholder="Address" className="border p-2 rounded" />
-              <input name="birthDate" onChange={handleChange} value={form.birthDate || ""} type="date" className="border p-2 rounded" />
-              <select name="gender" onChange={handleChange} value={form.gender || ""} className="border p-2 rounded">
+              <input
+                name="employeeId"
+                onChange={handleChange}
+                value={form.employeeId || ""}
+                placeholder="Employee ID"
+                className="border p-2 rounded"
+              />
+              <input
+                name="email"
+                onChange={handleChange}
+                value={form.email || ""}
+                placeholder="Email"
+                className="border p-2 rounded"
+              />
+              <input
+                name="firstName"
+                onChange={handleChange}
+                value={form.firstName || ""}
+                placeholder="First Name"
+                className="border p-2 rounded"
+              />
+              <input
+                name="lastName"
+                onChange={handleChange}
+                value={form.lastName || ""}
+                placeholder="Last Name"
+                className="border p-2 rounded"
+              />
+              <input
+                name="phone"
+                onChange={handleChange}
+                value={form.phone || ""}
+                placeholder="Phone"
+                className="border p-2 rounded"
+              />
+              <input
+                name="address"
+                onChange={handleChange}
+                value={form.address || ""}
+                placeholder="Address"
+                className="border p-2 rounded"
+              />
+              <input
+                name="birthDate"
+                onChange={handleChange}
+                value={form.birthDate || ""}
+                type="date"
+                className="border p-2 rounded"
+              />
+              <select
+                name="gender"
+                onChange={handleChange}
+                value={form.gender || ""}
+                className="border p-2 rounded"
+              >
                 <option value="">Select Gender</option>
                 <option>Male</option>
                 <option>Female</option>
                 <option>Other</option>
               </select>
-              <input name="bloodType" onChange={handleChange} value={form.bloodType || ""} placeholder="Blood Type" className="border p-2 rounded" />
-              <input type="file" name="photo" onChange={handleChange} className="border p-2 rounded" />
-              <select name="subjects" multiple value={form.subjects || []} onChange={handleChange} className="border p-2 rounded">
+              <input
+                name="bloodType"
+                onChange={handleChange}
+                value={form.bloodType || ""}
+                placeholder="Blood Type"
+                className="border p-2 rounded"
+              />
+              <input
+                type="file"
+                name="photo"
+                onChange={handleChange}
+                className="border p-2 rounded"
+              />
+              <select
+                name="subjects"
+                multiple
+                value={form.subjects || []}
+                onChange={handleChange}
+                className="border p-2 rounded"
+              >
                 {subjects.map((s) => (
-                  <option key={s._id} value={s._id}>{s.name}</option>
+                  <option key={s._id} value={s._id}>
+                    {s.name}
+                  </option>
                 ))}
               </select>
             </div>
-            <button onClick={handleSubmit} className="mt-6 bg-green-600 text-white py-2 px-6 rounded hover:bg-green-700">
+            <button
+              onClick={handleSubmit}
+              className="mt-6 bg-green-600 text-white py-2 px-6 rounded hover:bg-green-700"
+            >
               {editMode ? "Update Teacher" : "Create Teacher"}
             </button>
           </div>
@@ -211,23 +316,52 @@ export default function TeacherDashboard() {
               <tr key={t._id} className="border-b hover:bg-gray-50">
                 <td className="py-3 px-4 text-center">
                   {t.photoUrl ? (
-                    <img src={t.photoUrl} alt="avatar" className="w-10 h-10 rounded-full object-cover" />
+                    <Image
+                      src={t.photoUrl}
+                      alt="avatar"
+                      className="rounded-full object-cover"
+                      width={40} // Set a width
+                      height={40} // Set a height
+                    />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                      <span className="text-white text-sm">{getInitials(`${t.firstName} ${t.lastName}`)}</span>
+                      <span className="text-white text-sm">
+                        {getInitials(`${t.firstName} ${t.lastName}`)}
+                      </span>
                     </div>
                   )}
                 </td>
-                <td className="py-3 px-4">{t.firstName} {t.lastName}</td>
+
+                <td
+                  className="py-3 px-4 cursor-pointer text-blue-600 hover:underline"
+                  onClick={() => router.push(`/dashboard/teachers/${t._id}`)}
+                >
+                  {t.firstName} {t.lastName}
+                </td>
                 <td className="py-3 px-4">{t.employeeId}</td>
                 <td className="py-3 px-4">{t.phone}</td>
                 <td className="py-3 px-4">{t.bloodType}</td>
                 <td className="py-3 px-4">
-                  {t.subjects?.map((subj) => subj.name).join(", ") || "-"}
+                  {t.subjects
+                    ?.map((subjectId) => {
+                      const subject = subjects.find((s) => s._id === subjectId);
+                      return subject ? subject.name : null;
+                    })
+                    .join(", ") || "-"}
                 </td>
                 <td className="py-3 px-4">
-                  <button onClick={() => openEditModal(t)} className="text-blue-500 hover:text-blue-700 mr-2">Edit</button>
-                  <button onClick={() => handleDelete(t._id)} className="text-red-500 hover:text-red-700">Delete</button>
+                  <button
+                    onClick={() => openEditModal(t)}
+                    className="text-blue-500 hover:text-blue-700 mr-2"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(t._id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
@@ -237,8 +371,20 @@ export default function TeacherDashboard() {
 
       {/* Pagination */}
       <div className="mt-6 flex justify-center gap-2">
-        <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50">Prev</button>
-        <button disabled={page * 10 >= total} onClick={() => setPage((p) => p + 1)} className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50">Next</button>
+        <button
+          disabled={page === 1}
+          onClick={() => setPage((p) => p - 1)}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Prev
+        </button>
+        <button
+          disabled={page * 10 >= total}
+          onClick={() => setPage((p) => p + 1)}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
     </div>
   );

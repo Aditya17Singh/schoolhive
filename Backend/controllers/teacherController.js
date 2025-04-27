@@ -1,4 +1,5 @@
 const Teacher = require("../models/Teacher");
+const Lesson = require("../models/Lesson");
 
 exports.createTeacher = async (req, res) => {
   try {
@@ -14,6 +15,24 @@ exports.createTeacher = async (req, res) => {
     res.status(201).json(newTeacher);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+};
+
+exports.getTeacherSchedule = async (req, res) => {
+  try {
+    const lessons = await Lesson.find({ teacher: req.params.id })
+      .populate("class subject")
+      .lean();
+
+    const events = lessons.map((l) => ({
+      title: `${l.class.name} | ${l.subject.name}`,
+      start: l.startTime,
+      end: l.endTime,
+    }));
+
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
 
