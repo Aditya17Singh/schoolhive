@@ -127,21 +127,45 @@ export default function Dashboard() {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold text-blue-800 mb-6">Welcome, {user.name}!</h1>
+      <h1 className="text-3xl font-bold text-blue-800 mb-6">
+        Welcome, {user.name}!
+      </h1>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <StatCard title="Total Students" value={stats.totalStudents} color="text-blue-600" />
-        <StatCard title="Total Classes" value={stats.totalClasses} color="text-green-600" />
-        <StatCard title="Total Teachers" value={stats.totalTeachers} color="text-purple-600" />
-        <StatCard title="Fee Collection" value={`₹${stats.feeCollection}`} color="text-red-600" />
+        <StatCard
+          title="Total Students"
+          value={stats.totalStudents}
+          color="text-blue-600"
+          link="/dashboard/students"
+        />
+        <StatCard
+          title="Total Classes"
+          value={stats.totalClasses}
+          color="text-green-600"
+          link="/dashboard/classes"
+        />
+        <StatCard
+          title="Total Teachers"
+          value={stats.totalTeachers}
+          color="text-purple-600"
+          link="/dashboard/teachers"
+        />
+        <StatCard
+          title="Fee Collection"
+          value={`₹${stats.feeCollection}`}
+          color="text-red-600"
+        />
       </div>
 
       {/* Notices */}
       <div className="bg-white shadow-lg rounded-lg p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Latest Notices</h2>
-          <button onClick={() => fetchStatsAndNotices(localStorage.getItem("token"))} className="bg-blue-500 text-white px-4 py-2 rounded-md">
+          <button
+            onClick={() => fetchStatsAndNotices(localStorage.getItem("token"))}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md"
+          >
             Refresh Notices
           </button>
         </div>
@@ -149,38 +173,73 @@ export default function Dashboard() {
         {notices.length > 0 ? (
           <ul className="space-y-4">
             {notices.map((notice) => (
-              <li key={notice._id} className="border-b pb-2 flex justify-between items-center">
+              <li
+                key={notice._id}
+                className="border-b pb-2 flex justify-between items-center"
+              >
                 {editingNotice?._id === notice._id ? (
                   <div className="w-full">
                     <input
                       type="text"
                       value={editingNotice.title}
-                      onChange={(e) => setEditingNotice({ ...editingNotice, title: e.target.value })}
+                      onChange={(e) =>
+                        setEditingNotice({
+                          ...editingNotice,
+                          title: e.target.value,
+                        })
+                      }
                       className="w-full border p-2 mb-2"
                     />
                     <textarea
                       value={editingNotice.description}
-                      onChange={(e) => setEditingNotice({ ...editingNotice, description: e.target.value })}
+                      onChange={(e) =>
+                        setEditingNotice({
+                          ...editingNotice,
+                          description: e.target.value,
+                        })
+                      }
                       className="w-full border p-2"
                     />
                     <div className="flex justify-end space-x-2 mt-2">
-                      <button onClick={handleSaveEdit} className="bg-green-500 text-white px-3 py-1 rounded">Save</button>
-                      <button onClick={() => setEditingNotice(null)} className="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button>
+                      <button
+                        onClick={handleSaveEdit}
+                        className="bg-green-500 text-white px-3 py-1 rounded"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingNotice(null)}
+                        className="bg-gray-400 text-white px-3 py-1 rounded"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 ) : (
                   <div className="w-full">
                     <h3 className="text-lg font-medium">{notice.title}</h3>
                     <p className="text-gray-700">{notice.description}</p>
-                    <p className="text-sm text-gray-500">{new Date(notice.date).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500">
+                      {new Date(notice.date).toLocaleDateString()}
+                    </p>
                   </div>
                 )}
 
                 <div className="flex space-x-2">
                   {user?.role === "admin" && (
                     <>
-                      <button onClick={() => handleEdit(notice)} className="bg-yellow-500 text-white px-3 py-1 rounded">Edit</button>
-                      <button onClick={() => handleDelete(notice._id)} className="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
+                      <button
+                        onClick={() => handleEdit(notice)}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(notice._id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded"
+                      >
+                        Delete
+                      </button>
                     </>
                   )}
                 </div>
@@ -195,11 +254,23 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ title, value, color }) {
+function StatCard({ title, value, color, link }) {
+  const router = useRouter();
+
+  const handleClick = () => {
+    if (link) {
+      router.push(link);
+    }
+  };
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+    <div
+      className={`bg-white p-6 rounded-lg shadow-lg text-center cursor-${link ? "pointer" : "default"} hover:shadow-xl transition`}
+      onClick={handleClick}
+    >
       <h2 className="text-xl font-semibold text-gray-700">{title}</h2>
       <p className={`text-3xl font-bold ${color}`}>{value}</p>
     </div>
   );
 }
+
