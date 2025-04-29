@@ -14,6 +14,7 @@ const teacherSchema = new mongoose.Schema({
   bloodType: { type: String },
   password: { type: String, default: "123456" },
   subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subject' }],
+  schoolId: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true },
 });
 
 module.exports = mongoose.model("Teacher", teacherSchema);
