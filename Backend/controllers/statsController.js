@@ -1,10 +1,13 @@
 const Class = require("../models/Class");
+const Teacher = require("../models/Teacher");
+const Student = require("../models/Student");
 
 exports.getStats = async (req, res) => {
   try {
     const schoolId = req.user?.schoolId;
+    const schoolCode = req.user?.schoolCode;
 
-    if (!schoolId) {
+    if (!schoolId || !schoolCode) {
       return res.json({
         totalStudents: 0,
         totalClasses: 0,
@@ -13,13 +16,17 @@ exports.getStats = async (req, res) => {
       });
     }
 
-    const totalClasses = await Class.countDocuments({ schoolId });
+    const [totalClasses, totalTeachers, totalStudents] = await Promise.all([
+      Class.countDocuments({ schoolId }),
+      Teacher.countDocuments({ schoolId }),
+      Student.countDocuments({ schoolCode }),
+    ]);
 
     res.json({
-      totalStudents: 0,        // Temporary
+      totalStudents, 
       totalClasses,
-      totalTeachers: 0,        // Temporary
-      feeCollection: 0,        // Temporary
+      totalTeachers, 
+      feeCollection: 0, 
     });
   } catch (error) {
     console.error("Error fetching stats:", error);
