@@ -23,10 +23,10 @@ exports.getStats = async (req, res) => {
     ]);
 
     res.json({
-      totalStudents, 
+      totalStudents,
       totalClasses,
-      totalTeachers, 
-      feeCollection: 0, 
+      totalTeachers,
+      feeCollection: 0,
     });
   } catch (error) {
     console.error("Error fetching stats:", error);
