@@ -33,9 +33,10 @@ exports.createStudentInClass = async (req, res) => {
       admissionNumber,
       email,
       phone,
-      password, // plain, will be hashed by the schema
+      password,
       class: classId,
-      schoolCode, // ✅ important for login!
+      schoolCode,
+      ...req.body // This ensures profilePicture, dob, fatherName, etc. get saved
     });
 
     await newStudent.save();

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function ClassList() {
   const router = useRouter();
@@ -10,6 +11,9 @@ export default function ClassList() {
   const [selectedClass, setSelectedClass] = useState("");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
+  const [modalClassId, setModalClassId] = useState(null);
+
 
   // Forms
   const [classForm, setClassForm] = useState({ name: "", section: "" });
@@ -18,7 +22,42 @@ export default function ClassList() {
     admissionNumber: "",
     email: "",
     password: "",
-  });
+    phone: "",
+    profilePicture: null,
+    dateOfAdmission: "",
+    fee: "",
+    classId: "",
+  
+    // Section 2: Other Info
+    dob: "",
+    gender: "",
+    orphan: false,
+    identifiableMark: "",
+    religion: "",
+    siblings: "",
+    bloodGroup: "",
+    disease: "",
+    address: "",
+  
+    // Father Info
+    fatherName: "",
+    fatherOccupation: "",
+    fatherMobile: "",
+    fatherEducation: "",
+  
+    // Mother Info
+    motherName: "",
+    motherOccupation: "",
+    motherMobile: "",
+  });  
+
+  useEffect(() => {
+    const admin = JSON.parse(localStorage.getItem("user"));
+    if (admin?.schoolCode && isStudentModalOpen) {
+      setStudentForm((prev) => ({ ...prev, schoolCode: admin.schoolCode }));
+    }
+  }, [isStudentModalOpen]);
+  
 
   // File Inputs
   const [studentFile, setStudentFile] = useState(null);
@@ -155,6 +194,43 @@ export default function ClassList() {
     }
   };
 
+  const handleAddStudentToClass = async (classId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/classes/${classId}/students`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(studentForm),
+      });
+      if (!res.ok) throw new Error("Failed to add student");
+      setStudentForm({ name: "", admissionNumber: "", email: "", password: "" });
+      fetchStudents(classId);
+      showToast("Student added successfully!");
+      setIsStudentModalOpen(false);
+    } catch (error) {
+      showToast("Error adding student", "error");
+    }
+  };
+
+
+  const handleCheckboxChange = (e, setter) => {
+    const { name, checked } = e.target;
+    setter(prev => ({ ...prev, [name]: checked }));
+  };
+
+  const handleFileChange = (e, setForm) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm(prev => ({ ...prev, profilePicture: reader.result })); // Base64 string
+    };
+    reader.readAsDataURL(file);
+  };
+  
   // Handle Class Selection
   const handleClassSelection = (classId) => {
     setSelectedClass(classId);
@@ -263,9 +339,8 @@ export default function ClassList() {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`px-4 py-2 rounded shadow-md text-white ${
-              toast.type === "error" ? "bg-red-600" : "bg-green-600"
-            }`}
+            className={`px-4 py-2 rounded shadow-md text-white ${toast.type === "error" ? "bg-red-600" : "bg-green-600"
+              }`}
           >
             {toast.message}
           </div>
@@ -356,20 +431,36 @@ export default function ClassList() {
                     className="flex items-center justify-between border-b py-2"
                   >
                     <div
-                      onClick={() => handleClassSelection(cls._id)}
-                      className="cursor-pointer"
+                      // onClick={() => handleClassSelection(cls._id)}
+                      onClick={() => router.push(`/dashboard/classes/${cls._id}/students`)}
+                      className="cursor-pointer flex-1"
                     >
                       {cls.name} - {cls.section}
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteClass(cls._id);
-                      }}
-                      className="text-red-600 hover:underline text-sm"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <Link href={`/dashboard/classes/${cls._id}/students`}>
+                        <button className="text-blue-600 hover:underline text-sm">View Students</button>
+                      </Link>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setModalClassId(cls._id);
+                          setIsStudentModalOpen(true);
+                        }}
+                        className="text-green-600 hover:underline text-sm"
+                      >
+                        ➕
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClass(cls._id);
+                        }}
+                        className="text-red-600 hover:underline text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -378,81 +469,104 @@ export default function ClassList() {
         </div>
 
         {/* RIGHT SIDE: Student Actions */}
-        <div className="bg-white p-6 shadow-md rounded-lg">
-          <h2 className="text-lg font-semibold mb-4">Add Student</h2>
-          {!selectedClass ? (
-            <p className="text-red-600">Please select a class first.</p>
-          ) : (
-            <form onSubmit={handleAddStudent}>
-              {["name", "admissionNumber", "email"].map((field) => (
-                <input
-                  key={field}
-                  type="text"
-                  name={field}
-                  placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                  value={studentForm[field]}
-                  onChange={(e) => handleInputChange(e, setStudentForm)}
-                  className="w-full p-2 border rounded mb-2"
-                  required
-                />
-              ))}
+        {isStudentModalOpen && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-lg relative p-6">
+              <h2 className="text-2xl font-bold mb-6 text-center">Add Student</h2>
 
-              <input
-                type="password"
-                name="password"
-                placeholder="Optional Password"
-                value={studentForm.password}
-                onChange={(e) => handleInputChange(e, setStudentForm)}
-                className="w-full p-2 border rounded mb-2"
-              />
               <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+                className="absolute top-3 right-4 text-gray-500 hover:text-black text-xl"
+                onClick={() => setIsStudentModalOpen(false)}
               >
-                ➕ Add Student
+                ✕
               </button>
-            </form>
-          )}
 
-          {/* Bulk Upload for Students */}
-          <div className="mt-6">
-            <label className="block font-medium mb-2">
-              Bulk Upload Students (CSV)
-            </label>
-            <input
-              type="file"
-              onChange={handleBulkStudentUpload}
-              className="w-full border px-3 py-2 rounded"
-            />
-          </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleAddStudentToClass(modalClassId);
+                }}
+                className="space-y-6"
+              >
+                {/* Section 1: Student Info */}
+                <section>
+                  <h3 className="text-lg font-semibold mb-2">Student Info</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" name="name" placeholder="Full Name" value={studentForm.name} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" required />
+                    <input type="text" name="admissionNumber" placeholder="Admission Number" value={studentForm.admissionNumber} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" required />
+                    <input type="email" name="email" placeholder="Email" value={studentForm.email} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" required />
+                    <input type="password" name="password" placeholder="Password (optional)" value={studentForm.password} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <input type="text" name="phone" placeholder="Phone Number" value={studentForm.phone} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <input type="file" name="profilePicture" onChange={(e) => handleFileChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <label className="col-span-2">
+                      <span className="block mb-1 text-sm font-medium text-gray-700">Date of Admission</span>
+                      <input type="date" name="dateOfAdmission" value={studentForm.dateOfAdmission} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    </label>
+                    <input type="number" name="fee" placeholder="Fee" value={studentForm.fee} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <select name="classId" value={studentForm.classId} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" required>
+                      <option value="">Select Class</option>
+                      {classes.map((cls) => (
+                        <option key={cls._id} value={cls._id}>{cls.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </section>
 
-          {/* View Students */}
-          {selectedClass && (
-            <div className="mt-6">
-              <h3 className="text-md font-semibold mb-2">Students in Class</h3>
-              {students[selectedClass]?.length ? (
-                <ul className="space-y-2 max-h-64 overflow-auto">
-                  {students[selectedClass].map((student) => (
-                    <li
-                      key={student._id}
-                      className="flex justify-between items-center bg-gray-100 p-3 rounded"
-                    >
-                      <span>{student.name}</span>
-                      <button
-                        onClick={() => handleDeleteStudent(student._id)}
-                        className="bg-red-600 text-white px-3 py-1 rounded"
-                      >
-                        Delete
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No students in this class</p>
-              )}
+                {/* Section 2: Other Info */}
+                <section>
+                  <h3 className="text-lg font-semibold mb-2">Other Information</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="date" name="dob" value={studentForm.dob} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <select name="gender" value={studentForm.gender} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded">
+                      <option value="">Select Gender</option>
+                      <option>Male</option>
+                      <option>Female</option>
+                      <option>Other</option>
+                    </select>
+                    <label className="flex items-center gap-2 col-span-2">
+                      <input type="checkbox" name="orphan" checked={studentForm.orphan} onChange={(e) => handleCheckboxChange(e, setStudentForm)} />
+                      <span>Orphan</span>
+                    </label>
+                    <input type="text" name="identifiableMark" placeholder="Identifiable Mark" value={studentForm.identifiableMark} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <input type="text" name="religion" placeholder="Religion" value={studentForm.religion} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <input type="number" name="siblings" placeholder="No. of Siblings" value={studentForm.siblings} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <input type="text" name="bloodGroup" placeholder="Blood Group" value={studentForm.bloodGroup} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <input type="text" name="disease" placeholder="Any Disease" value={studentForm.disease} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <textarea name="address" placeholder="Address" value={studentForm.address} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" rows={2}></textarea>
+                  </div>
+                </section>
+
+                {/* Section 3: Father Info */}
+                <section>
+                  <h3 className="text-lg font-semibold mb-2">Father / Guardian Info</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" name="fatherName" placeholder="Father's Name" value={studentForm.fatherName} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <input type="text" name="fatherOccupation" placeholder="Occupation" value={studentForm.fatherOccupation} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <input type="text" name="fatherMobile" placeholder="Mobile Number" value={studentForm.fatherMobile} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <input type="text" name="fatherEducation" placeholder="Education" value={studentForm.fatherEducation} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                  </div>
+                </section>
+
+                {/* Section 4: Mother Info */}
+                <section>
+                  <h3 className="text-lg font-semibold mb-2">Mother Info</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" name="motherName" placeholder="Mother's Name" value={studentForm.motherName} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <input type="text" name="motherOccupation" placeholder="Occupation" value={studentForm.motherOccupation} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                    <input type="text" name="motherMobile" placeholder="Mobile Number" value={studentForm.motherMobile} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
+                  </div>
+                </section>
+
+                {/* Submit Button */}
+                <div className="text-right pt-4">
+                  <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow">
+                    ➕ Add Student
+                  </button>
+                </div>
+              </form>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
