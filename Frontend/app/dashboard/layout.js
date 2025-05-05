@@ -20,7 +20,7 @@ export default function DashboardLayout({ children }) {
       setUser(JSON.parse(userData));
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   const handleSignOut = () => {
     localStorage.removeItem("token");
@@ -40,8 +40,8 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="bg-blue-800 text-white w-64 p-6 shadow-lg hidden md:block">
-        <Link href="/dashboard">
+      <div className="bg-blue-800 text-white w-64 p-6 shadow-lg h-screen fixed top-0 left-0 overflow-y-auto">
+      <Link href="/dashboard">
           <h2 className="text-2xl font-bold mb-6 cursor-pointer hover:underline">
             {user.schoolName || "Dashboard"}
           </h2>
@@ -123,7 +123,7 @@ export default function DashboardLayout({ children }) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6">{children}</div>
-    </div>
+      <div className="ml-64 flex-1 p-6 overflow-y-auto min-h-screen">{children}</div>
+      </div>
   );
 }

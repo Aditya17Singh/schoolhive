@@ -307,7 +307,7 @@ export default function ClassList() {
   // Loading Skeleton
   if (loading) {
     return (
-      <div className="p-6 grid md:grid-cols-2 gap-6">
+      <div className="p-6 gap-6">
         {/* Skeleton for Left Side */}
         <div className="bg-white p-6 shadow-md rounded-lg space-y-4 animate-pulse">
           <div className="h-6 bg-gray-300 rounded w-1/2"></div>
@@ -349,7 +349,7 @@ export default function ClassList() {
 
       <h1 className="text-2xl font-bold mb-6">Manage Classes & Students</h1>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid gap-6">
         {/* LEFT SIDE: Class Actions */}
         <div className="bg-white p-6 shadow-md rounded-lg">
           <h2 className="text-lg font-semibold mb-4">Create or Select Class</h2>
@@ -441,7 +441,7 @@ export default function ClassList() {
                       <Link href={`/dashboard/classes/${cls._id}/students`}>
                         <button className="text-blue-600 hover:underline text-sm">View Students</button>
                       </Link>
-                      <button
+                      {/* <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setModalClassId(cls._id);
@@ -450,7 +450,7 @@ export default function ClassList() {
                         className="text-green-600 hover:underline text-sm"
                       >
                         ➕
-                      </button>
+                      </button> */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -471,25 +471,25 @@ export default function ClassList() {
         {/* RIGHT SIDE: Student Actions */}
         {isStudentModalOpen && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-lg relative p-6">
-              <h2 className="text-2xl font-bold mb-6 text-center">Add Student</h2>
+            {/* <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-lg relative p-6"> */}
+              {/* <h2 className="text-2xl font-bold mb-6 text-center">Add Student</h2> */}
 
-              <button
+              {/* <button
                 className="absolute top-3 right-4 text-gray-500 hover:text-black text-xl"
                 onClick={() => setIsStudentModalOpen(false)}
               >
                 ✕
-              </button>
+              </button> */}
 
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handleAddStudentToClass(modalClassId);
+                  // handleAddStudentToClass(modalClassId);
                 }}
                 className="space-y-6"
               >
                 {/* Section 1: Student Info */}
-                <section>
+                {/* <section>
                   <h3 className="text-lg font-semibold mb-2">Student Info</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <input type="text" name="name" placeholder="Full Name" value={studentForm.name} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" required />
@@ -510,10 +510,10 @@ export default function ClassList() {
                       ))}
                     </select>
                   </div>
-                </section>
+                </section> */}
 
                 {/* Section 2: Other Info */}
-                <section>
+                {/* <section>
                   <h3 className="text-lg font-semibold mb-2">Other Information</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <input type="date" name="dob" value={studentForm.dob} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
@@ -534,10 +534,10 @@ export default function ClassList() {
                     <input type="text" name="disease" placeholder="Any Disease" value={studentForm.disease} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
                     <textarea name="address" placeholder="Address" value={studentForm.address} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" rows={2}></textarea>
                   </div>
-                </section>
+                </section> */}
 
                 {/* Section 3: Father Info */}
-                <section>
+                {/* <section>
                   <h3 className="text-lg font-semibold mb-2">Father / Guardian Info</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <input type="text" name="fatherName" placeholder="Father's Name" value={studentForm.fatherName} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
@@ -545,26 +545,26 @@ export default function ClassList() {
                     <input type="text" name="fatherMobile" placeholder="Mobile Number" value={studentForm.fatherMobile} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
                     <input type="text" name="fatherEducation" placeholder="Education" value={studentForm.fatherEducation} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
                   </div>
-                </section>
+                </section> */}
 
                 {/* Section 4: Mother Info */}
-                <section>
+                {/* <section>
                   <h3 className="text-lg font-semibold mb-2">Mother Info</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <input type="text" name="motherName" placeholder="Mother's Name" value={studentForm.motherName} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
                     <input type="text" name="motherOccupation" placeholder="Occupation" value={studentForm.motherOccupation} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
                     <input type="text" name="motherMobile" placeholder="Mobile Number" value={studentForm.motherMobile} onChange={(e) => handleInputChange(e, setStudentForm)} className="w-full p-2 border rounded" />
                   </div>
-                </section>
+                </section> */}
 
                 {/* Submit Button */}
-                <div className="text-right pt-4">
+                {/* <div className="text-right pt-4">
                   <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow">
                     ➕ Add Student
                   </button>
-                </div>
+                </div> */}
               </form>
-            </div>
+            {/* </div> */}
           </div>
         )}
       </div>

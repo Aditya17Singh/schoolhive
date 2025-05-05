@@ -5,7 +5,7 @@ const studentSchema = new mongoose.Schema({
   // Section 1: Basic Student Info
   name: { type: String, required: true },
   admissionNumber: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, unique: true },
   password: { type: String },
   phone: { type: String }, // mobile number
   profilePicture: { type: String }, // URL or path to uploaded image

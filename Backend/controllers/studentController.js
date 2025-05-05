@@ -15,37 +15,37 @@ exports.getStudentsByClass = async (req, res) => {
 
 exports.createStudentInClass = async (req, res) => {
   try {
-    const { name, admissionNumber, email, phone } = req.body;
-    const classId = req.params.classId;
+    if (!req.body) {
+      return res.status(400).json({ error: "No form data received" });
+    }
+        const classId = req.params.classId;
 
-    // Step 1: Find the class and school
+     // Step 1: Find the class and school
     const classDoc = await Class.findById(classId).populate("schoolId");
     if (!classDoc) return res.status(404).json({ error: "Class not found" });
+    
+    const schoolCode = classDoc.schoolId.code;
+    const studentData = {
+      ...req.body,
+      class: req.params.classId,
+      orphan: req.body.orphan === "true", // checkbox sends strings
+      schoolCode
+    };
 
-    const schoolCode = classDoc.schoolId.code; // ✅ assuming School has `code`
+    // Handle file
+    if (req.file) {
+      studentData.profilePicture = req.file.buffer; // Or save to disk and use file.path
+    }
 
-    // Step 2: Generate password from schoolCode + admissionNumber
-    const password = `${schoolCode}${admissionNumber}`;
-
-    // Step 3: Create the student (now with schoolCode field)
-    const newStudent = new Student({
-      name,
-      admissionNumber,
-      email,
-      phone,
-      password,
-      class: classId,
-      schoolCode,
-      ...req.body // This ensures profilePicture, dob, fatherName, etc. get saved
-    });
-
+    const newStudent = new Student(studentData);
     await newStudent.save();
+
     res.status(201).json(newStudent);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: "Error creating student", details: err.message });
   }
 };
-
 
 exports.getAllStudents = async (req, res) => {
   try {
