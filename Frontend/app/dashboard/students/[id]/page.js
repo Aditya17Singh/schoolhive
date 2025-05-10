@@ -179,33 +179,30 @@ export default function StudentDetailsPage() {
 
         {/* Section 2: Academic */}
         <Section title="Academic Details">
-  {editMode ? (
-    <Field
-      label="Class & Section"
-      value={formData.classId || ""}
-      editable={true}
-      type="select"
-      options={classes.map((cls) => ({
-        label: `${cls.name} - ${cls.section}`,
-        value: cls._id,
-      }))}
-      onChange={(val) => handleChange("classId", val)}
-    />
-  ) : (
-    <Field
-      label="Class & Section"
-      value={
-        student.class
-          ? `${student.class.name} - ${student.class.section}`
-          : ""
-      }
-      editable={false}
-    />
-  )}
+          {editMode ? (
+            <Field
+              label="Class & Section"
+              value={formData.classId || ""}
+              editable={true}
+              type="select"
+              options={classes.map((cls) => ({
+                label: `${cls.name} - ${cls.section}`,
+                value: cls._id,
+              }))}
+              onChange={(val) => handleChange("classId", val)}
+            />
+          ) : (
+            <Field
+              label="Class & Section"
+              value={
+                student.class
+                  ? `${student.class.name} - ${student.class.section}`
+                  : ""
+              }
+              editable={false}
+            />
+          )}
         </Section>
-
-
-
         {/* Section 3: Other Info */}
         <Section title="Other Information">
           <Field

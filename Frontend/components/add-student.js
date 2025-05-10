@@ -13,7 +13,6 @@ export default function AddStudentModal({
     name: "",
     admissionNumber: "",
     email: "",
-    password: "",
     phone: "",
     profilePicture: null,
     dateOfAdmission: "",

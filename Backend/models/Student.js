@@ -6,13 +6,11 @@ const studentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   admissionNumber: { type: String, required: true, unique: true },
   email: { type: String, unique: true },
-  password: { type: String },
   phone: { type: String }, // mobile number
   profilePicture: { type: String }, // URL or path to uploaded image
   dateOfAdmission: { type: Date },
   fee: { type: Number },
   class: { type: mongoose.Schema.Types.ObjectId, ref: "Class" },
-  schoolCode: { type: String, required: true },
 
   // Section 2: Other Information
   dob: { type: Date },

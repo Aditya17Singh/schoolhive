@@ -2,164 +2,111 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 
 export default function ClassStudentsPage() {
-  const { id: classId } = useParams(); // get [id] from the URL
+  const { id: classId } = useParams();
   const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [classInfo, setClassInfo] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [studentForm, setStudentForm] = useState({
-    name: "",
-    admissionNumber: "",
-    email: "",
-    password: "",
-    phone: "",
-    profilePicture: null,
-    dateOfAdmission: "",
-    fee: "",
-    classId: classId || "", // default to current classId
-  });
-  const [toasts, setToasts] = useState([]);
-  const showToast = (message, type = "success") => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(
-      () => setToasts((prev) => prev.filter((toast) => toast.id !== id)),
-      3000
-    );
-  };
+  const [loading, setLoading] = useState(true);
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
   const fetchClassInfo = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/classes/${classId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      if (!res.ok) throw new Error("Failed to fetch class info");
-      const data = await res.json();
-      setClassInfo(data);
+      const res = await axios.get(
+        `http://localhost:5000/api/classes/${classId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setClassInfo(res.data);
     } catch (error) {
       console.error("Error fetching class info:", error);
     }
   };
+
   const fetchStudents = async () => {
     try {
-      const res = await fetch(
+      const res = await axios.get(
         `http://localhost:5000/api/classes/${classId}/students`,
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      if (!res.ok) throw new Error("Failed to fetch students");
-      const data = await res.json();
-      setStudents(data);
+      setStudents(res.data);
     } catch (error) {
       console.error("Error fetching students:", error);
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     if (classId) {
-      setStudentForm((prev) => ({ ...prev, classId }));
-      fetchStudents();
       fetchClassInfo();
+      fetchStudents();
     }
   }, [classId]);
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setStudentForm((prev) => ({ ...prev, [name]: value }));
-  };
-  const handleCheckboxChange = (e) => {
-    const { name, checked } = e.target;
-    setStudentForm((prev) => ({ ...prev, [name]: checked }));
-  };
-  const handleFileChange = (e) => {
-    setStudentForm((prev) => ({ ...prev, profilePicture: e.target.files[0] }));
-  };
-  const handleAddStudent = async () => {
-    try {
-      const res = await fetch(
-        `http://localhost:5000/api/classes/${studentForm.classId}/students`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify(studentForm),
-        }
-      );
-      if (!res.ok) throw new Error("Failed to add student");
-      // Reset the form after successful addition
-      setStudentForm({
-        name: "",
-        admissionNumber: "",
-        email: "",
-        password: "",
-        phone: "",
-        profilePicture: null,
-        dateOfAdmission: "",
-        fee: "",
-        classId: classId || "", // maintain classId
-        dob: "",
-        gender: "",
-        orphan: false,
-        identifiableMark: "",
-        religion: "",
-        siblings: "",
-        bloodGroup: "",
-        disease: "",
-        address: "",
-        fatherName: "",
-        fatherOccupation: "",
-        fatherMobile: "",
-        fatherEducation: "",
-        motherName: "",
-        motherOccupation: "",
-        motherMobile: "",
-      });
-      // Fetch students again to update the list
-      fetchStudents();
-      // Close modal and show success toast
-      setIsModalOpen(false);
-      showToast("Student added successfully!");
-    } catch (error) {
-      console.error("Error adding student:", error);
-      showToast("Error adding student", "error");
-    }
-  };
+
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">
-          Students in Class {classInfo?.name}
-          {classInfo?.section ? classInfo.section.toUpperCase() : ""}
+          Students - Class {classInfo?.name} {classInfo?.section?.toUpperCase()}
         </h1>
+        <div className="flex items-center space-x-3">
+          <Link
+            href="/dashboard/students"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg shadow transition"
+          >
+            Manage Students
+          </Link>
+          <Link
+            href="/dashboard/classes"
+            className="text-sm text-gray-600 hover:underline"
+          >
+            ← Back to Classes
+          </Link>
+        </div>
       </div>
+
       {loading ? (
-        <p>Loading students...</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-gray-100 p-4 rounded-lg shadow animate-pulse"
+            >
+              <div className="h-4 bg-gray-300 mb-2 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-300 mb-2 rounded w-1/2"></div>
+              <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+            </div>
+          ))}
+        </div>
+      ) : students.length === 0 ? (
+        <p className="text-red-500">No students found in this class.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {students.map((student) => (
             <Link
               href={`/dashboard/students/${student._id}`}
               key={student._id}
-              className="border p-4 rounded shadow hover:bg-gray-50 transition block"
+              className="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-gray-50 transition duration-200 border"
             >
-              <p>
-                <strong>Name:</strong> {student.name}
+              <h2 className="text-lg font-semibold mb-1">{student.name}</h2>
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Admission No:</span>{" "}
+                {student.admissionNumber}
               </p>
-              <p>
-                <strong>Admission No:</strong> {student.admissionNumber}
-              </p>
-              <p>
-                <strong>Email:</strong> {student.email}
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Email:</span> {student.email}
               </p>
             </Link>
           ))}
         </div>
       )}
-    
     </div>
   );
 }

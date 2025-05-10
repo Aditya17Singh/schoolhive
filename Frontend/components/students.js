@@ -8,6 +8,7 @@ import AddStudentModal from "./add-student";
 export default function AdminStudentDashboard() {
   const [students, setStudents] = useState([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false); 
@@ -44,7 +45,17 @@ export default function AdminStudentDashboard() {
   }, [fetchStudents, schoolCode]);
 
   useEffect(() => {
-    const keyword = search.toLowerCase();
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300); 
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [search]);
+
+  useEffect(() => {
+    const keyword = debouncedSearch.toLowerCase();
     const result = students.filter(
       (s) =>
         s.name.toLowerCase().includes(keyword) ||
@@ -52,7 +63,7 @@ export default function AdminStudentDashboard() {
         (s.email && s.email.toLowerCase().includes(keyword))
     );
     setFiltered(result);
-  }, [search, students]);
+  }, [debouncedSearch, students]);
 
   const deleteStudent = async (id) => {
     if (!confirm("Are you sure you want to delete this student?")) return;

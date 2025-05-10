@@ -105,8 +105,10 @@ exports.deleteClass = async (req, res) => {
   try {
     const classId = req.params.id;
 
-    // 1. Delete all students in this class
-    await Student.deleteMany({ class: classId });
+    await Student.updateMany(
+      { class: classId },
+      { $unset: { class: "" } } 
+    );
 
     // 2. Delete the class itself
     const deletedClass = await Class.findByIdAndDelete(classId);
@@ -114,7 +116,7 @@ exports.deleteClass = async (req, res) => {
       return res.status(404).json({ error: "Class not found" });
     }
 
-    res.json({ message: "Class and related students deleted successfully" });
+    res.json({ message: "Class deleted, students' references removed successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

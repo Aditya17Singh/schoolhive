@@ -18,18 +18,24 @@ exports.createStudentInClass = async (req, res) => {
     if (!req.body) {
       return res.status(400).json({ error: "No form data received" });
     }
-        const classId = req.params.classId;
+    const { admissionNumber } = req.body;
+      const classId = req.params.classId;
 
      // Step 1: Find the class and school
     const classDoc = await Class.findById(classId).populate("schoolId");
     if (!classDoc) return res.status(404).json({ error: "Class not found" });
     
     const schoolCode = classDoc.schoolId.code;
+
+    // Step 2: Generate password from schoolCode + admissionNumber
+    const password = `${schoolCode}${admissionNumber}`;
+
     const studentData = {
       ...req.body,
       class: req.params.classId,
       orphan: req.body.orphan === "true", // checkbox sends strings
-      schoolCode
+      schoolCode,
+      password
     };
 
     // Handle file
@@ -61,7 +67,6 @@ exports.getAllStudents = async (req, res) => {
   }
 };
 
-
 exports.getStudentById = async (req, res) => {
   try {
     const student = await Student.findById(req.params.id).populate("class");
@@ -72,13 +77,31 @@ exports.getStudentById = async (req, res) => {
   }
 };
 
+// In your studentController.js
 exports.updateStudent = async (req, res) => {
   try {
-    const updatedStudent = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedStudent) return res.status(404).json({ error: "Student not found" });
-    res.json(updatedStudent);
+    const studentId = req.params.id;
+    const updateData = req.body; 
+
+    //still to find
+    if (updateData.classId) {
+      updateData.class = updateData.classId;
+      delete updateData.classId;
+    }
+
+    const updatedStudent = await Student.findByIdAndUpdate(
+      studentId,
+      updateData,
+      { new: true } // this will return the updated student
+    ).populate('class'); // optionally populate to get the class details
+
+    if (!updatedStudent) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    res.json(updatedStudent); // send the updated student back to the frontend
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
