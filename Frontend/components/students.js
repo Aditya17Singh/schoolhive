@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
-import AddStudentModal from "./add-student"; 
+import AddStudentModal from "./add-student";
 
 export default function AdminStudentDashboard() {
   const [students, setStudents] = useState([]);
@@ -11,7 +11,7 @@ export default function AdminStudentDashboard() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false); 
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
   const schoolCode = user?.schoolCode;
@@ -47,7 +47,7 @@ export default function AdminStudentDashboard() {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 300); 
+    }, 300);
 
     return () => {
       clearTimeout(handler);
@@ -74,7 +74,8 @@ export default function AdminStudentDashboard() {
     }
     try {
       const res = await axios.delete(
-        `http://localhost:5000/api/students/${id}`, {
+        `http://localhost:5000/api/students/${id}`,
+        {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -87,17 +88,21 @@ export default function AdminStudentDashboard() {
   };
 
   const deleteAllStudents = async () => {
-    const confirmDelete = confirm(
-      "⚠️ Are you sure you want to delete ALL students in this school?"
+    const confirmation = prompt(
+      "⚠️ This action will DELETE ALL STUDENTS from the school.\n\nType DELETE ALL to confirm:"
     );
-    if (!confirmDelete) return;
-  
+
+    if (confirmation !== "DELETE ALL") {
+      alert("❌ Deletion cancelled. Confirmation phrase did not match.");
+      return;
+    }
+
     const token = localStorage.getItem("token");
     if (!token) {
       console.error("❌ No token found in localStorage");
       return;
     }
-  
+
     try {
       const res = await axios.delete(
         `http://localhost:5000/api/students?schoolCode=${schoolCode}`,
@@ -108,11 +113,11 @@ export default function AdminStudentDashboard() {
         }
       );
       console.log("✅ All students deleted successfully:", res.data);
-      fetchStudents(); 
+      fetchStudents();
     } catch (err) {
       console.error("❌ Delete all failed:", err.response?.data || err.message);
     }
-  };  
+  };
 
   const handleAddStudent = () => {
     fetchStudents();

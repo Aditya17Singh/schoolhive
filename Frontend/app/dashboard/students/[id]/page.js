@@ -10,7 +10,7 @@ export default function StudentDetailsPage() {
   const [formData, setFormData] = useState({});
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [classes, setClasses] = useState([]); // To store class options
+  const [classes, setClasses] = useState([]); 
 
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -72,7 +72,7 @@ export default function StudentDetailsPage() {
   
       setStudent({
         ...res.data,
-        class: updatedClass || res.data.class // fallback if needed
+        class: updatedClass || res.data.class 
       });
   
       setEditMode(false);
@@ -168,12 +168,6 @@ export default function StudentDetailsPage() {
             value={formData.fee}
             editable={editMode}
             onChange={(val) => handleChange("fee", val)}
-          />
-          <Field
-            label="School Code"
-            value={formData.schoolCode}
-            editable={editMode}
-            onChange={(val) => handleChange("schoolCode", val)}
           />
         </Section>
 
