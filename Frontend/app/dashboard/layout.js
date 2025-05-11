@@ -112,7 +112,7 @@ export default function DashboardLayout({ children }) {
             </h2>
           </Link>
           {/* Collapse Button (←) shown when sidebar is open) */}
-          {sidebarWidth !== 0 && (
+          {/* {sidebarWidth !== 0 && (
             <button
               onClick={toggleSidebar}
               className="absolute z-20 hidden group-hover:block  left-[calc(100%+4px)] cursor-pointer  border rounded-full shadow w-8 h-8 flex items-center"
@@ -120,10 +120,10 @@ export default function DashboardLayout({ children }) {
             >
               ←
             </button>
-          )}
+          )} */}
 
           {/* Expand Button (→) shown when sidebar is collapsed */}
-          {sidebarWidth === 0 && (
+          {/* {sidebarWidth === 0 && (
             <button
               onClick={toggleSidebar}
               className="absolute z-20 top-4 hidden group-hover:block cursor-pointer bg-black border rounded-full shadow p-1 w-8 h-8 flex items-center"
@@ -131,7 +131,7 @@ export default function DashboardLayout({ children }) {
             >
               →
             </button>
-          )}
+          )} */}
         </div>
         <ul>
           <li className="mb-4">
