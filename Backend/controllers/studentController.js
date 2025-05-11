@@ -15,36 +15,43 @@ exports.getStudentsByClass = async (req, res) => {
 
 exports.createStudentInClass = async (req, res) => {
   try {
-    const { name, admissionNumber, email, phone } = req.body;
-    const classId = req.params.classId;
+    if (!req.body) {
+      return res.status(400).json({ error: "No form data received" });
+    }
+    const { admissionNumber } = req.body;
+      const classId = req.params.classId;
 
-    // Step 1: Find the class and school
+     // Step 1: Find the class and school
     const classDoc = await Class.findById(classId).populate("schoolId");
     if (!classDoc) return res.status(404).json({ error: "Class not found" });
-
-    const schoolCode = classDoc.schoolId.code; // ✅ assuming School has `code`
+    
+    const schoolCode = classDoc.schoolId.code;
 
     // Step 2: Generate password from schoolCode + admissionNumber
     const password = `${schoolCode}${admissionNumber}`;
 
-    // Step 3: Create the student (now with schoolCode field)
-    const newStudent = new Student({
-      name,
-      admissionNumber,
-      email,
-      phone,
-      password, // plain, will be hashed by the schema
-      class: classId,
-      schoolCode, // ✅ important for login!
-    });
+    const studentData = {
+      ...req.body,
+      class: req.params.classId,
+      orphan: req.body.orphan === "true", // checkbox sends strings
+      schoolCode,
+      password
+    };
 
+    // Handle file
+    if (req.file) {
+      studentData.profilePicture = req.file.buffer; // Or save to disk and use file.path
+    }
+
+    const newStudent = new Student(studentData);
     await newStudent.save();
+
     res.status(201).json(newStudent);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: "Error creating student", details: err.message });
   }
 };
-
 
 exports.getAllStudents = async (req, res) => {
   try {
@@ -60,7 +67,6 @@ exports.getAllStudents = async (req, res) => {
   }
 };
 
-
 exports.getStudentById = async (req, res) => {
   try {
     const student = await Student.findById(req.params.id).populate("class");
@@ -71,13 +77,31 @@ exports.getStudentById = async (req, res) => {
   }
 };
 
+// In your studentController.js
 exports.updateStudent = async (req, res) => {
   try {
-    const updatedStudent = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedStudent) return res.status(404).json({ error: "Student not found" });
-    res.json(updatedStudent);
+    const studentId = req.params.id;
+    const updateData = req.body; 
+
+    //still to find
+    if (updateData.classId) {
+      updateData.class = updateData.classId;
+      delete updateData.classId;
+    }
+
+    const updatedStudent = await Student.findByIdAndUpdate(
+      studentId,
+      updateData,
+      { new: true } // this will return the updated student
+    ).populate('class'); // optionally populate to get the class details
+
+    if (!updatedStudent) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    res.json(updatedStudent); // send the updated student back to the frontend
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
