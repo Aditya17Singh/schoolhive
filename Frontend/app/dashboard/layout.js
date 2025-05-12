@@ -163,10 +163,18 @@ export default function DashboardLayout({ children }) {
               </li>
               <li className="mb-4">
                 <Link
-                  href="/dashboard/teachers"
+                  href="/dashboard/lesson"
                   className="text-lg hover:text-blue-400"
                 >
-                  Teachers
+                  Lesson
+                </Link>
+              </li>
+              <li className="mb-4">
+                <Link
+                  href="/dashboard/employee"
+                  className="text-lg hover:text-blue-400"
+                >
+                  Employees
                 </Link>
               </li>
               <li className="mb-4">

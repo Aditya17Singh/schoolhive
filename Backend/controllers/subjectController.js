@@ -12,7 +12,7 @@ exports.createSubject = async (req, res) => {
 
 exports.getAllSubjects = async (req, res) => {
   try {
-    const subjects = await Subject.find().populate("teacher", "firstName lastName").populate("class");
+    const subjects = await Subject.find().populate("employee", "firstName lastName").populate("class");
     res.json(subjects);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -21,7 +21,7 @@ exports.getAllSubjects = async (req, res) => {
 
 exports.getSubjectById = async (req, res) => {
   try {
-    const subject = await Subject.findById(req.params.id).populate("teacher", "firstName lastName").populate("class");
+    const subject = await Subject.findById(req.params.id).populate("employee", "firstName lastName").populate("class");
     if (!subject) return res.status(404).json({ error: "Subject not found" });
     res.json(subject);
   } catch (err) {
