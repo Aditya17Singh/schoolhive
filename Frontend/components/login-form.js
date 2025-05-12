@@ -73,6 +73,16 @@ export default function LoginForm() {
           Sign In
         </h2>
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+        <div className="mt-4 text-center">
+          <Link
+            href="/schools/register"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 shadow h-9 group relative px-5 py-2.5 text-sm font-medium text-white bg-[#003d3d] hover:bg-[#003d3d]/90 rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-gray-900/20 border border-green-200 hover:border-green-300"
+          >
+            <div className="relative flex items-center gap-2">
+              <span>Get Started</span>
+            </div>
+          </Link>
+        </div>
         <form onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-medium text-gray-700">
