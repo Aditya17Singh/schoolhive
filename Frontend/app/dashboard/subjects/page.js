@@ -21,7 +21,7 @@ export default function SubjectDashboard() {
 
   const fetchTeachersAndClasses = async () => {
     const [tRes, cRes] = await Promise.all([
-      fetch("http://localhost:5000/api/teachers", {
+      fetch("http://localhost:5000/api/employee", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -76,7 +76,7 @@ export default function SubjectDashboard() {
     if (res.ok) fetchSubjects();
   };
 
-  const filteredSubjects = subjects.filter((subject) =>
+  const filteredSubjects = subjects.length > 0 && subjects?.filter((subject) =>
     subject.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -179,7 +179,7 @@ export default function SubjectDashboard() {
           </tr>
         </thead>
         <tbody className="text-center">
-          {filteredSubjects.map((s) => (
+          {filteredSubjects && filteredSubjects.map((s) => (
             <tr key={s._id} className="border-t">
               <td className="p-2">{s.name}</td>
               <td className="p-2">{s.code}</td>

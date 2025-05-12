@@ -6,7 +6,6 @@ require("dotenv").config();
 // Import Routes
 const adminRoutes = require("./routes/adminRoutes");
 const classRoutes = require("./routes/classRoutes");
-const teacherRoutes = require("./routes/teacherRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const subjectRoutes = require("./routes/subjectRoutes");
 const noticeRoutes = require("./routes/noticeRoutes");
@@ -14,7 +13,8 @@ const complaintRoutes = require("./routes/complaintRoutes");
 const statsRoutes = require("./routes/statsRoutes");
 const schoolRoutes = require("./routes/schoolRoute");
 const loginRoutes = require("./routes/loginRoutes");  
-
+const lessonRoutes = require("./routes/lessonRoute");
+const employeeRoutes = require("./routes/employeeRoute");
 const app = express();
 
 app.use(cors({
@@ -26,10 +26,10 @@ app.use(cors({
 app.use(cors());
 app.use(express.json());
 
-
+app.use("/api/lessons", lessonRoutes);
+app.use("/api/employees", employeeRoutes);
 app.use("/api/schools", adminRoutes);
 app.use("/api/classes", classRoutes);
-app.use("/api/teachers", teacherRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/subjects", subjectRoutes);
 app.use("/api/notices", noticeRoutes);
