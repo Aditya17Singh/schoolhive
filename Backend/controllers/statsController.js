@@ -1,5 +1,5 @@
 const Class = require("../models/Class");
-const Teacher = require("../models/Teacher");
+const Employee = require("../models/Employee");
 const Student = require("../models/Student");
 
 exports.getStats = async (req, res) => {
@@ -18,7 +18,7 @@ exports.getStats = async (req, res) => {
 
     const [totalClasses, totalTeachers, totalStudents] = await Promise.all([
       Class.countDocuments({ schoolId }),
-      Teacher.countDocuments({ schoolId }),
+      Employee.countDocuments({ schoolId }),
       Student.countDocuments({ schoolCode }),
     ]);
 
