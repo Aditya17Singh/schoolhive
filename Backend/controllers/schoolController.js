@@ -8,7 +8,7 @@ exports.registerSchool = async (req, res) => {
       name,
       shortName,
       prefix,
-      code,
+      // code,
       contactEmail,
       contactPhone,
       password,
@@ -19,22 +19,26 @@ exports.registerSchool = async (req, res) => {
     } = req.body;
 
     // Check for duplicate school code
-    const existing = await School.findOne({ code });
-    if (existing) {
-      return res.status(400).json({ message: "School code already exists" });
-    }
+    // const existing = await School.findOne({ code });
+    // if (existing) {
+    //   return res.status(400).json({ message: "School code already exists" });
+    // }
 
     // Create the school
     const school = await School.create({
       name,
       shortName,
       prefix,
-      code,
+      // code,
       contactEmail,
       contactPhone,
       password, // ⚠️ In production, hash this
       logoUrl,
       address,
+      academicYear: {
+        start: academicYear.start,
+        end: academicYear.end,
+      },
     });
 
     // Create Academic Year linked to this school

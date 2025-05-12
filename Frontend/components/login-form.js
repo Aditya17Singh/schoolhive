@@ -5,7 +5,6 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-
 export default function LoginForm() {
   const [role, setRole] = useState("admin");
   const [name, setName] = useState("");
@@ -13,34 +12,38 @@ export default function LoginForm() {
   const [schoolCode, setSchoolCode] = useState("");
   const [admissionNumber, setAdmissionNumber] = useState("");
   const [employeeId, setEmployeeId] = useState("");
+  const [organizationEmail, setOrganizationEmail] = useState("");  // For organization
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (
       (role === "admin" && (!name || !mobile || !password)) ||
       (role === "student" && (!schoolCode || !admissionNumber || !password)) ||
-      (role === "employee" && (!schoolCode || !employeeId || !password))
+      (role === "employee" && (!schoolCode || !employeeId || !password)) ||
+      (role === "organization" && (!organizationEmail || !password))  // Organization role validation
     ) {
       setError("All fields are required.");
       return;
     }
-  
+
     setError("");
-  
+
     let payload = { role, password };
-  
+
     if (role === "admin") {
       payload = { name, mobile, password, role, schoolCode };
     } else if (role === "student") {
       payload = { schoolCode, admissionNumber, password, role };
     } else if (role === "employee") {
       payload = { schoolCode, employeeId, password, role };
+    } else if (role === "organization") {
+      payload = { organizationEmail, password, role };  // Organization role payload
     }
-  
+
     try {
       const res = await fetch("http://localhost:5000/api/login", {
         method: "POST",
@@ -48,7 +51,7 @@ export default function LoginForm() {
         credentials: "include", // If using cookies for JWT
         body: JSON.stringify(payload),
       });
-  
+
       const data = await res.json();
         
       if (res.ok) {
@@ -57,8 +60,8 @@ export default function LoginForm() {
 
         // Redirect to dashboard
         router.push("/dashboard");
-        } else {
-          setError(data.message || "Login failed");
+      } else {
+        setError(data.message || "Login failed");
       }
     } catch (err) {
       console.error(err);
@@ -96,6 +99,7 @@ export default function LoginForm() {
               <option value="admin">Admin</option>
               <option value="student">Student</option>
               <option value="employee">Employee</option>
+              <option value="organization">Organization</option> {/* New role */}
             </select>
           </div>
 
@@ -192,6 +196,23 @@ export default function LoginForm() {
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value)}
                   placeholder="Enter employee ID"
+                  className="mt-1 w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+            </>
+          )}
+
+          {role === "organization" && (
+            <>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Organization Email
+                </label>
+                <input
+                  type="email"
+                  value={organizationEmail}
+                  onChange={(e) => setOrganizationEmail(e.target.value)}
+                  placeholder="Enter organization email"
                   className="mt-1 w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
               </div>
