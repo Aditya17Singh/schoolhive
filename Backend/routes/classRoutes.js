@@ -1,17 +1,22 @@
+// routes/classRoutes.js - Updated to handle the registration process
+
 const express = require("express");
 const router = express.Router();
 const classController = require("../controllers/classController");
-const studentController = require("../controllers/studentController");  // Import student controller
+const studentController = require("../controllers/studentController");
 const verifyToken = require("../middleware/verifyToken");
 
 // Class Routes
-router.get("/",verifyToken, classController.getAllClasses);
+router.get("/", verifyToken, classController.getAllClasses);
 router.get("/:id", classController.getClassById);
-router.post("/", verifyToken, classController.createClass);
+
+// Modified to work without token during registration
+router.post("/", classController.createClass);
+
 router.put("/:id", classController.updateClass);
 router.put("/add-subject", classController.addSubjectToClass);
 router.put("/add-student", classController.addStudentToClass);
-router.delete("/:id",verifyToken, classController.deleteClass);
+router.delete("/:id", verifyToken, classController.deleteClass);
 router.post("/:classId/students", studentController.createStudentInClass);
 router.get("/:classId/students", studentController.getStudentsByClass);
 

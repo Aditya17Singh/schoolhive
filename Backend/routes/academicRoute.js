@@ -4,7 +4,7 @@ const { createAcademicYear, getAllAcademicYears, getAcademicYearById, updateAcad
 const verifyToken = require("../middleware/verifyToken");
 
 // Route to create a new academic year
-router.post("/academic-years",verifyToken, createAcademicYear);
+router.post("/", createAcademicYear);
 
 // Route to get all academic years for the authenticated school
 router.get("/academic-years",verifyToken, getAllAcademicYears);

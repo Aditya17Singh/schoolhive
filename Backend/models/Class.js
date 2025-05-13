@@ -10,7 +10,7 @@ const classSchema = new mongoose.Schema({
   },
   subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
   students: [{ type: mongoose.Schema.Types.ObjectId, ref: "Student" }],
-  schoolId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true }, // Updated ref to Organization
+  schoolId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true }, 
 });
 
 // Unique index to prevent duplicate classes in the same school

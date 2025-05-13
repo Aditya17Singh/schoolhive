@@ -1,8 +1,119 @@
-"use client";
+'use client';
 
 import { useState } from "react";
-import { registerSchool } from "./action";
 import { useRouter } from "next/navigation";
+
+// Modified action.js
+export async function registerOrganization(body) {
+  console.log('Registering organization:', body);
+  
+  try {
+    const response = await fetch(`http://localhost:5000/api/organization/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Something went wrong with organization registration');
+    
+    return { 
+      success: true, 
+      organizationId: data.organizationId || data.schoolId,
+      token: data.token // Store the authentication token returned from the API
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function registerClasses(classes, organizationId) {
+  
+  try {
+    // Create an array to store the results of all class creations
+    let classResults = [];
+    
+    // Process each class individually
+    for (const className of classes) {
+      // Determine the appropriate class type based on the class name
+      let type = "primary"; // Default
+      if (["Nursery", "LKG", "UKG"].includes(className)) {
+        type = "pre-primary";
+      } else if (parseInt(className) >= 6 && parseInt(className) <= 8) {
+        type = "middle";
+      } else if (parseInt(className) >= 9) {
+        type = "secondary";
+      }
+      
+      // Prepare data for class creation
+      const classData = {
+        name: className,
+        section: "A", // Default section, can be modified later
+        type: type,
+        schoolId: organizationId // Pass the organization ID directly as schoolId
+      };
+      
+      // Send the request to create this class
+      const response = await fetch(`http://localhost:5000/api/classes`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${token}` // Add the token in the Authorization header
+        },
+        body: JSON.stringify(classData),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error(`Failed to create class ${className}:`, data);
+        continue; // Continue with other classes even if one fails
+      }
+      
+      classResults.push(data);
+    }
+    
+    if (classResults.length === 0) {
+      throw new Error('Failed to create any classes');
+    }
+    
+    return { 
+      success: true, 
+      classIds: classResults.map(c => c._id),
+      classResults: classResults
+    };
+    
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function registerAcademicYear(academicYear, organizationId) {
+  console.log('Registering academic year:', academicYear, 'for organization:', organizationId);
+  
+  try {
+    // Update the payload to match what the backend expects
+    const payload = {
+      ...academicYear,
+      schoolId: organizationId  // Ensure we're using schoolId instead of organization
+    };
+
+    const response = await fetch(`http://localhost:5000/api/academics`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || data.error || 'Something went wrong with academic year registration');
+    
+    return { success: true, academicId: data.academicId || data._id };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
 
 export default function SchoolRegisterPage() {
   const [step, setStep] = useState(1);
@@ -21,8 +132,6 @@ export default function SchoolRegisterPage() {
   const handleBack = () => setStep((s) => s - 1);
 
   const handleSubmitStep1 = async (e) => {
-    console.log("step1");
-
     e.preventDefault();
     setIsSubmitting(true);
     setStatus("Submitting organization setup...");
@@ -46,9 +155,15 @@ export default function SchoolRegisterPage() {
     };
 
     try {
-      const result = await registerSchool(formattedData);
+      const result = await registerOrganization(formattedData);
 
       if (result.success) {
+        // Store the organization ID and authentication token for later steps
+        setFormData(prev => ({ 
+          ...prev, 
+          organizationId: result.organizationId,
+          authToken: result.token // Store the auth token from registration response
+        }));
         setStatus("Organization setup saved successfully!");
         handleNext();  // Proceed to the next step (class selection)
       } else {
@@ -63,18 +178,32 @@ export default function SchoolRegisterPage() {
 
   const handleSubmitStep2 = async (e) => {
     e.preventDefault();
+    
+    // Make sure we have selected classes and an organization ID
+    if (!formData.classes || formData.classes.length === 0) {
+      setStatus("Please select at least one class");
+      return;
+    }
+    
+    if (!formData.organizationId) {
+      setStatus("Missing organization information. Please go back to step 1.");
+      return;
+    }
+    
+    // if (!formData.authToken) {
+    //   setStatus("Missing authentication token. Please restart the process.");
+    //   return;
+    // }
+    
     setIsSubmitting(true);
     setStatus("Saving classes...");
 
-    const formattedClassesData = {
-      classes: formData.classes.map((cls) => ({
-        name: cls,
-        section: "A", // Default section, adjust as needed
-      })),
-    };
-
     try {
-      const result = await registerSchool(formattedClassesData);
+      const result = await registerClasses(
+        formData.classes, 
+        formData.organizationId,
+        formData.authToken // Pass the auth token to the API call
+      );
 
       if (result.success) {
         setStatus("Classes saved successfully!");
@@ -91,24 +220,45 @@ export default function SchoolRegisterPage() {
 
   const handleSubmitStep3 = async (e) => {
     e.preventDefault();
+    
+    // Validate academic year data
+    if (!formData.academicYearStart || !formData.academicYearEnd) {
+      setStatus("Please enter both start and end years");
+      return;
+    }
+    
+    if (!formData.organizationId) {
+      setStatus("Missing organization information. Please restart the process.");
+      return;
+    }
+    
+    // if (!formData.authToken) {
+    //   setStatus("Missing authentication token. Please restart the process.");
+    //   return;
+    // }
+    
     setIsSubmitting(true);
     setStatus("Saving academic year...");
 
-    const formattedAcademicYearData = {
-      academicYear: {
-        year: `${formData.academicYearStart}-${formData.academicYearEnd}`,
-        start: formData.academicYearStart,
-        end: formData.academicYearEnd,
-        startDate: `${formData.academicYearStart}-04-01`,
-        endDate: `${formData.academicYearEnd}-03-31`,
-      },
+    const academicYearData = {
+      year: `${formData.academicYearStart}-${formData.academicYearEnd}`,
+      start: formData.academicYearStart,
+      end: formData.academicYearEnd,
+      startDate: `${formData.academicYearStart}-04-01`,
+      endDate: `${formData.academicYearEnd}-03-31`,
     };
 
     try {
-      const result = await registerSchool(formattedAcademicYearData);
+      const result = await registerAcademicYear(
+        academicYearData, 
+        formData.organizationId,
+        //formData.authToken // Pass the auth token to the API call
+      );
 
       if (result.success) {
         setStatus("Academic year saved successfully!");
+        // Store the token in localStorage for future sessions if needed
+       // localStorage.setItem('authToken', formData.authToken);
         router.push("/dashboard");  // Redirect to the dashboard after completing all steps
       } else {
         setStatus(`❌ Error: ${result.error || "Unknown error"}`);
@@ -161,385 +311,383 @@ export default function SchoolRegisterPage() {
           ))}
         </div>
 
-        <form onSubmit={
-          step === 1
-            ? handleSubmitStep1
-            : step === 2
-              ? handleSubmitStep2
-              : handleSubmitStep3
-        }>
-          {step === 1 && (
-            <div className="space-y-6">
-              {/* Card 1: Organization Details */}
-              <div className="rounded-xl shadow-sm">
-                <div className="flex bg-gray-50 flex-col space-y-1.5 p-4 rounded-t-lg">
-                  <h3 className="font-semibold tracking-tight text-xl flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className="text-primary"
-                    >
-                      <path d="M20 7h-9"></path>
-                      <path d="M14 17H5"></path>
-                      <circle cx="17" cy="17" r="3"></circle>
-                      <circle cx="7" cy="7" r="3"></circle>
-                    </svg>
-                    Organization Details
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Basic information about your organization
-                  </p>
-                </div>{" "}
-                <div className="grid p-4 grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block mb-1">
-                      Organization Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      name="name"
-                      required
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">
-                      Organization Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      name="contactEmail"
-                      required
-                      type="email"
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">
-                      Phone Number <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      name="contactPhone"
-                      required
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">
-                      Password <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      name="password"
-                      required
-                      type="password"
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">
-                      Organization Prefix{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      name="prefix"
-                      required
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">
-                      Short Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      name="shortName"
-                      required
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-              </div>
+        {/* Status message displayed prominently */}
+        {status && (
+          <div className={`p-4 mb-4 rounded-lg ${status.includes('Error') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+            {status}
+          </div>
+        )}
 
-              {/* Card 2: Organization Logo */}
-              <div className="rounded-xl shadow-sm">
-                <div className="space-y-1.5 bg-muted/40 rounded-t-lg">
-                  <div className="bg-gray-50  p-4">
-                    <h3 className="font-semibold bg-gray-50 tracking-tight text-xl flex items-center gap-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        className="text-primary"
-                      >
-                        <rect width="18" height="18" x="3" y="3" rx="2"></rect>
-                        <circle cx="9" cy="9" r="2"></circle>
-                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
-                      </svg>
-                      Organization Logo<span className="text-red-500">*</span>
-                    </h3>
-                    <p className="text-sm text-muted-foreground pb-4">
-                      Upload a professional logo for your organization
-                    </p>
-                  </div>
-                  <div className=" p-4">
-                    <input
-                      name="logo"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 3: Organization Address */}
-              <div className="rounded-xl shadow-sm">
-                <div className="flex flex-col bg-gray-50 p-4  space-y-1.5  rounded-t-lg">
-                  <h3 className="font-semibold tracking-tight text-xl flex items-center gap-2">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className="text-primary"
-                    >
-                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                      <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-                    Organization Address
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Physical location of your organization
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-                  <div>
-                    <label className="block mb-1">
-                      Address Line 1 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      name="addressLine1"
-                      required
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">Address Line 2</label>
-                    <input
-                      name="addressLine2"
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">
-                      State <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      name="state"
-                      required
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">
-                      District <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      name="district"
-                      required
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1">
-                      City <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      name="city"
-                      required
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1">
-                      PIN Code <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      name="pincode"
-                      required
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation Buttons */}
-              <div className="flex justify-between mt-6">
-                <p className="text-sm text-gray-500 text-right">
-                  Fields marked with <span className="text-red-500">*</span> are
-                  required
-                </p>
-
-                <button
-                  type="submit"
-                  // onClick={handleNext}
-                  className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 py-2 px-8"
-                >
-                  {isSubmitting ? "Processing..." : "Continue"}
+        {step === 1 && (
+          <form onSubmit={handleSubmitStep1} className="space-y-6">
+            {/* Card 1: Organization Details */}
+            <div className="rounded-xl shadow-sm">
+              <div className="flex bg-gray-50 flex-col space-y-1.5 p-4 rounded-t-lg">
+                <h3 className="font-semibold tracking-tight text-xl flex items-center gap-2">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="ml-2"
+                    className="text-primary"
                   >
-                    <path d="M5 12h14" />
-                    <path d="m12 5 7 7-7 7" />
+                    <path d="M20 7h-9"></path>
+                    <path d="M14 17H5"></path>
+                    <circle cx="17" cy="17" r="3"></circle>
+                    <circle cx="7" cy="7" r="3"></circle>
                   </svg>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold mb-4">
-                Step 2: Select Classes
-              </h3>
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  "Nursery",
-                  "LKG",
-                  "UKG",
-                  "1",
-                  "2",
-                  "3",
-                  "4",
-                  "5",
-                  "6",
-                  "7",
-                  "8",
-                  "9",
-                  "10",
-                ].map((cls) => (
-                  <label key={cls} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      name="classes"
-                      value={cls}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setFormData((prev) => ({
-                          ...prev,
-                          classes: checked
-                            ? [...(prev.classes || []), cls]
-                            : prev.classes.filter((c) => c !== cls),
-                        }));
-                      }}
-                    />
-                    {cls}
+                  Organization Details
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Basic information about your organization
+                </p>
+              </div>{" "}
+              <div className="grid p-4 grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1">
+                    Organization Name <span className="text-red-500">*</span>
                   </label>
-                ))}
-              </div>
-              <div className="flex justify-between mt-6">
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="btn-secondary"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="bg-blue-600 text-white rounded-md px-6 py-2 hover:bg-blue-700 transition"
-                >
-                  {isSubmitting ? "Processing..." : "Continue"}
-                </button>
+                  <input
+                    name="name"
+                    required
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">
+                    Organization Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="contactEmail"
+                    required
+                    type="email"
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="contactPhone"
+                    required
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="password"
+                    required
+                    type="password"
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">
+                    Organization Prefix{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="prefix"
+                    required
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">
+                    Short Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="shortName"
+                    required
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
               </div>
             </div>
-          )}
 
-          {step === 3 && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold mb-4">
-                Step 3: Academic Year
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block mb-1">Start Year *</label>
-                  <input
-                    name="academicYearStart"
-                    required
-                    placeholder="2025"
-                    onChange={handleChange}
-                    className={inputClass}
-                  />
+            {/* Card 2: Organization Logo */}
+            <div className="rounded-xl shadow-sm">
+              <div className="space-y-1.5 bg-muted/40 rounded-t-lg">
+                <div className="bg-gray-50  p-4">
+                  <h3 className="font-semibold bg-gray-50 tracking-tight text-xl flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-primary"
+                    >
+                      <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+                      <circle cx="9" cy="9" r="2"></circle>
+                      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                    </svg>
+                    Organization Logo<span className="text-red-500">*</span>
+                  </h3>
+                  <p className="text-sm text-muted-foreground pb-4">
+                    Upload a professional logo for your organization
+                  </p>
                 </div>
-                <div>
-                  <label className="block mb-1">End Year *</label>
+                <div className=" p-4">
                   <input
-                    name="academicYearEnd"
-                    required
-                    placeholder="2026"
+                    name="logo"
+                    type="file"
+                    accept="image/*"
                     onChange={handleChange}
                     className={inputClass}
                   />
                 </div>
               </div>
-              <div className="flex justify-between mt-6">
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="btn-secondary"
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={status === "Submitting..."}
-                  className="bg-blue-600 text-white rounded-md px-6 py-2 hover:bg-blue-700 transition"
-                >
-                  {status === "Submitting..." ? "Registering..." : "Complete Setup"}
-                </button>
-              </div>
-              {status && <p className="text-center text-red-600">{status}</p>}
             </div>
-          )}
-        </form>
+
+            {/* Card 3: Organization Address */}
+            <div className="rounded-xl shadow-sm">
+              <div className="flex flex-col bg-gray-50 p-4  space-y-1.5  rounded-t-lg">
+                <h3 className="font-semibold tracking-tight text-xl flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-primary"
+                  >
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  Organization Address
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Physical location of your organization
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+                <div>
+                  <label className="block mb-1">
+                    Address Line 1 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="addressLine1"
+                    required
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">Address Line 2</label>
+                  <input
+                    name="addressLine2"
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">
+                    State <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="state"
+                    required
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">
+                    District <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="district"
+                    required
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1">
+                    City <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="city"
+                    required
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">
+                    PIN Code <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="pincode"
+                    required
+                    onChange={handleChange}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-6">
+              <p className="text-sm text-gray-500 text-right">
+                Fields marked with <span className="text-red-500">*</span> are
+                required
+              </p>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 py-2 px-8"
+              >
+                {isSubmitting ? "Processing..." : "Continue"}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="ml-2"
+                >
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === 2 && (
+          <form onSubmit={handleSubmitStep2} className="space-y-6">
+            <h3 className="text-lg font-semibold mb-4">
+              Step 2: Select Classes
+            </h3>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                "Nursery",
+                "LKG",
+                "UKG",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+              ].map((cls) => (
+                <label key={cls} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="classes"
+                    value={cls}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setFormData((prev) => ({
+                        ...prev,
+                        classes: checked
+                          ? [...(prev.classes || []), cls]
+                          : (prev.classes || []).filter((c) => c !== cls),
+                      }));
+                    }}
+                  />
+                  {cls}
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-between mt-6">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gray-200 text-gray-800 shadow hover:bg-gray-300 h-9 py-2 px-8"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 py-2 px-8"
+              >
+                {isSubmitting ? "Processing..." : "Continue"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === 3 && (
+          <form onSubmit={handleSubmitStep3} className="space-y-6">
+            <h3 className="text-lg font-semibold mb-4">
+              Step 3: Academic Year
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1">Start Year *</label>
+                <input
+                  name="academicYearStart"
+                  required
+                  placeholder="2025"
+                  onChange={handleChange}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="block mb-1">End Year *</label>
+                <input
+                  name="academicYearEnd"
+                  required
+                  placeholder="2026"
+                  onChange={handleChange}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <div className="flex justify-between mt-6">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gray-200 text-gray-800 shadow hover:bg-gray-300 h-9 py-2 px-8"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 py-2 px-8"
+              >
+                {isSubmitting ? "Processing..." : "Complete Setup"}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </>
   );

@@ -1,3 +1,5 @@
+// Updated classController.js to handle class creation without req.user
+
 const Class = require("../models/Class");
 const Subject = require("../models/Subject");
 const Student = require("../models/Student");
@@ -25,11 +27,15 @@ exports.getClassById = async (req, res) => {
   }
 };
 
-// Create a New Class with Section
+// Create a New Class with Section - UPDATED to work without req.user
 exports.createClass = async (req, res) => {
   try {
-    const { name, section, type } = req.body;
-    const schoolId = req.user.schoolId;
+    // Get the data directly from the request body
+    const { name, section, type, schoolId } = req.body;
+    
+    if (!schoolId) {
+      return res.status(400).json({ error: "School ID is required" });
+    }
 
     // Check if class with same name, section, and schoolId already exists
     const existingClass = await Class.findOne({ name, section, schoolId });
@@ -149,4 +155,3 @@ exports.deleteClass = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
