@@ -1,6 +1,6 @@
 const Student = require("../models/Student");
 const Class = require("../models/Class");
-const School = require("../models/School");
+const School = require("../models/Organization");
 
 // ✅ Get all students in a specific class
 exports.getStudentsByClass = async (req, res) => {

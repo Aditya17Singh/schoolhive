@@ -8,6 +8,7 @@ export default function SchoolRegisterPage() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({});
   const [status, setStatus] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -19,30 +20,81 @@ export default function SchoolRegisterPage() {
   const handleNext = () => setStep((s) => s + 1);
   const handleBack = () => setStep((s) => s - 1);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setStatus("Submitting...");
+  const handleSubmitStep1 = async (e) => {
+    console.log("step1");
 
-    // Reformat formData to match the backend schema
+    e.preventDefault();
+    setIsSubmitting(true);
+    setStatus("Submitting organization setup...");
+
     const formattedData = {
-      name: formData.name,
+      orgName: formData.name,
       shortName: formData.shortName,
       prefix: formData.prefix,
-      contactEmail: formData.contactEmail,
-      contactPhone: formData.contactPhone,
+      orgEmail: formData.contactEmail,
+      phoneNumber: formData.contactPhone,
       password: formData.password,
-      logo: formData.logo, // assuming formData.logo is a file object or a string (URL)
+      logo: formData.logo,
       address: {
-        line1: formData.addressLine1,
-        line2: formData.addressLine2 || "", // optional field
-        stateDistrict: formData.stateDistrict,
+        state: formData.state,
+        district: formData.district,
         city: formData.city,
         pinCode: formData.pincode,
+        line1: formData.addressLine1,
+        line2: formData.addressLine2 || "",
       },
+    };
+
+    try {
+      const result = await registerSchool(formattedData);
+
+      if (result.success) {
+        setStatus("Organization setup saved successfully!");
+        handleNext();  // Proceed to the next step (class selection)
+      } else {
+        setStatus(`❌ Error: ${result.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      setStatus(`❌ Error: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmitStep2 = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setStatus("Saving classes...");
+
+    const formattedClassesData = {
       classes: formData.classes.map((cls) => ({
-        name: cls, // `cls` is the class name (e.g., "1")
-        section: "A", // You could make this dynamic as well based on UI, e.g., `"A"` or `"B"`
+        name: cls,
+        section: "A", // Default section, adjust as needed
       })),
+    };
+
+    try {
+      const result = await registerSchool(formattedClassesData);
+
+      if (result.success) {
+        setStatus("Classes saved successfully!");
+        handleNext();  // Proceed to the next step (academic year setup)
+      } else {
+        setStatus(`❌ Error: ${result.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      setStatus(`❌ Error: ${error.message}`);
+    } finally {
+      setIsSubmitting(false); // Stop processing
+    }
+  };
+
+  const handleSubmitStep3 = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setStatus("Saving academic year...");
+
+    const formattedAcademicYearData = {
       academicYear: {
         year: `${formData.academicYearStart}-${formData.academicYearEnd}`,
         start: formData.academicYearStart,
@@ -53,15 +105,18 @@ export default function SchoolRegisterPage() {
     };
 
     try {
-      const result = await registerSchool(formattedData);
+      const result = await registerSchool(formattedAcademicYearData);
 
       if (result.success) {
-        router.push("/dashboard");
+        setStatus("Academic year saved successfully!");
+        router.push("/dashboard");  // Redirect to the dashboard after completing all steps
       } else {
         setStatus(`❌ Error: ${result.error || "Unknown error"}`);
       }
     } catch (error) {
       setStatus(`❌ Error: ${error.message}`);
+    } finally {
+      setIsSubmitting(false); // Stop processing
     }
   };
 
@@ -92,11 +147,10 @@ export default function SchoolRegisterPage() {
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center space-x-2">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step === s
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${step === s
                     ? "bg-blue-600 text-white"
                     : "bg-gray-200 text-gray-600"
-                }`}
+                  }`}
               >
                 {s}
               </div>
@@ -107,7 +161,13 @@ export default function SchoolRegisterPage() {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={
+          step === 1
+            ? handleSubmitStep1
+            : step === 2
+              ? handleSubmitStep2
+              : handleSubmitStep3
+        }>
           {step === 1 && (
             <div className="space-y-6">
               {/* Card 1: Organization Details */}
@@ -296,15 +356,27 @@ export default function SchoolRegisterPage() {
                   </div>
                   <div>
                     <label className="block mb-1">
-                      State & District <span className="text-red-500">*</span>
+                      State <span className="text-red-500">*</span>
                     </label>
                     <input
-                      name="stateDistrict"
+                      name="state"
                       required
                       onChange={handleChange}
                       className={inputClass}
                     />
                   </div>
+                  <div>
+                    <label className="block mb-1">
+                      District <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      name="district"
+                      required
+                      onChange={handleChange}
+                      className={inputClass}
+                    />
+                  </div>
+
                   <div>
                     <label className="block mb-1">
                       City <span className="text-red-500">*</span>
@@ -338,11 +410,11 @@ export default function SchoolRegisterPage() {
                 </p>
 
                 <button
-                  type="button"
-                  onClick={handleNext}
+                  type="submit"
+                  // onClick={handleNext}
                   className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 py-2 px-8"
                 >
-                  Continue
+                  {isSubmitting ? "Processing..." : "Continue"}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -415,7 +487,7 @@ export default function SchoolRegisterPage() {
                   onClick={handleNext}
                   className="bg-blue-600 text-white rounded-md px-6 py-2 hover:bg-blue-700 transition"
                 >
-                  Continue
+                  {isSubmitting ? "Processing..." : "Continue"}
                 </button>
               </div>
             </div>
@@ -461,7 +533,7 @@ export default function SchoolRegisterPage() {
                   disabled={status === "Submitting..."}
                   className="bg-blue-600 text-white rounded-md px-6 py-2 hover:bg-blue-700 transition"
                 >
-                  {status === "Submitting..." ? "Registering..." : "Submit"}
+                  {status === "Submitting..." ? "Registering..." : "Complete Setup"}
                 </button>
               </div>
               {status && <p className="text-center text-red-600">{status}</p>}

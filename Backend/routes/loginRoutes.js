@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const School = require("../models/School");  // School model
+const School = require("../models/Organization");  // School model
 
 // secret for JWT
 const JWT_SECRET = process.env.JWT_SECRET || "yoursecretkey";

@@ -28,7 +28,7 @@ exports.getClassById = async (req, res) => {
 // Create a New Class with Section
 exports.createClass = async (req, res) => {
   try {
-    const { name, section } = req.body;
+    const { name, section, type } = req.body;
     const schoolId = req.user.schoolId;
 
     // Check if class with same name, section, and schoolId already exists
@@ -37,7 +37,35 @@ exports.createClass = async (req, res) => {
       return res.status(400).json({ error: "Class with this name and section already exists." });
     }
 
-    const newClass = new Class({ name, section, schoolId });
+    // Automatically set the order based on the type and name
+    let order = 0;
+
+    switch (type) {
+      case "pre-primary":
+        order = (["Nursery", "PG", "LKG", "UKG"].indexOf(name) + 1) * 0.25; // e.g., 0, 0.25, 0.5, 0.75
+        break;
+      case "primary":
+        order = parseInt(name, 10); // e.g., 1, 2, 3
+        break;
+      case "middle":
+        order = parseInt(name, 10); // e.g., 7, 8, 9
+        break;
+      case "secondary":
+        order = parseInt(name, 10); // e.g., 11, 12
+        break;
+      default:
+        order = 0; // Default order if something goes wrong
+    }
+
+    // Create a new class with the calculated order
+    const newClass = new Class({
+      name,
+      section,
+      type,
+      order,
+      schoolId,
+    });
+
     await newClass.save();
     res.status(201).json(newClass);
   } catch (error) {
