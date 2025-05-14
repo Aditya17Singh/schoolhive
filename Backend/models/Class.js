@@ -1,13 +1,14 @@
 const mongoose = require("mongoose");
 
 const classSchema = new mongoose.Schema({
-  name: { type: String, required: true }, // e.g. "Nursery", "1", "7", "12"
+  name: { type: String, required: true }, 
   section: { type: String, required: true }, // e.g. "A", "B"
   type: {
     type: String,
     required: true,
     enum: ["pre-primary", "primary", "middle", "secondary"]
   },
+  order: { type: Number, required: true },
   subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
   students: [{ type: mongoose.Schema.Types.ObjectId, ref: "Student" }],
   schoolId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true }, 

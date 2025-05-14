@@ -48,9 +48,9 @@ export async function registerClasses(classes, organizationId) {
       // Prepare data for class creation
       const classData = {
         name: className,
-        section: "A", // Default section, can be modified later
+        section: "A", 
         type: type,
-        schoolId: organizationId // Pass the organization ID directly as schoolId
+        schoolId: organizationId 
       };
       
       // Send the request to create this class
@@ -58,7 +58,6 @@ export async function registerClasses(classes, organizationId) {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${token}` // Add the token in the Authorization header
         },
         body: JSON.stringify(classData),
       });
@@ -319,7 +318,9 @@ export default function SchoolRegisterPage() {
         )}
 
         {step === 1 && (
-          <form onSubmit={handleSubmitStep1} className="space-y-6">
+          <form
+          onSubmit={handleSubmitStep1}
+           className="space-y-6">
             {/* Card 1: Organization Details */}
             <div className="rounded-xl shadow-sm">
               <div className="flex bg-gray-50 flex-col space-y-1.5 p-4 rounded-t-lg">
@@ -354,7 +355,7 @@ export default function SchoolRegisterPage() {
                   </label>
                   <input
                     name="name"
-                    required
+                     required
                     onChange={handleChange}
                     className={inputClass}
                   />
@@ -377,7 +378,7 @@ export default function SchoolRegisterPage() {
                   </label>
                   <input
                     name="contactPhone"
-                    required
+                     required
                     onChange={handleChange}
                     className={inputClass}
                   />
@@ -521,7 +522,7 @@ export default function SchoolRegisterPage() {
                   </label>
                   <input
                     name="district"
-                    required
+                     required
                     onChange={handleChange}
                     className={inputClass}
                   />
@@ -544,7 +545,7 @@ export default function SchoolRegisterPage() {
                   </label>
                   <input
                     name="pincode"
-                    required
+                     required
                     onChange={handleChange}
                     className={inputClass}
                   />
@@ -560,8 +561,9 @@ export default function SchoolRegisterPage() {
               </p>
 
               <button
-                type="submit"
-                disabled={isSubmitting}
+                type="button"
+                onClick={handleNext()}
+                // disabled={isSubmitting}
                 className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 py-2 px-8"
               >
                 {isSubmitting ? "Processing..." : "Continue"}
@@ -585,63 +587,204 @@ export default function SchoolRegisterPage() {
         )}
 
         {step === 2 && (
-          <form onSubmit={handleSubmitStep2} className="space-y-6">
-            <h3 className="text-lg font-semibold mb-4">
-              Step 2: Select Classes
-            </h3>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                "Nursery",
-                "LKG",
-                "UKG",
-                "1",
-                "2",
-                "3",
-                "4",
-                "5",
-                "6",
-                "7",
-                "8",
-                "9",
-                "10",
-              ].map((cls) => (
-                <label key={cls} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="classes"
-                    value={cls}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setFormData((prev) => ({
-                        ...prev,
-                        classes: checked
-                          ? [...(prev.classes || []), cls]
-                          : (prev.classes || []).filter((c) => c !== cls),
-                      }));
-                    }}
-                  />
-                  {cls}
-                </label>
-              ))}
-            </div>
-            <div className="flex justify-between mt-6">
+  <form onSubmit={handleSubmitStep2} className="space-y-6">
+    <h3 className="text-lg font-semibold mb-4">
+      Step 2: Select Classes
+    </h3>
+
+    {/* Card Groups */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Pre-Primary */}
+      <div className="p-4 rounded-xl shadow bg-white">
+        <h4 className="font-semibold mb-3 text-black">Pre-Primary</h4>
+        <div className="grid grid-cols-2 gap-3">
+          {["Nursery", "PG", "LKG", "UKG"].map((cls) => {
+            const isSelected = formData.classes?.includes(cls);
+            return (
               <button
                 type="button"
-                onClick={handleBack}
-                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gray-200 text-gray-800 shadow hover:bg-gray-300 h-9 py-2 px-8"
+                key={cls}
+                className={`rounded-lg p-3 text-center font-medium transition ${
+                  isSelected
+                    ? "bg-black text-white"
+                    : "bg-white text-gray-800 hover:bg-gray-100 border"
+                }`}
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    classes: isSelected
+                      ? prev.classes.filter((c) => c !== cls)
+                      : [...(prev.classes || []), cls],
+                  }));
+                }}
               >
-                Back
+                <div className="flex items-center justify-between">
+                  <span>{cls}</span>
+                  {isSelected && <span className="text-white">✔</span>}
+                </div>
               </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Primary */}
+      <div className="p-4 rounded-xl shadow bg-white">
+        <h4 className="font-semibold mb-3 text-black">Primary (1-6)</h4>
+        <div className="grid grid-cols-3 gap-3">
+          {["1", "2", "3", "4", "5", "6"].map((cls) => {
+            const isSelected = formData.classes?.includes(cls);
+            return (
               <button
-                type="submit"
-                disabled={isSubmitting}
-                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 py-2 px-8"
+                type="button"
+                key={cls}
+                className={`rounded-lg p-3 text-center font-medium transition ${
+                  isSelected
+                    ? "bg-black text-white"
+                    : "bg-white text-gray-800 hover:bg-gray-100 border"
+                }`}
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    classes: isSelected
+                      ? prev.classes.filter((c) => c !== cls)
+                      : [...(prev.classes || []), cls],
+                  }));
+                }}
               >
-                {isSubmitting ? "Processing..." : "Continue"}
+                <div className="flex items-center justify-between">
+                  <span>{cls}</span>
+                  {isSelected && <span className="text-white">✔</span>}
+                </div>
               </button>
-            </div>
-          </form>
-        )}
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Middle */}
+      <div className="p-4 rounded-xl shadow bg-white">
+        <h4 className="font-semibold mb-3 text-black">Middle (7-10)</h4>
+        <div className="grid grid-cols-3 gap-3">
+          {["7", "8", "9", "10"].map((cls) => {
+            const isSelected = formData.classes?.includes(cls);
+            return (
+              <button
+                type="button"
+                key={cls}
+                className={`rounded-lg p-3 text-center font-medium transition ${
+                  isSelected
+                    ? "bg-black text-white"
+                    : "bg-white text-gray-800 hover:bg-gray-100 border"
+                }`}
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    classes: isSelected
+                      ? prev.classes.filter((c) => c !== cls)
+                      : [...(prev.classes || []), cls],
+                  }));
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <span>{cls}</span>
+                  {isSelected && <span className="text-white">✔</span>}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Secondary */}
+      <div className="p-4 rounded-xl shadow bg-white">
+        <h4 className="font-semibold mb-3 text-black">Secondary (11–12)</h4>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            "11 Science",
+            "11 Commerce",
+            "11 Arts",
+            "12 Science",
+            "12 Commerce",
+            "12 Arts",
+          ].map((cls) => {
+            const isSelected = formData.classes?.includes(cls);
+            return (
+              <button
+                type="button"
+                key={cls}
+                className={`rounded-lg p-3 text-center font-medium transition ${
+                  isSelected
+                    ? "bg-black text-white"
+                    : "bg-white text-gray-800 hover:bg-gray-100 border"
+                }`}
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    classes: isSelected
+                      ? prev.classes.filter((c) => c !== cls)
+                      : [...(prev.classes || []), cls],
+                  }));
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <span>{cls}</span>
+                  {isSelected && <span className="text-white">✔</span>}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+
+    {/* Selected Classes Preview with Cross to Remove */}
+    <div className="mt-4">
+      <h5 className="font-semibold text-sm text-gray-700 mb-2">
+        Selected Classes:
+      </h5>
+      <div className="flex flex-wrap gap-2">
+        {(formData.classes || []).map((cls) => (
+          <span
+            key={cls}
+            className="flex items-center bg-black text-white text-sm px-3 py-1 rounded-full gap-2"
+          >
+            {cls}
+            <button
+              type="button"
+              className="text-white hover:text-red-300 ml-1"
+              onClick={() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  classes: prev.classes.filter((c) => c !== cls),
+                }));
+              }}
+            >
+              ✕
+            </button>
+          </span>
+        ))}
+      </div>
+    </div>
+
+    {/* Navigation Buttons */}
+    <div className="flex justify-between mt-6">
+      <button
+        type="button"
+        className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-gray-200 text-gray-800 hover:bg-gray-300 h-9 py-2 px-8"
+      >
+        Back
+      </button>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-black text-white hover:bg-gray-800 h-9 py-2 px-8"
+      >
+        {isSubmitting ? "Processing..." : "Continue"}
+      </button>
+    </div>
+  </form>
+)}
 
         {step === 3 && (
           <form onSubmit={handleSubmitStep3} className="space-y-6">

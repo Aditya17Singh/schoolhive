@@ -27,10 +27,8 @@ exports.getClassById = async (req, res) => {
   }
 };
 
-// Create a New Class with Section - UPDATED to work without req.user
 exports.createClass = async (req, res) => {
   try {
-    // Get the data directly from the request body
     const { name, section, type, schoolId } = req.body;
     
     if (!schoolId) {
@@ -48,7 +46,7 @@ exports.createClass = async (req, res) => {
 
     switch (type) {
       case "pre-primary":
-        order = (["Nursery", "PG", "LKG", "UKG"].indexOf(name) + 1) * 0.25; // e.g., 0, 0.25, 0.5, 0.75
+        order = (["Nursery", "PG", "LKG", "UKG"].indexOf(name) + 1) * 0.25; 
         break;
       case "primary":
         order = parseInt(name, 10); // e.g., 1, 2, 3
