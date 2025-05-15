@@ -2,117 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-// Modified action.js
-export async function registerOrganization(body) {
-  console.log('Registering organization:', body);
-  
-  try {
-    const response = await fetch(`http://localhost:5000/api/organization/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Something went wrong with organization registration');
-    
-    return { 
-      success: true, 
-      organizationId: data.organizationId || data.schoolId,
-      token: data.token // Store the authentication token returned from the API
-    };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-}
-
-export async function registerClasses(classes, organizationId) {
-  
-  try {
-    // Create an array to store the results of all class creations
-    let classResults = [];
-    
-    // Process each class individually
-    for (const className of classes) {
-      // Determine the appropriate class type based on the class name
-      let type = "primary"; // Default
-      if (["Nursery", "LKG", "UKG"].includes(className)) {
-        type = "pre-primary";
-      } else if (parseInt(className) >= 6 && parseInt(className) <= 8) {
-        type = "middle";
-      } else if (parseInt(className) >= 9) {
-        type = "secondary";
-      }
-      
-      // Prepare data for class creation
-      const classData = {
-        name: className,
-        section: "A", 
-        type: type,
-        schoolId: organizationId 
-      };
-      
-      // Send the request to create this class
-      const response = await fetch(`http://localhost:5000/api/classes`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(classData),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        console.error(`Failed to create class ${className}:`, data);
-        continue; // Continue with other classes even if one fails
-      }
-      
-      classResults.push(data);
-    }
-    
-    if (classResults.length === 0) {
-      throw new Error('Failed to create any classes');
-    }
-    
-    return { 
-      success: true, 
-      classIds: classResults.map(c => c._id),
-      classResults: classResults
-    };
-    
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-}
-
-export async function registerAcademicYear(academicYear, organizationId) {
-  console.log('Registering academic year:', academicYear, 'for organization:', organizationId);
-  
-  try {
-    // Update the payload to match what the backend expects
-    const payload = {
-      ...academicYear,
-      schoolId: organizationId  // Ensure we're using schoolId instead of organization
-    };
-
-    const response = await fetch(`http://localhost:5000/api/academics`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-    
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || data.error || 'Something went wrong with academic year registration');
-    
-    return { success: true, academicId: data.academicId || data._id };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-}
+import { registerOrganization, registerClasses , registerAcademicYear  } from './action';
 
 export default function SchoolRegisterPage() {
   const [step, setStep] = useState(1);
@@ -158,18 +48,20 @@ export default function SchoolRegisterPage() {
 
       if (result.success) {
         // Store the organization ID and authentication token for later steps
-        setFormData(prev => ({ 
-          ...prev, 
+        setFormData(prev => ({
+          ...prev,
           organizationId: result.organizationId,
           authToken: result.token // Store the auth token from registration response
         }));
         setStatus("Organization setup saved successfully!");
+        setTimeout(() => setStatus(""), 3000);
         handleNext();  // Proceed to the next step (class selection)
       } else {
         setStatus(`❌ Error: ${result.error || "Unknown error"}`);
       }
     } catch (error) {
       setStatus(`❌ Error: ${error.message}`);
+      setTimeout(() => setStatus(""), 3000);
     } finally {
       setIsSubmitting(false);
     }
@@ -177,29 +69,29 @@ export default function SchoolRegisterPage() {
 
   const handleSubmitStep2 = async (e) => {
     e.preventDefault();
-    
+
     // Make sure we have selected classes and an organization ID
     if (!formData.classes || formData.classes.length === 0) {
       setStatus("Please select at least one class");
       return;
     }
-    
+
     if (!formData.organizationId) {
       setStatus("Missing organization information. Please go back to step 1.");
       return;
     }
-    
+
     // if (!formData.authToken) {
     //   setStatus("Missing authentication token. Please restart the process.");
     //   return;
     // }
-    
+
     setIsSubmitting(true);
     setStatus("Saving classes...");
 
     try {
       const result = await registerClasses(
-        formData.classes, 
+        formData.classes,
         formData.organizationId,
         formData.authToken // Pass the auth token to the API call
       );
@@ -219,23 +111,23 @@ export default function SchoolRegisterPage() {
 
   const handleSubmitStep3 = async (e) => {
     e.preventDefault();
-    
+
     // Validate academic year data
     if (!formData.academicYearStart || !formData.academicYearEnd) {
       setStatus("Please enter both start and end years");
       return;
     }
-    
+
     if (!formData.organizationId) {
       setStatus("Missing organization information. Please restart the process.");
       return;
     }
-    
+
     // if (!formData.authToken) {
     //   setStatus("Missing authentication token. Please restart the process.");
     //   return;
     // }
-    
+
     setIsSubmitting(true);
     setStatus("Saving academic year...");
 
@@ -249,7 +141,7 @@ export default function SchoolRegisterPage() {
 
     try {
       const result = await registerAcademicYear(
-        academicYearData, 
+        academicYearData,
         formData.organizationId,
         //formData.authToken // Pass the auth token to the API call
       );
@@ -257,7 +149,7 @@ export default function SchoolRegisterPage() {
       if (result.success) {
         setStatus("Academic year saved successfully!");
         // Store the token in localStorage for future sessions if needed
-       // localStorage.setItem('authToken', formData.authToken);
+        // localStorage.setItem('authToken', formData.authToken);
         router.push("/dashboard");  // Redirect to the dashboard after completing all steps
       } else {
         setStatus(`❌ Error: ${result.error || "Unknown error"}`);
@@ -298,10 +190,12 @@ export default function SchoolRegisterPage() {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center ${step === s
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-600"
+                    : step > s
+                      ? "bg-green-500 text-white"
+                      : "bg-gray-200 text-gray-600"
                   }`}
               >
-                {s}
+                {step > s ? "✓" : s}
               </div>
               {s !== 3 && (
                 <div className="w-8 h-1 bg-gray-300 rounded-full"></div>
@@ -309,6 +203,7 @@ export default function SchoolRegisterPage() {
             </div>
           ))}
         </div>
+
 
         {/* Status message displayed prominently */}
         {status && (
@@ -319,8 +214,8 @@ export default function SchoolRegisterPage() {
 
         {step === 1 && (
           <form
-          onSubmit={handleSubmitStep1}
-           className="space-y-6">
+            onSubmit={handleSubmitStep1}
+            className="space-y-6">
             {/* Card 1: Organization Details */}
             <div className="rounded-xl shadow-sm">
               <div className="flex bg-gray-50 flex-col space-y-1.5 p-4 rounded-t-lg">
@@ -355,7 +250,7 @@ export default function SchoolRegisterPage() {
                   </label>
                   <input
                     name="name"
-                     required
+                    required
                     onChange={handleChange}
                     className={inputClass}
                   />
@@ -378,7 +273,7 @@ export default function SchoolRegisterPage() {
                   </label>
                   <input
                     name="contactPhone"
-                     required
+                    required
                     onChange={handleChange}
                     className={inputClass}
                   />
@@ -522,7 +417,7 @@ export default function SchoolRegisterPage() {
                   </label>
                   <input
                     name="district"
-                     required
+                    required
                     onChange={handleChange}
                     className={inputClass}
                   />
@@ -545,7 +440,7 @@ export default function SchoolRegisterPage() {
                   </label>
                   <input
                     name="pincode"
-                     required
+                    required
                     onChange={handleChange}
                     className={inputClass}
                   />
@@ -561,9 +456,8 @@ export default function SchoolRegisterPage() {
               </p>
 
               <button
-                type="button"
-                onClick={handleNext()}
-                // disabled={isSubmitting}
+                type="submit"
+                disabled={isSubmitting}
                 className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 py-2 px-8"
               >
                 {isSubmitting ? "Processing..." : "Continue"}
@@ -587,247 +481,279 @@ export default function SchoolRegisterPage() {
         )}
 
         {step === 2 && (
-  <form onSubmit={handleSubmitStep2} className="space-y-6">
-    <h3 className="text-lg font-semibold mb-4">
-      Step 2: Select Classes
-    </h3>
-
-    {/* Card Groups */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Pre-Primary */}
-      <div className="p-4 rounded-xl shadow bg-white">
-        <h4 className="font-semibold mb-3 text-black">Pre-Primary</h4>
-        <div className="grid grid-cols-2 gap-3">
-          {["Nursery", "PG", "LKG", "UKG"].map((cls) => {
-            const isSelected = formData.classes?.includes(cls);
-            return (
-              <button
-                type="button"
-                key={cls}
-                className={`rounded-lg p-3 text-center font-medium transition ${
-                  isSelected
-                    ? "bg-black text-white"
-                    : "bg-white text-gray-800 hover:bg-gray-100 border"
-                }`}
-                onClick={() => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    classes: isSelected
-                      ? prev.classes.filter((c) => c !== cls)
-                      : [...(prev.classes || []), cls],
-                  }));
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <span>{cls}</span>
-                  {isSelected && <span className="text-white">✔</span>}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Primary */}
-      <div className="p-4 rounded-xl shadow bg-white">
-        <h4 className="font-semibold mb-3 text-black">Primary (1-6)</h4>
-        <div className="grid grid-cols-3 gap-3">
-          {["1", "2", "3", "4", "5", "6"].map((cls) => {
-            const isSelected = formData.classes?.includes(cls);
-            return (
-              <button
-                type="button"
-                key={cls}
-                className={`rounded-lg p-3 text-center font-medium transition ${
-                  isSelected
-                    ? "bg-black text-white"
-                    : "bg-white text-gray-800 hover:bg-gray-100 border"
-                }`}
-                onClick={() => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    classes: isSelected
-                      ? prev.classes.filter((c) => c !== cls)
-                      : [...(prev.classes || []), cls],
-                  }));
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <span>{cls}</span>
-                  {isSelected && <span className="text-white">✔</span>}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Middle */}
-      <div className="p-4 rounded-xl shadow bg-white">
-        <h4 className="font-semibold mb-3 text-black">Middle (7-10)</h4>
-        <div className="grid grid-cols-3 gap-3">
-          {["7", "8", "9", "10"].map((cls) => {
-            const isSelected = formData.classes?.includes(cls);
-            return (
-              <button
-                type="button"
-                key={cls}
-                className={`rounded-lg p-3 text-center font-medium transition ${
-                  isSelected
-                    ? "bg-black text-white"
-                    : "bg-white text-gray-800 hover:bg-gray-100 border"
-                }`}
-                onClick={() => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    classes: isSelected
-                      ? prev.classes.filter((c) => c !== cls)
-                      : [...(prev.classes || []), cls],
-                  }));
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <span>{cls}</span>
-                  {isSelected && <span className="text-white">✔</span>}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Secondary */}
-      <div className="p-4 rounded-xl shadow bg-white">
-        <h4 className="font-semibold mb-3 text-black">Secondary (11–12)</h4>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            "11 Science",
-            "11 Commerce",
-            "11 Arts",
-            "12 Science",
-            "12 Commerce",
-            "12 Arts",
-          ].map((cls) => {
-            const isSelected = formData.classes?.includes(cls);
-            return (
-              <button
-                type="button"
-                key={cls}
-                className={`rounded-lg p-3 text-center font-medium transition ${
-                  isSelected
-                    ? "bg-black text-white"
-                    : "bg-white text-gray-800 hover:bg-gray-100 border"
-                }`}
-                onClick={() => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    classes: isSelected
-                      ? prev.classes.filter((c) => c !== cls)
-                      : [...(prev.classes || []), cls],
-                  }));
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <span>{cls}</span>
-                  {isSelected && <span className="text-white">✔</span>}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-
-    {/* Selected Classes Preview with Cross to Remove */}
-    <div className="mt-4">
-      <h5 className="font-semibold text-sm text-gray-700 mb-2">
-        Selected Classes:
-      </h5>
-      <div className="flex flex-wrap gap-2">
-        {(formData.classes || []).map((cls) => (
-          <span
-            key={cls}
-            className="flex items-center bg-black text-white text-sm px-3 py-1 rounded-full gap-2"
-          >
-            {cls}
-            <button
-              type="button"
-              className="text-white hover:text-red-300 ml-1"
-              onClick={() => {
-                setFormData((prev) => ({
-                  ...prev,
-                  classes: prev.classes.filter((c) => c !== cls),
-                }));
-              }}
-            >
-              ✕
-            </button>
-          </span>
-        ))}
-      </div>
-    </div>
-
-    {/* Navigation Buttons */}
-    <div className="flex justify-between mt-6">
-      <button
-        type="button"
-        className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-gray-200 text-gray-800 hover:bg-gray-300 h-9 py-2 px-8"
-      >
-        Back
-      </button>
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-black text-white hover:bg-gray-800 h-9 py-2 px-8"
-      >
-        {isSubmitting ? "Processing..." : "Continue"}
-      </button>
-    </div>
-  </form>
-)}
-
-        {step === 3 && (
-          <form onSubmit={handleSubmitStep3} className="space-y-6">
+          <form onSubmit={handleSubmitStep2} className="space-y-6">
             <h3 className="text-lg font-semibold mb-4">
-              Step 3: Academic Year
+              Step 2: Select Classes
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-1">Start Year *</label>
-                <input
-                  name="academicYearStart"
-                  required
-                  placeholder="2025"
-                  onChange={handleChange}
-                  className={inputClass}
-                />
+            <p>Please select the classes you want to register for. You can select multiple classes.</p>
+
+            {/* Card Groups */}
+            <div className="flex flex-col gap-6">
+              {/* Pre-Primary */}
+              <div className="p-4 rounded-xl shadow bg-white">
+                <h4 className="font-semibold mb-3 text-black">Pre-Primary</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {["Nursery", "PG", "LKG", "UKG"].map((cls) => {
+                    const isSelected = formData.classes?.includes(cls);
+                    return (
+                      <button
+                        type="button"
+                        key={cls}
+                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${isSelected
+                          ? "bg-gray-700 text-white"
+                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                          }`}
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            classes: isSelected
+                              ? prev.classes.filter((c) => c !== cls)
+                              : [...(prev.classes || []), cls],
+                          }));
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span>{cls}</span>
+                          {isSelected && (
+                            <span className="ml-2 text-white font-bold text-sm">✔</span>
+                          )}
+                        </div>
+                      </button>
+
+
+                    );
+                  })}
+                </div>
               </div>
-              <div>
-                <label className="block mb-1">End Year *</label>
-                <input
-                  name="academicYearEnd"
-                  required
-                  placeholder="2026"
-                  onChange={handleChange}
-                  className={inputClass}
-                />
+
+              {/* Primary */}
+              <div className="p-4 rounded-xl shadow bg-white">
+                <h4 className="font-semibold mb-3 text-black">Primary (1-6)</h4>
+                <div className="grid grid-cols-3 gap-3">
+                  {["1", "2", "3", "4", "5", "6"].map((cls) => {
+                    const isSelected = formData.classes?.includes(cls);
+                    return (
+                      <button
+                        type="button"
+                        key={cls}
+                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${isSelected
+                          ? "bg-gray-700 text-white"
+                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                          }`}
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            classes: isSelected
+                              ? prev.classes.filter((c) => c !== cls)
+                              : [...(prev.classes || []), cls],
+                          }));
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span>{cls}</span>
+                          {isSelected && (
+                            <span className="ml-2 text-white font-bold text-sm">✔</span>
+                          )}
+                        </div>
+                      </button>
+
+
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Middle */}
+              <div className="p-4 rounded-xl shadow bg-white">
+                <h4 className="font-semibold mb-3 text-black">Middle (7-10)</h4>
+                <div className="grid grid-cols-3 gap-3">
+                  {["7", "8", "9", "10"].map((cls) => {
+                    const isSelected = formData.classes?.includes(cls);
+                    return (
+                      <button
+                        type="button"
+                        key={cls}
+                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${isSelected
+                          ? "bg-gray-700 text-white"
+                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                          }`}
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            classes: isSelected
+                              ? prev.classes.filter((c) => c !== cls)
+                              : [...(prev.classes || []), cls],
+                          }));
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span>{cls}</span>
+                          {isSelected && (
+                            <span className="ml-2 text-white font-bold text-sm">✔</span>
+                          )}
+                        </div>
+                      </button>
+
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Secondary */}
+              <div className="p-4 rounded-xl shadow bg-white">
+                <h4 className="font-semibold mb-3 text-black">Secondary (11–12)</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    "11 Science",
+                    "11 Commerce",
+                    "11 Arts",
+                    "12 Science",
+                    "12 Commerce",
+                    "12 Arts",
+                  ].map((cls) => {
+                    const isSelected = formData.classes?.includes(cls);
+                    return (
+                      <button
+                        type="button"
+                        key={cls}
+                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${isSelected
+                          ? "bg-gray-700 text-white"
+                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                          }`}
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            classes: isSelected
+                              ? prev.classes.filter((c) => c !== cls)
+                              : [...(prev.classes || []), cls],
+                          }));
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span>{cls}</span>
+                          {isSelected && (
+                            <span className="ml-2 text-white font-bold text-sm">✔</span>
+                          )}
+                        </div>
+                      </button>
+
+                    );
+                  })}
+                </div>
               </div>
             </div>
+
+            {/* Selected Classes UI - Styled like chips in a card */}
+            <div className="bg-white p-5 rounded-xl shadow-md border border-gray-100 mt-6">
+              <h5 className="font-semibold text-gray-800 mb-3">
+                Selected Classes ({formData.classes?.length || 0})
+              </h5>
+              <div className="flex flex-wrap gap-2">
+                {(formData.classes || []).map((cls) => (
+                  <span
+                    key={cls}
+                    className="flex items-center bg-gray-700 bg-opacity-90 text-white text-sm px-3 py-1.5 rounded-full gap-1"
+                  >
+                    {cls}
+                    <button
+                      type="button"
+                      className="ml-1 rounded-full hover:bg-gray-700 w-5 h-5 flex items-center justify-center"
+                      onClick={() => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          classes: prev.classes.filter((c) => c !== cls),
+                        }));
+                      }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Navigation Buttons */}
             <div className="flex justify-between mt-6">
               <button
                 type="button"
-                onClick={handleBack}
-                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gray-200 text-gray-800 shadow hover:bg-gray-300 h-9 py-2 px-8"
+                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-gray-200 text-gray-800 hover:bg-gray-300 h-9 py-2 px-8"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 py-2 px-8"
+                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-black text-white hover:bg-gray-800 h-9 py-2 px-8"
               >
-                {isSubmitting ? "Processing..." : "Complete Setup"}
+                {isSubmitting ? "Processing..." : "Continue"}
               </button>
+            </div>
+          </form>
+        )}
+
+        {step === 3 && (
+          <form onSubmit={handleSubmitStep3} className="space-y-6">
+            {/* Step Heading */}
+            <div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-1">
+                Final Step: Set Academic Year
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Configure the academic year of your organization
+              </p>
+            </div>
+
+            {/* Card Container */}
+            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+              <h4 className="font-semibold text-gray-800 mb-4">
+                Academic Year
+              </h4>
+
+              {/* Input Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    Start Year <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="academicYearStart"
+                    required
+                    placeholder="2025"
+                    onChange={handleChange}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-medium text-gray-700">
+                    End Year <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="academicYearEnd"
+                    required
+                    placeholder="2026"
+                    onChange={handleChange}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between mt-6">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-gray-200 text-gray-800 hover:bg-gray-300 px-6 py-2 transition"
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 px-6 py-2 transition"
+                >
+                  {isSubmitting ? "Processing..." : "Complete Setup"}
+                </button>
+              </div>
             </div>
           </form>
         )}
