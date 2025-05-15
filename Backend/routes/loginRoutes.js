@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const School = require("../models/Organization");  // School model
+const School = require("../models/Organization"); // School model
 
 // secret for JWT
 const JWT_SECRET = process.env.JWT_SECRET || "yoursecretkey";
@@ -13,36 +13,32 @@ router.post("/login", async (req, res) => {
 
   try {
     let school;
-    
+
     // Check if the role is 'organization'
     if (role === "organization") {
-      const { organizationEmail, password: orgPassword } = req.body;
+      const { organizationEmail, password } = req.body;
 
-      if (!organizationEmail || !orgPassword) {
-        return res.status(400).json({ message: "Email and password are required for organization login" });
+      if (!organizationEmail || !password) {
+        return res
+          .status(400)
+          .json({ message: "Email and password are required" });
       }
 
-      // Find the school by the contactEmail
-      school = await School.findOne({ contactEmail: organizationEmail });
+      const org = await School.findOne({ orgEmail: organizationEmail }); 
 
-      if (!school) {
+      if (!org)
         return res.status(404).json({ message: "Organization not found" });
-      }
 
-      // Compare the entered password with the hashed password in the database
-      const isMatch = await bcrypt.compare(orgPassword, school.password);
-
-      if (!isMatch) {
+      const isMatch = await bcrypt.compare(password, org.password);
+      if (!isMatch)
         return res.status(401).json({ message: "Invalid credentials" });
-      }
 
-      // Create a JWT token for the organization
       const token = jwt.sign(
         {
-          id: school._id,
+          id: org._id,
           role: "organization",
-          name: school.name,
-          schoolCode: school.prefix, // Use school prefix as school code
+          name: org.orgName,
+          schoolCode: org.prefix,
         },
         JWT_SECRET,
         { expiresIn: "1d" }
@@ -51,10 +47,10 @@ router.post("/login", async (req, res) => {
       return res.json({
         token,
         user: {
-          id: school._id,
-          name: school.name,
+          id: org._id,
+          name: org.orgName,
           role: "organization",
-          schoolCode: school.prefix, // schoolCode
+          schoolCode: org.prefix,
         },
       });
     }

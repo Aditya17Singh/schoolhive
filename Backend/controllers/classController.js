@@ -7,7 +7,7 @@ const Student = require("../models/Student");
 // Get All Classes with Sections
 exports.getAllClasses = async (req, res) => {
   try {
-    const schoolId = req.user.schoolId; // from decoded JWT
+    const schoolId = req.user.id; // from decoded JWT
     const classes = await Class.find({ schoolId }).populate("subjects students");
     res.json(classes);
   } catch (error) {
