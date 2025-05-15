@@ -1,8 +1,12 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { registerOrganization, registerClasses , registerAcademicYear  } from './action';
+import {
+  registerOrganization,
+  registerClasses,
+  registerAcademicYear,
+} from "./action";
 
 export default function SchoolRegisterPage() {
   const [step, setStep] = useState(1);
@@ -47,15 +51,14 @@ export default function SchoolRegisterPage() {
       const result = await registerOrganization(formattedData);
 
       if (result.success) {
-        // Store the organization ID and authentication token for later steps
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           organizationId: result.organizationId,
-          authToken: result.token // Store the auth token from registration response
+          authToken: result.token,
         }));
         setStatus("Organization setup saved successfully!");
         setTimeout(() => setStatus(""), 3000);
-        handleNext();  // Proceed to the next step (class selection)
+        handleNext();
       } else {
         setStatus(`❌ Error: ${result.error || "Unknown error"}`);
       }
@@ -98,7 +101,7 @@ export default function SchoolRegisterPage() {
 
       if (result.success) {
         setStatus("Classes saved successfully!");
-        handleNext();  // Proceed to the next step (academic year setup)
+        handleNext(); // Proceed to the next step (academic year setup)
       } else {
         setStatus(`❌ Error: ${result.error || "Unknown error"}`);
       }
@@ -119,7 +122,9 @@ export default function SchoolRegisterPage() {
     }
 
     if (!formData.organizationId) {
-      setStatus("Missing organization information. Please restart the process.");
+      setStatus(
+        "Missing organization information. Please restart the process."
+      );
       return;
     }
 
@@ -142,22 +147,19 @@ export default function SchoolRegisterPage() {
     try {
       const result = await registerAcademicYear(
         academicYearData,
-        formData.organizationId,
-        //formData.authToken // Pass the auth token to the API call
+        formData.organizationId
       );
 
       if (result.success) {
         setStatus("Academic year saved successfully!");
-        // Store the token in localStorage for future sessions if needed
-        // localStorage.setItem('authToken', formData.authToken);
-        router.push("/dashboard");  // Redirect to the dashboard after completing all steps
+        router.push("/");
       } else {
         setStatus(`❌ Error: ${result.error || "Unknown error"}`);
       }
     } catch (error) {
       setStatus(`❌ Error: ${error.message}`);
     } finally {
-      setIsSubmitting(false); // Stop processing
+      setIsSubmitting(false);
     }
   };
 
@@ -188,12 +190,13 @@ export default function SchoolRegisterPage() {
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center space-x-2">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${step === s
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step === s
                     ? "bg-blue-600 text-white"
                     : step > s
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-200 text-gray-600"
-                  }`}
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-200 text-gray-600"
+                }`}
               >
                 {step > s ? "✓" : s}
               </div>
@@ -204,18 +207,21 @@ export default function SchoolRegisterPage() {
           ))}
         </div>
 
-
         {/* Status message displayed prominently */}
         {status && (
-          <div className={`p-4 mb-4 rounded-lg ${status.includes('Error') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+          <div
+            className={`p-4 mb-4 rounded-lg ${
+              status.includes("Error")
+                ? "bg-red-100 text-red-800"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
             {status}
           </div>
         )}
 
         {step === 1 && (
-          <form
-            onSubmit={handleSubmitStep1}
-            className="space-y-6">
+          <form onSubmit={handleSubmitStep1} className="space-y-6">
             {/* Card 1: Organization Details */}
             <div className="rounded-xl shadow-sm">
               <div className="flex bg-gray-50 flex-col space-y-1.5 p-4 rounded-t-lg">
@@ -292,8 +298,7 @@ export default function SchoolRegisterPage() {
                 </div>
                 <div>
                   <label className="block mb-1">
-                    Organization Prefix{" "}
-                    <span className="text-red-500">*</span>
+                    Organization Prefix <span className="text-red-500">*</span>
                   </label>
                   <input
                     name="prefix"
@@ -458,7 +463,7 @@ export default function SchoolRegisterPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-9 py-2 px-8"
+                className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-black text-white hover:bg-gray-800 h-9 py-2 px-8"
               >
                 {isSubmitting ? "Processing..." : "Continue"}
                 <svg
@@ -485,7 +490,10 @@ export default function SchoolRegisterPage() {
             <h3 className="text-lg font-semibold mb-4">
               Step 2: Select Classes
             </h3>
-            <p>Please select the classes you want to register for. You can select multiple classes.</p>
+            <p>
+              Please select the classes you want to register for. You can select
+              multiple classes.
+            </p>
 
             {/* Card Groups */}
             <div className="flex flex-col gap-6">
@@ -499,10 +507,11 @@ export default function SchoolRegisterPage() {
                       <button
                         type="button"
                         key={cls}
-                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${isSelected
-                          ? "bg-gray-700 text-white"
-                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-                          }`}
+                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${
+                          isSelected
+                            ? "bg-gray-700 text-white"
+                            : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                        }`}
                         onClick={() => {
                           setFormData((prev) => ({
                             ...prev,
@@ -515,12 +524,12 @@ export default function SchoolRegisterPage() {
                         <div className="flex items-center justify-between">
                           <span>{cls}</span>
                           {isSelected && (
-                            <span className="ml-2 text-white font-bold text-sm">✔</span>
+                            <span className="ml-2 text-white font-bold text-sm">
+                              ✔
+                            </span>
                           )}
                         </div>
                       </button>
-
-
                     );
                   })}
                 </div>
@@ -536,10 +545,11 @@ export default function SchoolRegisterPage() {
                       <button
                         type="button"
                         key={cls}
-                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${isSelected
-                          ? "bg-gray-700 text-white"
-                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-                          }`}
+                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${
+                          isSelected
+                            ? "bg-gray-700 text-white"
+                            : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                        }`}
                         onClick={() => {
                           setFormData((prev) => ({
                             ...prev,
@@ -552,12 +562,12 @@ export default function SchoolRegisterPage() {
                         <div className="flex items-center justify-between">
                           <span>{cls}</span>
                           {isSelected && (
-                            <span className="ml-2 text-white font-bold text-sm">✔</span>
+                            <span className="ml-2 text-white font-bold text-sm">
+                              ✔
+                            </span>
                           )}
                         </div>
                       </button>
-
-
                     );
                   })}
                 </div>
@@ -573,10 +583,11 @@ export default function SchoolRegisterPage() {
                       <button
                         type="button"
                         key={cls}
-                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${isSelected
-                          ? "bg-gray-700 text-white"
-                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-                          }`}
+                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${
+                          isSelected
+                            ? "bg-gray-700 text-white"
+                            : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                        }`}
                         onClick={() => {
                           setFormData((prev) => ({
                             ...prev,
@@ -589,11 +600,12 @@ export default function SchoolRegisterPage() {
                         <div className="flex items-center justify-between">
                           <span>{cls}</span>
                           {isSelected && (
-                            <span className="ml-2 text-white font-bold text-sm">✔</span>
+                            <span className="ml-2 text-white font-bold text-sm">
+                              ✔
+                            </span>
                           )}
                         </div>
                       </button>
-
                     );
                   })}
                 </div>
@@ -601,7 +613,9 @@ export default function SchoolRegisterPage() {
 
               {/* Secondary */}
               <div className="p-4 rounded-xl shadow bg-white">
-                <h4 className="font-semibold mb-3 text-black">Secondary (11–12)</h4>
+                <h4 className="font-semibold mb-3 text-black">
+                  Secondary (11–12)
+                </h4>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     "11 Science",
@@ -616,10 +630,11 @@ export default function SchoolRegisterPage() {
                       <button
                         type="button"
                         key={cls}
-                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${isSelected
-                          ? "bg-gray-700 text-white"
-                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-                          }`}
+                        className={`cursor-pointer rounded-lg p-3 text-center font-medium transition duration-200 ${
+                          isSelected
+                            ? "bg-gray-700 text-white"
+                            : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                        }`}
                         onClick={() => {
                           setFormData((prev) => ({
                             ...prev,
@@ -632,11 +647,12 @@ export default function SchoolRegisterPage() {
                         <div className="flex items-center justify-between">
                           <span>{cls}</span>
                           {isSelected && (
-                            <span className="ml-2 text-white font-bold text-sm">✔</span>
+                            <span className="ml-2 text-white font-bold text-sm">
+                              ✔
+                            </span>
                           )}
                         </div>
                       </button>
-
                     );
                   })}
                 </div>
@@ -749,7 +765,8 @@ export default function SchoolRegisterPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 px-6 py-2 transition"
+                  // className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 px-6 py-2 transition"
+                  className="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-black text-white hover:bg-gray-800 h-9 py-2 px-8"
                 >
                   {isSubmitting ? "Processing..." : "Complete Setup"}
                 </button>

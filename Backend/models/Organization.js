@@ -4,7 +4,6 @@ const bcrypt = require("bcryptjs");
 const AddressSchema = new mongoose.Schema({
   line1: { type: String, required: true },
   line2: { type: String },
-  nearbyLandmark: { type: String, default: "" },
   city: { type: String, required: true },
   district: { type: String, required: true },
   state: { type: String, required: true },
