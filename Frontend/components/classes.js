@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CirclePlus } from "lucide-react";
@@ -93,12 +93,42 @@ export default function ClassList() {
     setDialogOpen(true);
   };
 
-  const handleSaveSubjects = (subjects) => {
+  const handleSaveSubjects = async (subjects) => {
     if (selectedClassId) {
-      setSubjectMap((prev) => ({
-        ...prev,
-        [selectedClassId]: subjects,
-      }));
+      try {
+        const res = await fetch(
+          "http://localhost:5000/api/classes/add-subject",
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({
+              classId: selectedClassId,
+              subjectNames: subjects, // Send names to match with DB
+            }),
+          }
+        );
+
+        const data = await res.json();
+
+        if (res.ok) {
+          setClasses((prevClasses) =>
+            prevClasses.map((cls) =>
+              cls._id === selectedClassId
+                ? { ...cls, subjects: data.classData.subjects }
+                : cls
+            )
+          );
+          setDialogOpen(false);
+          showToast("Subjects updated successfully!");
+        } else {
+          console.error(data.error || "Failed to add subjects");
+        }
+      } catch (error) {
+        console.error("Error adding subjects to class:", error);
+      }
     }
   };
 
@@ -130,7 +160,7 @@ export default function ClassList() {
         }
       );
       showToast("Sections updated successfully!");
-      fetchClasses(); 
+      fetchClasses();
     } catch (error) {
       console.error(error);
       showToast("Failed to update sections", "error");
@@ -138,6 +168,12 @@ export default function ClassList() {
       setShowSectionDialog(false);
     }
   };
+
+  const selectedClass = classes.find((cls) => cls._id === selectedClassId);
+  const classSubjectNames = useMemo(() => {
+    if (!selectedClass || !selectedClass.subjects) return [];
+    return selectedClass.subjects.map((subject) => subject.name);
+  }, [selectedClass]);
 
   // Loading Skeleton
   if (loading) {
@@ -255,9 +291,19 @@ export default function ClassList() {
                             No subjects added yet
                           </span>
                         ) : (
-                          <span className="text-xs font-medium px-3 py-1 rounded-full bg-green-50 text-green-600 border border-green-200">
-                            {cls.subjects.length} Subjects
-                          </span>
+                          <div className="flex flex-wrap gap-1 max-w-xs">
+                            {cls.subjects.map((subject) => (
+                              <span
+                                key={subject._id}
+                                className="text-xs font-medium px-2 py-1 rounded bg-green-100 text-green-800 border border-green-300"
+                                title={subject.name}
+                              >
+                                {subject.name.length > 20
+                                  ? subject.name.slice(0, 20) + "…"
+                                  : subject.name}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </td>
 
@@ -322,6 +368,7 @@ export default function ClassList() {
             open={dialogOpen}
             onOpenChange={setDialogOpen}
             onSave={handleSaveSubjects}
+            classSubjectNames={classSubjectNames}
           />
 
           <SectionDialog

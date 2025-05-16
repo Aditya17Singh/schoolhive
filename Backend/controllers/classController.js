@@ -119,24 +119,37 @@ exports.updateClass = async (req, res) => {
 // Add Subject to Class
 exports.addSubjectToClass = async (req, res) => {
   try {
-    const { classId, subjectId } = req.body;
+    const { classId, subjectNames = [] } = req.body;
 
     const classData = await Class.findById(classId);
     if (!classData) return res.status(404).json({ error: "Class not found" });
 
-    const subject = await Subject.findById(subjectId);
-    if (!subject) return res.status(404).json({ error: "Subject not found" });
+    const newSubjectIds = [];
 
-    if (!classData.subjects.includes(subjectId)) {
-      classData.subjects.push(subjectId);
-      await classData.save();
+    for (const name of subjectNames) {
+      let subject = await Subject.findOne({ name });
+
+      if (!subject) {
+        subject = await Subject.create({ name });
+      }
+
+      newSubjectIds.push(subject._id);
     }
 
-    res.json({ message: "Subject added to class", classData });
+    // Replace classData.subjects with newSubjectIds (remove old subjects not in the new list)
+    classData.subjects = newSubjectIds;
+
+    await classData.save();
+
+    await classData.populate("subjects");
+
+    res.json({ message: "Subjects updated for class", classData });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Add Student to Class
 exports.addStudentToClass = async (req, res) => {
