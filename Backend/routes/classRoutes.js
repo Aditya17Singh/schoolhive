@@ -13,6 +13,7 @@ router.get("/:id", classController.getClassById);
 // Modified to work without token during registration
 router.post("/", classController.createClass);
 
+router.put("/:id/sections", verifyToken, classController.updateClassSections);
 router.put("/:id", classController.updateClass);
 router.put("/add-subject", classController.addSubjectToClass);
 router.put("/add-student", classController.addStudentToClass);

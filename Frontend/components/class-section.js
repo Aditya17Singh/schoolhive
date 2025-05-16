@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import * as Dialog from '@radix-ui/react-dialog';
-import { X, Lock, Check,CirclePlus } from 'lucide-react';
+import * as Dialog from "@radix-ui/react-dialog";
+import { X, Lock, Check } from "lucide-react";
 
 export default function SectionDialog({
   show,
@@ -18,9 +17,7 @@ export default function SectionDialog({
     <Dialog.Root open={show} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-        <Dialog.Content
-          className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg sm:rounded-lg"
-        >
+        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg sm:rounded-lg">
           <Dialog.Title className="text-lg font-semibold">
             Add or Remove Sections
           </Dialog.Title>
@@ -43,7 +40,7 @@ export default function SectionDialog({
                     ) : (
                       <button
                         onClick={() => handleRemoveSection(sec)}
-                        className="hover:text-blue-600 ml-1"
+                        className="hover:text-blue-600 ml-1 cursor-pointer"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -56,10 +53,11 @@ export default function SectionDialog({
             {/* Available Sections */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-medium text-gray-700">Available Sections</h3>
+                <h3 className="font-medium text-gray-700">
+                  Available Sections
+                </h3>
                 <span className="text-sm text-gray-500 flex items-center gap-1">
-                  <Lock className="h-3 w-3" />
-                  = Compulsory
+                  <Lock className="h-3 w-3" />= Compulsory
                 </span>
               </div>
               <div className="grid grid-cols-5 gap-2">
@@ -71,15 +69,17 @@ export default function SectionDialog({
                       key={sec}
                       onClick={() => handleToggleSection(sec)}
                       disabled={isCompulsory}
-                      className={`p-3 rounded-lg text-sm font-medium transition-all border flex items-center justify-center gap-2 ${
+                      className={`p-3 cursor-pointer rounded-lg text-sm font-medium transition-all border flex items-center justify-center gap-2 ${
                         isSelected
-                          ? 'bg-blue-50 text-blue-700 border-blue-500'
-                          : 'border-gray-200 hover:border-blue-500'
-                      } ${isCompulsory ? 'cursor-default text-blue-700' : ''}`}
+                          ? "bg-blue-50 text-blue-700 border-blue-500"
+                          : "border-gray-200 hover:border-blue-500"
+                      } ${isCompulsory ? "cursor-default text-blue-700" : ""}`}
                     >
                       {sec}
                       {isCompulsory && <Lock className="w-3 h-3" />}
-                      {isSelected && !isCompulsory && <Check className="w-4 h-4" />}
+                      {isSelected && !isCompulsory && (
+                        <Check className="w-4 h-4" />
+                      )}
                     </button>
                   );
                 })}
@@ -96,7 +96,7 @@ export default function SectionDialog({
             </Dialog.Close>
             <button
               onClick={handleSaveSections}
-              className="bg-blue-600 text-white text-sm px-4 py-2 rounded-md hover:bg-blue-700"
+              className="bg-blue-600 cursor-pointer text-white text-sm px-4 py-2 rounded-md hover:bg-blue-700"
             >
               Save Changes
             </button>
@@ -106,7 +106,7 @@ export default function SectionDialog({
           <Dialog.Close asChild>
             <button
               type="button"
-              className="absolute right-4 top-4 opacity-70 hover:opacity-100"
+              className="absolute right-4 top-4 opacity-70 hover:opacity-100 cursor-pointer"
             >
               <X className="w-4 h-4" />
               <span className="sr-only">Close</span>

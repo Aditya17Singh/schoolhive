@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CirclePlus } from 'lucide-react';
+import { CirclePlus } from "lucide-react";
 import axios from "axios";
 import { AddSubjectsDialog } from "./add-subject-dialog";
 import SectionDialog from "./class-section";
@@ -16,7 +16,7 @@ export default function ClassList() {
   const [search, setSearch] = useState("");
 
   // Forms
-  const [classForm, setClassForm] = useState({ name: "", section: "" });
+  // const [classForm, setClassForm] = useState({ name: "", section: "" });
 
   // Toasts
   const [toasts, setToasts] = useState([]);
@@ -104,40 +104,40 @@ export default function ClassList() {
 
   //for section
   const [showSectionDialog, setShowSectionDialog] = useState(false);
-const [selectedSections, setSelectedSections] = useState(["A"]);
-const [compulsorySections, setCompulsorySections] = useState(["A"]);
-const allSections = ["A", "B", "C", "D", "E", "F", "G" ,"H", "I", "J"];
+  const [selectedSections, setSelectedSections] = useState(["A"]);
+  const [compulsorySections, setCompulsorySections] = useState(["A"]);
+  const allSections = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 
-const handleToggleSection = (section) => {
-  setSelectedSections((prev) =>
-    prev.includes(section)
-      ? prev.filter((s) => s !== section)
-      : [...prev, section]
-  );
-};
-
-const handleRemoveSection = (section) => {
-  setSelectedSections((prev) => prev.filter((s) => s !== section));
-};
-
-const handleSaveSections = async () => {
-  try {
-    const res = await axios.put(
-      `http://localhost:5000/api/classes/${selectedClassId}/sections`,
-      { sections: selectedSections },
-      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+  const handleToggleSection = (section) => {
+    setSelectedSections((prev) =>
+      prev.includes(section)
+        ? prev.filter((s) => s !== section)
+        : [...prev, section]
     );
-    showToast("Sections updated successfully!");
-    fetchClasses(); // Refresh
-  } catch (error) {
-    console.error(error);
-    showToast("Failed to update sections", "error");
-  } finally {
-    setShowSectionDialog(false);
-  }
-};
+  };
 
+  const handleRemoveSection = (section) => {
+    setSelectedSections((prev) => prev.filter((s) => s !== section));
+  };
 
+  const handleSaveSections = async () => {
+    try {
+      const res = await axios.put(
+        `http://localhost:5000/api/classes/${selectedClassId}/sections`,
+        { sections: selectedSections },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
+      showToast("Sections updated successfully!");
+      fetchClasses(); 
+    } catch (error) {
+      console.error(error);
+      showToast("Failed to update sections", "error");
+    } finally {
+      setShowSectionDialog(false);
+    }
+  };
 
   // Loading Skeleton
   if (loading) {
@@ -234,7 +234,7 @@ const handleSaveSections = async () => {
               </thead>
               <tbody>
                 {filteredClasses
-                  .sort((a, b) => a.order - b.order) // ensure correct sorting by order
+                  .sort((a, b) => a.order - b.order)
                   .map((cls, idx) => (
                     <tr
                       key={cls._id}
@@ -248,7 +248,6 @@ const handleSaveSections = async () => {
                       <td className="px-4 py-3 text-center capitalize">
                         {cls.name}
                       </td>
-
                       {/* Subjects */}
                       <td className="px-4 py-3">
                         {cls.subjects.length === 0 ? (
@@ -266,29 +265,34 @@ const handleSaveSections = async () => {
                       <td className="px-4 py-3">
                         <button
                           onClick={() => handleOpenDialog(cls._id)}
-                          className="inline-flex gap-2 items-center px-4 py-2 text-sm font-medium shadow-sm rounded-md bg-background hover:bg-accent hover:text-accent-foreground"
+                          className="cursor-pointer inline-flex gap-2 items-center px-4 py-2 text-sm font-medium shadow-sm rounded-md bg-background hover:bg-accent hover:text-accent-foreground"
                         >
                           <span className="text-xs font-medium px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded">
                             {cls.subjects.length}
                           </span>
-                         <CirclePlus/>
+                          <CirclePlus />
                           Add Subjects
                         </button>
                       </td>
 
                       {/* Sections */}
                       <td className="px-4 py-3 text-center">
-                        <div className="flex justify-center items-center gap-1">
-                          <div className="w-7 aspect-square flex items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-sm font-medium">
-                            {cls.section}
-                          </div>
+                        <div className="flex justify-center items-center gap-1 flex-wrap">
+                          {[...cls.sections].sort().map((sec) => (
+                            <div
+                              key={sec}
+                              className="w-7 aspect-square flex items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-sm font-medium"
+                            >
+                              {sec}
+                            </div>
+                          ))}
                           <button
-onClick={() => {
-  setSelectedClassId(cls._id);
-  setSelectedSections(cls.sections || ["A"]); // Set current sections
-  setShowSectionDialog(true);
-}}
-                            className="hover:text-blue-600"
+                            onClick={() => {
+                              setSelectedClassId(cls._id);
+                              setSelectedSections(cls.sections || ["A"]);
+                              setShowSectionDialog(true);
+                            }}
+                            className="hover:text-blue-600 cursor-pointer"
                           >
                             <svg
                               className="w-7 h-7"
@@ -335,4 +339,3 @@ onClick={() => {
     </div>
   );
 }
-

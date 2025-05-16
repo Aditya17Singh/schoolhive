@@ -7,8 +7,8 @@ const Student = require("../models/Student");
 // Get All Classes with Sections
 exports.getAllClasses = async (req, res) => {
   try {
-    const schoolId = req.user.id; // from decoded JWT
-    const classes = await Class.find({ schoolId }).populate("subjects students");
+    const orgId = req.user.id; 
+    const classes = await Class.find({ orgId }).populate("subjects students");
     res.json(classes);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -29,14 +29,14 @@ exports.getClassById = async (req, res) => {
 
 exports.createClass = async (req, res) => {
   try {
-    const { name, sections, type, schoolId } = req.body;
+    const { name, sections, type, orgId } = req.body;
 
-    if (!schoolId) {
+    if (!orgId) {
       return res.status(400).json({ error: "School ID is required" });
     }
 
-    // Check if class with same name, section, and schoolId already exists
-    const existingClass = await Class.findOne({ name,  schoolId });
+    // Check if class with same name, section, and orgId already exists
+    const existingClass = await Class.findOne({ name,  orgId });
     if (existingClass) {
       return res.status(400).json({ error: "Class with this name and section already exists." });
     }
@@ -69,7 +69,7 @@ exports.createClass = async (req, res) => {
       sections,
       type,
       order,
-      schoolId,
+      orgId,
     });
 
     await newClass.save();
@@ -78,6 +78,32 @@ exports.createClass = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+exports.updateClassSections = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { sections } = req.body;
+
+    if (!Array.isArray(sections)) {
+      return res.status(400).json({ error: "Sections must be an array." });
+    }
+
+    const updatedClass = await Class.findByIdAndUpdate(
+      id,
+      { sections },
+      { new: true }
+    );
+
+    if (!updatedClass) {
+      return res.status(404).json({ error: "Class not found" });
+    }
+
+    res.json({ message: "Sections updated successfully", class: updatedClass });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 // Update Class (Name or Section)
 exports.updateClass = async (req, res) => {

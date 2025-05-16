@@ -12,14 +12,16 @@ export default function LoginForm() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
+  const router = useRouter();
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (
-      (role === "admin" && (!email && !orgUid || !password)) ||
-      (role === "teacher" && (!phone && !orgUid || !password)) ||
+      (role === "admin" && ((!email && !orgUid) || !password)) ||
+      (role === "teacher" && ((!phone && !orgUid) || !password)) ||
       (role === "organization" && (!email || !password))
     ) {
       setError("All fields are required.");
@@ -27,6 +29,7 @@ export default function LoginForm() {
     }
 
     setError("");
+    setLoading(true); 
 
     let payload = { role, password };
 
@@ -66,18 +69,24 @@ export default function LoginForm() {
         router.push("/dashboard");
       } else {
         setError(data.message || "Login failed");
+        setLoading(false); 
       }
     } catch (err) {
       console.error(err);
       setError("Something went wrong");
+      setLoading(false); 
     }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
-        <h2 className="text-center text-2xl font-bold text-gray-800">Sign In</h2>
-        {error && <p className="mt-2 text-center text-sm text-red-500">{error}</p>}
+        <h2 className="text-center text-2xl font-bold text-gray-800">
+          Sign In
+        </h2>
+        {error && (
+          <p className="mt-2 text-center text-sm text-red-500">{error}</p>
+        )}
         <div className="mt-4 text-center">
           <Link
             href="/schools/register/step-1"
@@ -91,7 +100,9 @@ export default function LoginForm() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Role</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Role
+            </label>
             <select
               value={role}
               onChange={(e) => {
@@ -171,7 +182,9 @@ export default function LoginForm() {
 
           {/* Password for all roles */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
             <input
               type="password"
               value={password}
@@ -183,9 +196,12 @@ export default function LoginForm() {
 
           <button
             type="submit"
-            className="w-full rounded-md bg-blue-600 py-2 text-white font-semibold hover:bg-blue-700 transition"
+            disabled={loading}
+            className={`w-full rounded-md py-2 text-white font-semibold transition ${
+              loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            Login
+            {loading ? "Login..." : "Login"}
           </button>
         </form>
       </div>
