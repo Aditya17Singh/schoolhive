@@ -46,19 +46,21 @@ exports.createClass = async (req, res) => {
 
     switch (type) {
       case "pre-primary":
-        order = (["Nursery", "PG", "LKG", "UKG"].indexOf(name) + 1) * 0.25; 
+        order = (["Nursery", "PG", "LKG", "UKG"].indexOf(name) + 1) * 0.25;
         break;
       case "primary":
-        order = parseInt(name, 10); // e.g., 1, 2, 3
+      case "middle": {
+        const parsed = parseInt(name, 10);
+        order = isNaN(parsed) ? 0 : parsed;
         break;
-      case "middle":
-        order = parseInt(name, 10); // e.g., 7, 8, 9
+      }
+      case "secondary": {
+        const match = name.match(/\d+/);
+        order = match ? parseInt(match[0], 10) : 0;
         break;
-      case "secondary":
-        order = parseInt(name, 10); // e.g., 11, 12
-        break;
+      }
       default:
-        order = 0; // Default order if something goes wrong
+        order = 0;
     }
 
     // Create a new class with the calculated order
