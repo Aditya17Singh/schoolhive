@@ -29,14 +29,14 @@ exports.getClassById = async (req, res) => {
 
 exports.createClass = async (req, res) => {
   try {
-    const { name, section, type, schoolId } = req.body;
-    
+    const { name, sections, type, schoolId } = req.body;
+
     if (!schoolId) {
       return res.status(400).json({ error: "School ID is required" });
     }
 
     // Check if class with same name, section, and schoolId already exists
-    const existingClass = await Class.findOne({ name, section, schoolId });
+    const existingClass = await Class.findOne({ name,  schoolId });
     if (existingClass) {
       return res.status(400).json({ error: "Class with this name and section already exists." });
     }
@@ -66,7 +66,7 @@ exports.createClass = async (req, res) => {
     // Create a new class with the calculated order
     const newClass = new Class({
       name,
-      section,
+      sections,
       type,
       order,
       schoolId,
@@ -141,7 +141,7 @@ exports.deleteClass = async (req, res) => {
 
     await Student.updateMany(
       { class: classId },
-      { $unset: { class: "" } } 
+      { $unset: { class: "" } }
     );
 
     // 2. Delete the class itself

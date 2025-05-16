@@ -38,7 +38,7 @@ export async function registerClasses(classes, organizationId) {
 
       const classData = {
         name: className,
-        section: 'A',
+        section: ['A'],
         type,
         schoolId: organizationId,
       };

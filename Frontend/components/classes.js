@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { CirclePlus } from 'lucide-react';
 import axios from "axios";
 import { AddSubjectsDialog } from "./add-subject-dialog";
-import * as Dialog from '@radix-ui/react-dialog';
-import { X, Lock, Check,CirclePlus } from 'lucide-react';
+import SectionDialog from "./class-section";
 
 export default function ClassList() {
   const router = useRouter();
@@ -67,61 +67,6 @@ export default function ClassList() {
     }
   };
 
-  // Handle Input Changes
-  const handleInputChange = (e, setter) => {
-    setter((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  // Handle Adding a Class
-  const handleAddClass = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/classes",
-        classForm,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      setClasses([...classes, res.data]);
-      setClassForm({ name: "", section: "" });
-      showToast("Class added successfully!");
-    } catch (error) {
-      if (
-        error.response &&
-        error.response.data?.error ===
-          "Class with this name and section already exists."
-      ) {
-        showToast(error.response.data.error, "error");
-      } else {
-        showToast("Error adding class", "error");
-      }
-    }
-  };
-
-  // Handle Deleting a Class
-  const handleDeleteClass = async (classId) => {
-    // Displaying a warning that all students will lose their reference to this class
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this class? Deleting this class will remove its association with all students, but the students themselves will remain in the school system."
-      )
-    )
-      return;
-
-    try {
-      await axios.delete(`http://localhost:5000/api/classes/${classId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      showToast("Class deleted and students' references removed successfully!");
-      fetchClasses(); // Reload the class list
-    } catch (error) {
-      showToast("Error deleting class", "error");
-    }
-  };
-
   // Handle Search for Classes
   const handleClassSearch = (e) => setSearch(e.target.value);
 
@@ -175,10 +120,23 @@ const handleRemoveSection = (section) => {
   setSelectedSections((prev) => prev.filter((s) => s !== section));
 };
 
-const handleSaveSections = () => {
-  // Save logic here
-  setShowSectionDialog(false);
+const handleSaveSections = async () => {
+  try {
+    const res = await axios.put(
+      `http://localhost:5000/api/classes/${selectedClassId}/sections`,
+      { sections: selectedSections },
+      { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+    );
+    showToast("Sections updated successfully!");
+    fetchClasses(); // Refresh
+  } catch (error) {
+    console.error(error);
+    showToast("Failed to update sections", "error");
+  } finally {
+    setShowSectionDialog(false);
+  }
 };
+
 
 
   // Loading Skeleton
@@ -325,7 +283,11 @@ const handleSaveSections = () => {
                             {cls.section}
                           </div>
                           <button
-                            onClick={() => setShowSectionDialog(true)}
+onClick={() => {
+  setSelectedClassId(cls._id);
+  setSelectedSections(cls.sections || ["A"]); // Set current sections
+  setShowSectionDialog(true);
+}}
                             className="hover:text-blue-600"
                           >
                             <svg
@@ -374,116 +336,3 @@ const handleSaveSections = () => {
   );
 }
 
-function SectionDialog({
-  show,
-  onClose,
-  selectedSections,
-  compulsorySections,
-  allSections,
-  handleRemoveSection,
-  handleToggleSection,
-  handleSaveSections,
-}) {
-  return (
-    <Dialog.Root open={show} onOpenChange={onClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-        <Dialog.Content
-          className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-md translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-lg sm:rounded-lg"
-        >
-          <Dialog.Title className="text-lg font-semibold">
-            Add or Remove Sections
-          </Dialog.Title>
-
-          <div className="flex flex-col gap-6 py-4">
-            {/* Selected Sections */}
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="text-sm font-medium text-blue-800 mb-2">
-                Selected Sections
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {selectedSections.map((sec) => (
-                  <span
-                    key={sec}
-                    className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full flex items-center gap-1"
-                  >
-                    {sec}
-                    {compulsorySections.includes(sec) ? (
-                      <Lock className="h-3 w-3 ml-1 text-blue-600" />
-                    ) : (
-                      <button
-                        onClick={() => handleRemoveSection(sec)}
-                        className="hover:text-blue-600 ml-1"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Available Sections */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-medium text-gray-700">Available Sections</h3>
-                <span className="text-sm text-gray-500 flex items-center gap-1">
-                  <Lock className="h-3 w-3" />
-                  = Compulsory
-                </span>
-              </div>
-              <div className="grid grid-cols-5 gap-2">
-                {allSections.map((sec) => {
-                  const isSelected = selectedSections.includes(sec);
-                  const isCompulsory = compulsorySections.includes(sec);
-                  return (
-                    <button
-                      key={sec}
-                      onClick={() => handleToggleSection(sec)}
-                      disabled={isCompulsory}
-                      className={`p-3 rounded-lg text-sm font-medium transition-all border flex items-center justify-center gap-2 ${
-                        isSelected
-                          ? 'bg-blue-50 text-blue-700 border-blue-500'
-                          : 'border-gray-200 hover:border-blue-500'
-                      } ${isCompulsory ? 'cursor-default text-blue-700' : ''}`}
-                    >
-                      {sec}
-                      {isCompulsory && <Lock className="w-3 h-3" />}
-                      {isSelected && !isCompulsory && <Check className="w-4 h-4" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-            <Dialog.Close asChild>
-              <button className="border bg-white text-sm px-4 py-2 rounded-md hover:bg-gray-50">
-                Cancel
-              </button>
-            </Dialog.Close>
-            <button
-              onClick={handleSaveSections}
-              className="bg-blue-600 text-white text-sm px-4 py-2 rounded-md hover:bg-blue-700"
-            >
-              Save Changes
-            </button>
-          </div>
-
-          {/* Close Icon */}
-          <Dialog.Close asChild>
-            <button
-              type="button"
-              className="absolute right-4 top-4 opacity-70 hover:opacity-100"
-            >
-              <X className="w-4 h-4" />
-              <span className="sr-only">Close</span>
-            </button>
-          </Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
-}
