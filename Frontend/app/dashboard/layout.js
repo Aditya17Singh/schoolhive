@@ -11,31 +11,23 @@ export default function DashboardLayout({ children }) {
   const router = useRouter();
 
   const [sidebarWidth, setSidebarWidth] = useState(250);
-  const [isResizing, setIsResizing] = useState(false);
   const containerRef = useRef(null);
   const lastNonZeroWidth = useRef(250);
 
-  // Add to top with existing hooks
-  const lastClickTimeRef = useRef(0);
+  const [openMenus, setOpenMenus] = useState({
+    academics: false,
+    teachers: false,
+    students: false,
+    admission: false,
+    attendance: false,
+    fee: false,
+  });
 
-  // Detect double click for toggling sidebar
-  // const handleResizerClick = () => {
-  //   const now = Date.now();
-  //   if (now - lastClickTimeRef.current < 300) {
-  //     // Double tap detected
-  //     toggleSidebar();
-  //   }
-  //   lastClickTimeRef.current = now;
-  // };
-
-  // Auth check
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
-
-    if (!token || !userData) {
-      router.replace("/");
-    } else {
+    if (!token || !userData) router.replace("/");
+    else {
       setUser(JSON.parse(userData));
       setLoading(false);
     }
@@ -47,186 +39,122 @@ export default function DashboardLayout({ children }) {
     router.replace("/");
   };
 
-  // Resizable logic
-  // const startResizing = () => setIsResizing(true);
-  const stopResizing = () => setIsResizing(false);
-
-  // const handleMouseMove = (e) => {
-  //   if (!isResizing || !containerRef.current) return;
-  //   const containerLeft = containerRef.current.getBoundingClientRect().left;
-  //   const newWidth = e.clientX - containerLeft;
-  //   const min = 150;
-  //   const max = 500;
-  //   if (newWidth >= min && newWidth <= max) {
-  //     setSidebarWidth(newWidth);
-  //     lastNonZeroWidth.current = newWidth;
-  //   }
-  // };
-
-  const toggleSidebar = () => {
-    if (sidebarWidth === 0) {
-      setSidebarWidth(lastNonZeroWidth.current || 250);
-    } else {
-      lastNonZeroWidth.current = sidebarWidth;
-      setSidebarWidth(0);
-    }
+  const toggleMenu = (menu) => {
+    setOpenMenus((prev) => ({ ...prev, [menu]: !prev[menu] }));
   };
-
-  // useEffect(() => {
-  //   document.addEventListener("mousemove", handleMouseMove);
-  //   document.addEventListener("mouseup", stopResizing);
-  //   return () => {
-  //     document.removeEventListener("mousemove", handleMouseMove);
-  //     document.removeEventListener("mouseup", stopResizing);
-  //   };
-  // }, [isResizing]);
 
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Image
-          src="/site-logo.webp"
-          alt="Site Logo"
-          width={100}
-          height={100}
-          className="animate-pulse"
-        />
+        <Image src="/site-logo.webp" alt="Site Logo" width={100} height={100} className="animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="flex w-full h-screen overflow-hidden relative bg-gray-100 "
-    >
-      {/* Sidebar */}
-      <div
-        className="bg-blue-800 text-white p-6 transition-all duration-300 overflow-y-auto h-full group"
-        style={{ width: `${sidebarWidth}px` }}
-      >
-        <div className="flex justify-between items-center mb-6">
-          <Link href="/dashboard">
-            <h2 className="text-2xl font-bold cursor-pointer hover:underline">
-              {user.schoolName || "Dashboard"}
-            </h2>
-          </Link>
-          {/* Collapse Button (←) shown when sidebar is open) */}
-          {/* {sidebarWidth !== 0 && (
-            <button
-              onClick={toggleSidebar}
-              className="absolute z-20 hidden group-hover:block  left-[calc(100%+4px)] cursor-pointer  border rounded-full shadow w-8 h-8 flex items-center"
-              style={{ left: `${sidebarWidth - 40}px` }} // 8px offset from resizer
-            >
-              ←
-            </button>
-          )} */}
+    <div ref={containerRef} className="flex w-full h-screen overflow-hidden bg-gray-100">
+      <div className="bg-blue-900 text-white p-4 overflow-y-auto h-full" style={{ width: `${sidebarWidth}px` }}>
+        <h2 className="text-xl font-bold mb-6">{user.schoolName || "Dashboard"}</h2>
 
-          {/* Expand Button (→) shown when sidebar is collapsed */}
-          {/* {sidebarWidth === 0 && (
-            <button
-              onClick={toggleSidebar}
-              className="absolute z-20 top-4 hidden group-hover:block cursor-pointer bg-black border rounded-full shadow p-1 w-8 h-8 flex items-center"
-              style={{ left: `${sidebarWidth + 40}px` }}
-            >
-              →
-            </button>
-          )} */}
-        </div>
-        <ul>
-          <li className="mb-4">
-            <Link
-              href="/dashboard/profile"
-              className="text-lg hover:text-blue-400"
-            >
-              Profile
-            </Link>
-          </li>
+        <ul className="space-y-2 text-sm">
+          <MenuItem href="/dashboard" icon="🏠" label="Home" />
 
-          {user.role === "admin" && (
-            <>
-              <li className="mb-4">
-                <Link
-                  href="/dashboard/classes"
-                  className="text-lg hover:text-blue-400"
-                >
-                  Classes
-                </Link>
-              </li>
-              <li className="mb-4">
-                <Link
-                  href="/dashboard/subjects"
-                  className="text-lg hover:text-blue-400"
-                >
-                  Subjects
-                </Link>
-              </li>
-              <li className="mb-4">
-                <Link
-                  href="/dashboard/lesson"
-                  className="text-lg hover:text-blue-400"
-                >
-                  Lesson
-                </Link>
-              </li>
-              <li className="mb-4">
-                <Link
-                  href="/dashboard/employee"
-                  className="text-lg hover:text-blue-400"
-                >
-                  Employees
-                </Link>
-              </li>
-              <li className="mb-4">
-                <Link
-                  href="/dashboard/students"
-                  className="text-lg hover:text-blue-400"
-                >
-                  Students
-                </Link>
-              </li>
-              <li className="mb-4">
-                <Link
-                  href="/dashboard/notices"
-                  className="text-lg hover:text-blue-400"
-                >
-                  Notices
-                </Link>
-              </li>
-              <li className="mb-4">
-                <Link
-                  href="/dashboard/complaints"
-                  className="text-lg hover:text-blue-400"
-                >
-                  Complaints
-                </Link>
-              </li>
-            </>
-          )}
-          <li className="mt-6">
-            <button
-              onClick={handleSignOut}
-              className="text-lg text-red-400 hover:text-red-600 font-semibold"
-            >
-              Sign Out
+          <Dropdown label="Academics" icon="🎓" open={openMenus.academics} toggle={() => toggleMenu("academics")}>
+            <MenuItem href="/dashboard/classes" label="Classes" icon="📘" />
+            <MenuItem href="/dashboard/subjects" label="Subjects" icon="📚" />
+            <MenuItem href="/dashboard/examsession" label="Exam Session" icon="📝" />
+          </Dropdown>
+
+          <MenuItem href="/dashboard/notices" label="Notices" icon="📢" />
+
+          <Dropdown label="Teachers" icon="👨‍🏫" open={openMenus.teachers} toggle={() => toggleMenu("teachers")}>
+            <MenuItem href="/dashboard/teachers" label="Dashboard" icon="📊" />
+            <MenuItem href="/dashboard/teachers/applications" label="Manage Applications" icon="📄" />
+            <MenuItem href="/dashboard/teachers/new" label="New Teacher" icon="➕" />
+          </Dropdown>
+
+          <Dropdown label="Students" icon="👩‍🎓" open={openMenus.students} toggle={() => toggleMenu("students")}>
+            <MenuItem href="/dashboard/students" label="Dashboard" icon="📊" />
+            <MenuItem href="/dashboard/students/rollno" label="Manage Roll No" icon="🔢" />
+            <MenuItem href="/dashboard/students/promote" label="Promote Student" icon="📈" />
+          </Dropdown>
+
+          <Dropdown label="Admission" icon="📝" open={openMenus.admission} toggle={() => toggleMenu("admission")}>
+            <MenuItem href="/dashboard/admission" label="Dashboard" icon="📊" />
+            <MenuItem href="/dashboard/admission/new" label="New Admission" icon="➕" />
+          </Dropdown>
+
+          <Dropdown label="Attendance" icon="🕒" open={openMenus.attendance} toggle={() => toggleMenu("attendance")}>
+            <MenuItem href="/dashboard/attendance" label="Dashboard" icon="📊" />
+          </Dropdown>
+
+          <Dropdown label="Fee" icon="💰" open={openMenus.fee} toggle={() => toggleMenu("fee")}>
+            <MenuItem href="/dashboard/fee" label="Dashboard" icon="📊" />
+            <MenuItem href="/dashboard/fee/structures" label="Structures" icon="🏗️" />
+            <MenuItem href="/dashboard/fee/payments" label="Payments" icon="💳" />
+          </Dropdown>
+
+          <MenuItem href="/dashboard/results" label="Result" icon="📈" />
+          <MenuItem href="/dashboard/other" label="Other" icon="🧩" />
+          <MenuItem href="/dashboard/news" label="What's New" icon="📰" />
+          <MenuItem href="/dashboard/organization" label="Organization" icon="🏢" />
+          <MenuItem href="/dashboard/admins" label="Admins" icon="🧑‍💼" />
+          <MenuItem href="/dashboard/support" label="Support" icon="🛠️" />
+          <MenuItem href="/dashboard/settings" label="Settings" icon="⚙️" />
+
+          <li className="mt-4">
+            <button onClick={handleSignOut} className="text-red-400 hover:text-red-600 font-semibold">
+              🚪 Sign Out
             </button>
           </li>
         </ul>
       </div>
 
-      {/* Resizer */}
-      {/* Resizer with double click toggle */}
-      {/* <div
-        onMouseDown={startResizing}
-        onClick={handleResizerClick}
-        className="absolute top-0 bottom-0 z-10"
-        style={{ left: `${sidebarWidth}px` }}
-      >
-        <div className="cursor-col-resize w-[5px] h-full hover:bg-black transition-colors" />
-      </div> */}
-
-      {/* Main Content */}
-      <div className="flex-1 p-6 overflow-y-auto h-full">{children}</div>
+      <div className="flex-1 p-6 overflow-y-auto">{children}</div>
     </div>
+  );
+}
+
+function MenuItem({ href, label, icon }) {
+  return (
+    <li>
+      <Link href={href} className="flex items-center gap-2 hover:text-blue-300">
+        <span>{icon}</span>
+        <span>{label}</span>
+      </Link>
+    </li>
+  );
+}
+
+function Dropdown({ label, icon, open, toggle, children }) {
+  return (
+    <li>
+      <button
+        onClick={toggle}
+        className="flex items-center gap-2 w-full hover:text-blue-300 cursor-pointer"
+      >
+        <span>{icon}</span>
+        <span>{label}</span>
+        <span className="ml-auto transform transition-transform duration-300"
+          style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="lucide lucide-chevron-down h-5 w-5"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+      </button>
+      {open && <ul className="pl-6 mt-2 space-y-2">{children}</ul>}
+    </li>
   );
 }

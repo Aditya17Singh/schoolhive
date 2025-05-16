@@ -4,6 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 // Import Routes
+const academicRoutes = require("./routes/academicRoute");
 const adminRoutes = require("./routes/adminRoutes");
 const classRoutes = require("./routes/classRoutes");
 const studentRoutes = require("./routes/studentRoutes");
@@ -11,7 +12,7 @@ const subjectRoutes = require("./routes/subjectRoutes");
 const noticeRoutes = require("./routes/noticeRoutes");
 const complaintRoutes = require("./routes/complaintRoutes");
 const statsRoutes = require("./routes/statsRoutes");
-const schoolRoutes = require("./routes/schoolRoute");
+const organizationRoutes = require("./routes/organizationRoute");
 const loginRoutes = require("./routes/loginRoutes");  
 const lessonRoutes = require("./routes/lessonRoute");
 const employeeRoutes = require("./routes/employeeRoute");
@@ -26,6 +27,7 @@ app.use(cors({
 app.use(cors());
 app.use(express.json());
 
+app.use("/api/academics" , academicRoutes);
 app.use("/api/lessons", lessonRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/schools", adminRoutes);
@@ -35,7 +37,7 @@ app.use("/api/subjects", subjectRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/stats", statsRoutes);
-app.use("/api/schools", schoolRoutes);
+app.use("/api/organization", organizationRoutes);
 app.use("/api", loginRoutes);  
 
 // Connect to MongoDB

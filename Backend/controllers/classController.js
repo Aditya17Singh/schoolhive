@@ -1,3 +1,5 @@
+// Updated classController.js to handle class creation without req.user
+
 const Class = require("../models/Class");
 const Subject = require("../models/Subject");
 const Student = require("../models/Student");
@@ -5,7 +7,7 @@ const Student = require("../models/Student");
 // Get All Classes with Sections
 exports.getAllClasses = async (req, res) => {
   try {
-    const schoolId = req.user.schoolId; // from decoded JWT
+    const schoolId = req.user.id; // from decoded JWT
     const classes = await Class.find({ schoolId }).populate("subjects students");
     res.json(classes);
   } catch (error) {
@@ -25,11 +27,13 @@ exports.getClassById = async (req, res) => {
   }
 };
 
-// Create a New Class with Section
 exports.createClass = async (req, res) => {
   try {
-    const { name, section } = req.body;
-    const schoolId = req.user.schoolId;
+    const { name, section, type, schoolId } = req.body;
+    
+    if (!schoolId) {
+      return res.status(400).json({ error: "School ID is required" });
+    }
 
     // Check if class with same name, section, and schoolId already exists
     const existingClass = await Class.findOne({ name, section, schoolId });
@@ -37,7 +41,37 @@ exports.createClass = async (req, res) => {
       return res.status(400).json({ error: "Class with this name and section already exists." });
     }
 
-    const newClass = new Class({ name, section, schoolId });
+    // Automatically set the order based on the type and name
+    let order = 0;
+
+    switch (type) {
+      case "pre-primary":
+        order = (["Nursery", "PG", "LKG", "UKG"].indexOf(name) + 1) * 0.25;
+        break;
+      case "primary":
+      case "middle": {
+        const parsed = parseInt(name, 10);
+        order = isNaN(parsed) ? 0 : parsed;
+        break;
+      }
+      case "secondary": {
+        const match = name.match(/\d+/);
+        order = match ? parseInt(match[0], 10) : 0;
+        break;
+      }
+      default:
+        order = 0;
+    }
+
+    // Create a new class with the calculated order
+    const newClass = new Class({
+      name,
+      section,
+      type,
+      order,
+      schoolId,
+    });
+
     await newClass.save();
     res.status(201).json(newClass);
   } catch (error) {
@@ -121,4 +155,3 @@ exports.deleteClass = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
