@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
 
 const academicYearSchema = new mongoose.Schema({
-  year: { type: String, required: true }, // Example: "2024-2025"
+  year: { type: String, required: true },
   startDate: { type: Date },
   endDate: { type: Date },
   isActive: { type: Boolean, default: false },
-  schoolId: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true },
+  orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
 }, { timestamps: true });
 
 // Automatically set startDate and endDate based on the year
@@ -23,6 +23,6 @@ academicYearSchema.pre("save", function (next) {
   next();
 });
 
-academicYearSchema.index({ year: 1, schoolId: 1 }, { unique: true });
+academicYearSchema.index({ year: 1, orgId: 1 }, { unique: true });
 
 module.exports = mongoose.model("AcademicYear", academicYearSchema);

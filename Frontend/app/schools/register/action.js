@@ -28,7 +28,7 @@ export async function registerClasses(classes, organizationId) {
 
     for (const className of classes) {
       let type = 'primary';
-      if (['Nursery', 'LKG', 'UKG'].includes(className)) {
+      if (['PG', 'Nursery', 'LKG', 'UKG'].includes(className)) {
         type = 'pre-primary';
       } else if (parseInt(className) >= 6 && parseInt(className) <= 8) {
         type = 'middle';
@@ -38,9 +38,9 @@ export async function registerClasses(classes, organizationId) {
 
       const classData = {
         name: className,
-        section: 'A',
+        sections: ['A'],
         type,
-        schoolId: organizationId,
+        orgId: organizationId,
       };
 
       try {
@@ -73,7 +73,7 @@ export async function registerAcademicYear(academicYear, organizationId) {
   try {
     const payload = {
       ...academicYear,
-      schoolId: organizationId,
+      orgId: organizationId,
     };
 
     const response = await axios.post('http://localhost:5000/api/academics', payload, {

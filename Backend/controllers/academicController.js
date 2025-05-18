@@ -3,10 +3,10 @@ const AcademicYear = require("../models/AcademicYear");
 // Create a new Academic Year
 exports.createAcademicYear = async (req, res) => {
   try {
-    const { year, schoolId, isActive = false } = req.body;
+    const { year, orgId, isActive = false } = req.body;
 
-    // Check if academic year for the given schoolId already exists
-    const existingYear = await AcademicYear.findOne({ year, schoolId });
+    // Check if academic year for the given orgId already exists
+    const existingYear = await AcademicYear.findOne({ year, orgId });
     if (existingYear) {
       return res.status(400).json({ error: "Academic year already exists for this school." });
     }
@@ -14,7 +14,7 @@ exports.createAcademicYear = async (req, res) => {
     // Create new academic year
     const newAcademicYear = new AcademicYear({
       year,
-      schoolId,
+      orgId,
       isActive,
     });
 
@@ -28,8 +28,8 @@ exports.createAcademicYear = async (req, res) => {
 // Get All Academic Years for a School
 exports.getAllAcademicYears = async (req, res) => {
   try {
-    const schoolId = req.user.schoolId; // Extract schoolId from the authenticated user
-    const academicYears = await AcademicYear.find({ schoolId }).sort({ year: -1 }); // Sort by year (descending)
+    const orgId = req.user.orgId; 
+    const academicYears = await AcademicYear.find({ orgId }).sort({ year: -1 }); 
     res.json(academicYears);
   } catch (error) {
     res.status(500).json({ error: error.message });

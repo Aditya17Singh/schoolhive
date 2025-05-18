@@ -1,77 +1,61 @@
-// Updated classController.js to handle class creation without req.user
-
 const Class = require("../models/Class");
 const Subject = require("../models/Subject");
 const Student = require("../models/Student");
 
-// Get All Classes with Sections
+// Get All Classes with Subjects and Students
 exports.getAllClasses = async (req, res) => {
   try {
-    const schoolId = req.user.id; // from decoded JWT
-    const classes = await Class.find({ schoolId }).populate("subjects students");
+    const orgId = req.user.id;
+    const classes = await Class.find({ orgId })
+      .populate({ path: "subjects", select: "name code employee" })
+      .populate({ path: "students", select: "firstName lastName rollNo" });
     res.json(classes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
+// Get Class by ID
+// exports.getClassById = async (req, res) => {
+//   try {
+//     const classData = await Class.findById(req.params.id)
+//       .populate({ path: "subjects", select: "name code employee" })
+//       .populate({ path: "students", select: "firstName lastName rollNo" });
+//     if (!classData) return res.status(404).json({ error: "Class not found" });
+//     res.json(classData);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
-// Get Class by ID with Section, Subjects, and Students
-exports.getClassById = async (req, res) => {
-  try {
-    const classData = await Class.findById(req.params.id).populate("subjects students");
-    if (!classData) return res.status(404).json({ error: "Class not found" });
-    res.json(classData);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
+// Create Class
 exports.createClass = async (req, res) => {
   try {
-    const { name, section, type, schoolId } = req.body;
-    
-    if (!schoolId) {
-      return res.status(400).json({ error: "School ID is required" });
-    }
+    const { name, sections, type, orgId } = req.body;
 
-    // Check if class with same name, section, and schoolId already exists
-    const existingClass = await Class.findOne({ name, section, schoolId });
+    if (!orgId) return res.status(400).json({ error: "School ID (orgId) is required" });
+
+    const existingClass = await Class.findOne({ name, orgId });
     if (existingClass) {
-      return res.status(400).json({ error: "Class with this name and section already exists." });
+      return res.status(400).json({ error: "Class with this name already exists." });
     }
 
-    // Automatically set the order based on the type and name
     let order = 0;
-
     switch (type) {
       case "pre-primary":
         order = (["Nursery", "PG", "LKG", "UKG"].indexOf(name) + 1) * 0.25;
         break;
       case "primary":
-      case "middle": {
-        const parsed = parseInt(name, 10);
-        order = isNaN(parsed) ? 0 : parsed;
+      case "middle":
+        order = parseInt(name) || 0;
         break;
-      }
-      case "secondary": {
+      case "secondary":
         const match = name.match(/\d+/);
-        order = match ? parseInt(match[0], 10) : 0;
+        order = match ? parseInt(match[0]) : 0;
         break;
-      }
-      default:
-        order = 0;
     }
 
-    // Create a new class with the calculated order
-    const newClass = new Class({
-      name,
-      section,
-      type,
-      order,
-      schoolId,
-    });
-
+    const newClass = new Class({ name, sections, type, order, orgId });
     await newClass.save();
     res.status(201).json(newClass);
   } catch (error) {
@@ -79,7 +63,7 @@ exports.createClass = async (req, res) => {
   }
 };
 
-// Update Class (Name or Section)
+// Update Class (name, sections, etc.)
 exports.updateClass = async (req, res) => {
   try {
     const updatedClass = await Class.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -90,23 +74,70 @@ exports.updateClass = async (req, res) => {
   }
 };
 
-// Add Subject to Class
-exports.addSubjectToClass = async (req, res) => {
+// Update Only Sections
+exports.updateClassSections = async (req, res) => {
   try {
-    const { classId, subjectId } = req.body;
+    const { id } = req.params;
+    const { sections } = req.body;
 
-    const classData = await Class.findById(classId);
-    if (!classData) return res.status(404).json({ error: "Class not found" });
-
-    const subject = await Subject.findById(subjectId);
-    if (!subject) return res.status(404).json({ error: "Subject not found" });
-
-    if (!classData.subjects.includes(subjectId)) {
-      classData.subjects.push(subjectId);
-      await classData.save();
+    if (!Array.isArray(sections)) {
+      return res.status(400).json({ error: "Sections must be an array." });
     }
 
-    res.json({ message: "Subject added to class", classData });
+    const updatedClass = await Class.findByIdAndUpdate(id, { sections }, { new: true });
+    if (!updatedClass) return res.status(404).json({ error: "Class not found" });
+
+    res.json({ message: "Sections updated successfully", class: updatedClass });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.addSubjectToClass = async (req, res) => {
+  try {
+    const { classId, subjectNames = [], orgId } = req.body;
+
+    if (!orgId) {
+      return res.status(400).json({ error: "orgId is required to create subjects" });
+    }
+
+    const classData = await Class.findById(classId).populate("subjects");
+    if (!classData) {
+      return res.status(404).json({ error: "Class not found" });
+    }
+
+    const existingSubjects = await Subject.find({ class: classId, orgId });
+
+    const existingNames = existingSubjects.map((subj) => subj.name);
+    const namesToDelete = existingNames.filter((name) => !subjectNames.includes(name));
+
+    await Subject.deleteMany({
+      class: classId,
+      orgId,
+      name: { $in: namesToDelete },
+    });
+
+    const subjectIds = await Promise.all(
+      subjectNames.map(async (name) => {
+        let subject = await Subject.findOne({ name, orgId, class: classId });
+
+        if (!subject) {
+          subject = await Subject.create({ name, orgId, class: classId });
+        }
+
+        return subject._id;
+      })
+    );
+
+    classData.subjects = subjectIds;
+    await classData.save();
+
+    const populatedClass = await Class.findById(classId).populate({
+      path: "subjects",
+      select: "name code employee",
+    });
+
+    res.json({ message: "Subjects updated for class", classData: populatedClass });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -134,23 +165,17 @@ exports.addStudentToClass = async (req, res) => {
   }
 };
 
-// Delete a Class
+// Delete Class (and clean up student references)
 exports.deleteClass = async (req, res) => {
   try {
     const classId = req.params.id;
 
-    await Student.updateMany(
-      { class: classId },
-      { $unset: { class: "" } } 
-    );
+    await Student.updateMany({ class: classId }, { $unset: { class: "" } });
 
-    // 2. Delete the class itself
     const deletedClass = await Class.findByIdAndDelete(classId);
-    if (!deletedClass) {
-      return res.status(404).json({ error: "Class not found" });
-    }
+    if (!deletedClass) return res.status(404).json({ error: "Class not found" });
 
-    res.json({ message: "Class deleted, students' references removed successfully" });
+    res.json({ message: "Class deleted, student references cleared." });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
