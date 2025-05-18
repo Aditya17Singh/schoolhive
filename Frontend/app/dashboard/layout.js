@@ -70,7 +70,7 @@ export default function DashboardLayout({ children }) {
           <Dropdown label="Teachers" icon="👨‍🏫" open={openMenus.teachers} toggle={() => toggleMenu("teachers")}>
             <MenuItem href="/dashboard/teachers" label="Dashboard" icon="📊" />
             <MenuItem href="/dashboard/teachers/applications" label="Manage Applications" icon="📄" />
-            <MenuItem href="/dashboard/teachers/new" label="New Teacher" icon="➕" />
+            <MenuItem href="/dashboard/teachers" label="New Teacher" icon="➕" />
           </Dropdown>
 
           <Dropdown label="Students" icon="👩‍🎓" open={openMenus.students} toggle={() => toggleMenu("students")}>

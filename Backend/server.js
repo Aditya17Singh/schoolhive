@@ -4,6 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 // Import Routes
+const teacherRoutes = require("./routes/teacherRoute");
 const academicRoutes = require("./routes/academicRoute");
 const adminRoutes = require("./routes/adminRoutes");
 const classRoutes = require("./routes/classRoutes");
@@ -27,6 +28,7 @@ app.use(cors({
 app.use(cors());
 app.use(express.json());
 
+app.use("/api/teachers", teacherRoutes);
 app.use("/api/academics" , academicRoutes);
 app.use("/api/lessons", lessonRoutes);
 app.use("/api/employees", employeeRoutes);
