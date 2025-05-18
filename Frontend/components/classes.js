@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { CirclePlus } from "lucide-react";
 import axios from "axios";
 import { AddSubjectsDialog } from "./add-subject-dialog";
@@ -10,32 +9,29 @@ import SectionDialog from "./class-section";
 
 export default function ClassList() {
   const router = useRouter();
+
+  // State management
   const [user, setUser] = useState(null);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // Forms
-  // const [classForm, setClassForm] = useState({ name: "", section: "" });
-
   // Toasts
   const [toasts, setToasts] = useState([]);
 
-  // Toast Notification Function
-  const showToast = (message, type = "success") => {
+  const showToast = useCallback((message, type = "success") => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(
-      () => setToasts((prev) => prev.filter((toast) => toast.id !== id)),
-      3000
-    );
-  };
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, 3000);
+  }, []);
 
-    // Fetch Classes from API
   const fetchClasses = useCallback(async () => {
     try {
+      const token = localStorage.getItem("token");
       const res = await axios.get("http://localhost:5000/api/classes", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setClasses(res.data);
     } catch (error) {
@@ -44,103 +40,106 @@ export default function ClassList() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
-  // User Authentication Check
+  // Auth + Init fetch
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
 
     if (!token || !userData) {
-      router.replace("/");
-      return;
+      return router.replace("/");
     }
 
-    const parsedUser = JSON.parse(userData);
-    if (parsedUser.role !== "organization") {
-      router.replace("/");
-      return;
-    }
+    try {
+      const parsedUser = JSON.parse(userData);
+      if (parsedUser.role !== "organization") {
+        return router.replace("/");
+      }
 
-    setUser(parsedUser);
-    fetchClasses();
+      setUser(parsedUser);
+      fetchClasses();
+    } catch {
+      router.replace("/");
+    }
   }, [fetchClasses, router]);
 
-
-
-  // Handle Search for Classes
   const handleClassSearch = (e) => setSearch(e.target.value);
 
-  // Escape Regular Expression Characters
   const escapeRegExp = (string) =>
-    string.replace(/[.*+?^=!:${}()|\[\]\/\\]/g, "\\$&");
+    string.replace(/[.*+?^=!:${}()|[\]/\\]/g, "\\$&");
 
-  // Filtered Classes Based on Search
-  const sortedClasses = [...classes].sort((a, b) => a.order - b.order);
-
-  const filteredClasses = sortedClasses.filter((cls) =>
-    `${cls.name} ${cls.section}`
-      .toLowerCase()
-      .includes(escapeRegExp(search.toLowerCase()))
+  const sortedClasses = useMemo(
+    () => [...classes].sort((a, b) => a.order - b.order),
+    [classes]
   );
 
-  //for subject
+  const filteredClasses = useMemo(() => {
+    const pattern = escapeRegExp(search.toLowerCase());
+    return sortedClasses.filter((cls) =>
+      `${cls.name} ${cls.section}`.toLowerCase().includes(pattern)
+    );
+  }, [search, sortedClasses]);
+
+  // Subject dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState(null);
-  const [subjectMap, setSubjectMap] = useState({});
 
   const handleOpenDialog = (classId) => {
     setSelectedClassId(classId);
     setDialogOpen(true);
   };
 
+  const handleSaveSubjects = useCallback(
+    async (subjects) => {
+      if (!selectedClassId) return;
 
- const handleSaveSubjects = async (subjects) => {
-   if (!selectedClassId) return;
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        const orgId = user?.id;
+        const res = await fetch(
+          "http://localhost:5000/api/classes/add-subject",
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({
+              classId: selectedClassId,
+              subjectNames: subjects,
+              orgId,
+            }),
+          }
+        );
 
-   try {
-     const user = JSON.parse(localStorage.getItem("user"));
-     const orgId = user?.id;
+        const data = await res.json();
 
-     const res = await fetch("http://localhost:5000/api/classes/add-subject", {
-       method: "PUT",
-       headers: {
-         "Content-Type": "application/json",
-         Authorization: `Bearer ${localStorage.getItem("token")}`,
-       },
-       body: JSON.stringify({
-         classId: selectedClassId,
-         subjectNames: subjects,
-         orgId, 
-       }),
-     });
+        if (res.ok && data.classData?.subjects) {
+          setClasses((prev) =>
+            prev.map((cls) =>
+              cls._id === selectedClassId
+                ? { ...cls, subjects: data.classData.subjects }
+                : cls
+            )
+          );
+          showToast("Subjects updated successfully!");
+          setDialogOpen(false);
+        } else {
+          showToast("Failed to update subjects", "error");
+        }
+      } catch (error) {
+        console.error("Error adding subjects:", error);
+        showToast("Error adding subjects", "error");
+      }
+    },
+    [selectedClassId, showToast]
+  );
 
-     const data = await res.json();
-
-     if (res.ok && data.classData?.subjects) {
-       setClasses((prevClasses) =>
-         prevClasses.map((cls) =>
-           cls._id === selectedClassId
-             ? { ...cls, subjects: data.classData.subjects }
-             : cls
-         )
-       );
-       showToast("Subjects updated successfully!");
-       setDialogOpen(false);
-     } else {
-       console.error(data.error || "Failed to add subjects");
-       showToast("Failed to update subjects", "error");
-     }
-   } catch (error) {
-     console.error("Error adding subjects to class:", error);
-     showToast("Error adding subjects", "error");
-   }
- };
-
-  //for section
+  // Section dialog states
   const [showSectionDialog, setShowSectionDialog] = useState(false);
   const [selectedSections, setSelectedSections] = useState(["A"]);
-  const [compulsorySections, setCompulsorySections] = useState(["A"]);
+  const [compulsorySections] = useState(["A"]);
   const allSections = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 
   const handleToggleSection = (section) => {
@@ -155,7 +154,7 @@ export default function ClassList() {
     setSelectedSections((prev) => prev.filter((s) => s !== section));
   };
 
-  const handleSaveSections = async () => {
+  const handleSaveSections = useCallback(async () => {
     try {
       const res = await axios.put(
         `http://localhost:5000/api/classes/${selectedClassId}/sections`,
@@ -168,15 +167,13 @@ export default function ClassList() {
       );
 
       if (res.status === 200) {
-        // Update the local class list instead of refetching
-        setClasses((prevClasses) =>
-          prevClasses.map((cls) =>
+        setClasses((prev) =>
+          prev.map((cls) =>
             cls._id === selectedClassId
               ? { ...cls, sections: selectedSections }
               : cls
           )
         );
-
         showToast("Sections updated successfully!");
       } else {
         showToast("Failed to update sections", "error");
@@ -187,38 +184,37 @@ export default function ClassList() {
     } finally {
       setShowSectionDialog(false);
     }
-  };
+  }, [selectedClassId, selectedSections, showToast]);
 
-  const selectedClass = classes.find((cls) => cls._id === selectedClassId);
+  const selectedClass = useMemo(() => {
+    return classes.find((cls) => cls._id === selectedClassId);
+  }, [classes, selectedClassId]);
+
   const classSubjectNames = useMemo(() => {
-    if (!selectedClass || !selectedClass.subjects) return [];
-    return selectedClass.subjects.map((subject) => subject.name);
+    return selectedClass?.subjects?.map((s) => s.name) || [];
   }, [selectedClass]);
 
-  // Loading Skeleton
   if (loading) {
     return (
-      <div className="p-6 gap-6">
-        {/* Skeleton for Left Side */}
-        <div className="bg-white p-6 shadow-md rounded-lg space-y-4 animate-pulse">
-          <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-          <div className="h-10 bg-gray-200 rounded"></div>
-          <div className="h-10 bg-gray-200 rounded"></div>
-          <div className="h-10 bg-gray-300 rounded w-full"></div>
-        </div>
+      <div className="p-6 space-y-6">
+        {[...Array(2)].map((_, index) => (
+          <div
+            key={index}
+            className="bg-white p-6 shadow-md rounded-lg space-y-4 animate-pulse"
+          >
+            <div className="h-6 w-1/3 bg-gray-300 rounded"></div>
 
-        {/* Skeleton for Right Side */}
-        <div className="bg-white p-6 shadow-md rounded-lg space-y-4 animate-pulse">
-          <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-          <div className="space-y-2">
-            <div className="h-10 bg-gray-200 rounded"></div>
-            <div className="h-10 bg-gray-200 rounded"></div>
-            <div className="h-10 bg-gray-200 rounded"></div>
-            <div className="h-10 bg-gray-200 rounded"></div>
+            <div className="w-full h-10 bg-gray-200 rounded"></div>
+
+            <div className="grid grid-cols-5 gap-4">
+              <div className="h-8 bg-gray-200 rounded col-span-1"></div>
+              <div className="h-8 bg-gray-200 rounded col-span-1"></div>
+              <div className="h-8 bg-gray-200 rounded col-span-1"></div>
+              <div className="h-8 bg-gray-200 rounded col-span-1"></div>
+              <div className="h-8 bg-gray-200 rounded col-span-1"></div>
+            </div>
           </div>
-          <div className="h-10 bg-gray-300 rounded w-full"></div>
-          <div className="h-10 bg-gray-200 rounded w-full mt-4"></div>
-        </div>
+        ))}
       </div>
     );
   }
@@ -242,35 +238,37 @@ export default function ClassList() {
       <h1 className="text-2xl font-bold mb-6">Manage Classes & Students</h1>
 
       <div className="grid gap-6">
-        {/* LEFT SIDE: Class Actions */}
+        {/* Search input */}
         <div className="relative">
           <input
             type="text"
             value={search}
             onChange={handleClassSearch}
-            className="flex w-full border bg-transparent px-3 py-1 text-sm shadow-sm file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pl-12 h-11 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            className="w-full border px-3 py-2 pl-10 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
             placeholder="Search ClassName..."
           />
           <svg
-            class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+            className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
             <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            ></path>
+            />
           </svg>
         </div>
+
+        {/* Class Table */}
         <div className="bg-white p-6 shadow-md rounded-lg">
-          <div className="w-full max-h-[500px] overflow-y-auto  rounded-md shadow-md custom-scrollbar">
-            <table className="w-full text-sm caption-bottom">
-              <thead className="[&>tr]:border-b bg-gray-50 text-gray-700 sticky top-0 z-10">
-                <tr className="border-b border-gray-200 hover:bg-muted/50">
+          <div className="w-full max-h-[500px] overflow-y-auto rounded-md custom-scrollbar">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 sticky top-0 z-10 text-gray-700">
+                <tr>
                   <th className="px-6 py-4 text-left font-semibold">
                     Class Name
                   </th>
@@ -280,7 +278,7 @@ export default function ClassList() {
                   <th className="px-6 py-4 text-left font-semibold">
                     Add Subjects
                   </th>
-                  <th className="px-6 py-4 text-left font-semibold text-center">
+                  <th className="px-6 py-4 text-center font-semibold">
                     Sections
                   </th>
                   <th className="px-6 py-4 text-left font-semibold">
@@ -289,97 +287,87 @@ export default function ClassList() {
                 </tr>
               </thead>
               <tbody>
-                {filteredClasses
-                  .sort((a, b) => a.order - b.order)
-                  .map((cls, idx) => (
-                    <tr
-                      key={cls._id}
-                      className={`${
-                        idx !== filteredClasses.length - 1 ? "border-b" : ""
-                      } hover:bg-gray-100 ${
-                        idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      }`}
-                    >
-                      {/* Class Name */}
-                      <td className="px-4 py-3 text-center capitalize">
-                        {cls.name}
-                      </td>
-                      {/* Subjects */}
-                      <td className="px-4 py-3">
-                        {cls.subjects.length === 0 ? (
-                          <span className="text-xs font-medium px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">
-                            No subjects added yet
-                          </span>
-                        ) : (
-                          <div className="flex flex-wrap gap-1 max-w-xs">
-                            {cls.subjects.map((subject) => (
-                              <span
-                                key={subject._id}
-                                className="text-xs font-medium px-2 py-1 rounded bg-green-100 text-green-800 border border-green-300"
-                                title={subject.name}
-                              >
-                                {subject.name.length > 20
-                                  ? subject.name.slice(0, 20) + "…"
-                                  : subject.name}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Add Subjects */}
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleOpenDialog(cls._id)}
-                          className="cursor-pointer inline-flex gap-2 items-center px-4 py-2 text-sm font-medium shadow-sm rounded-md bg-background hover:bg-accent hover:text-accent-foreground"
-                        >
-                          <span className="text-xs font-medium px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded">
-                            {cls.subjects.length}
-                          </span>
-                          <CirclePlus />
-                          Add Subjects
-                        </button>
-                      </td>
-
-                      {/* Sections */}
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex justify-center items-center gap-1 flex-wrap">
-                          {[...cls.sections].sort().map((sec) => (
-                            <div
-                              key={sec}
-                              className="w-7 aspect-square flex items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-sm font-medium"
+                {filteredClasses.map((cls, idx) => (
+                  <tr
+                    key={cls._id}
+                    className={`${
+                      idx !== filteredClasses.length - 1 ? "border-b" : ""
+                    } ${
+                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    } hover:bg-gray-100`}
+                  >
+                    <td className="px-4 py-3 capitalize text-center">
+                      {cls.name}
+                    </td>
+                    <td className="px-4 py-3">
+                      {cls.subjects.length === 0 ? (
+                        <span className="text-xs font-medium px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">
+                          No subjects added yet
+                        </span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {cls.subjects.map((subject) => (
+                            <span
+                              key={subject._id}
+                              className="text-xs font-medium px-2 py-1 rounded bg-green-100 text-green-800 border border-green-300"
+                              title={subject.name}
                             >
-                              {sec}
-                            </div>
+                              {subject.name.length > 20
+                                ? subject.name.slice(0, 20) + "…"
+                                : subject.name}
+                            </span>
                           ))}
-                          <button
-                            onClick={() => {
-                              setSelectedClassId(cls._id);
-                              setSelectedSections(cls.sections || ["A"]);
-                              setShowSectionDialog(true);
-                            }}
-                            className="hover:text-blue-600 cursor-pointer"
-                          >
-                            <svg
-                              className="w-7 h-7"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle cx="12" cy="12" r="10" />
-                              <path d="M8 12h8M12 8v8" />
-                            </svg>
-                          </button>
                         </div>
-                      </td>
-
-                      {/* Class Type */}
-                      <td className="px-4 py-3 capitalize">
-                        {cls.type.replace("-", " ")}
-                      </td>
-                    </tr>
-                  ))}
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleOpenDialog(cls._id)}
+                        className="cursor-pointer inline-flex gap-2 items-center px-4 py-2 text-sm font-medium shadow-sm rounded-md bg-background hover:bg-accent hover:text-accent-foreground"
+                      >
+                        <span className="text-xs font-medium px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded">
+                          {cls.subjects.length}
+                        </span>
+                        <CirclePlus />
+                        Add Subjects
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex justify-center items-center gap-1 flex-wrap">
+                        {[...cls.sections].sort().map((sec) => (
+                          <div
+                            key={sec}
+                            className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-sm font-medium"
+                          >
+                            {sec}
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => {
+                            setSelectedClassId(cls._id);
+                            setSelectedSections(cls.sections || ["A"]);
+                            setShowSectionDialog(true);
+                          }}
+                          className="hover:text-blue-600 cursor-pointer"
+                        >
+                          <svg
+                            className="w-7 h-7"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M8 12h8M12 8v8" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 capitalize">
+                      {cls.type.replace("-", " ")}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
