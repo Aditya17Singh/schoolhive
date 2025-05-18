@@ -43,10 +43,12 @@ export default function SubjectDashboard() {
     fetchClasses();
   }, []);
 
-  const filteredSubjects =
-    subjects.data?.filter((subject) =>
-      subject.subjectName.toLowerCase().includes(searchQuery.toLowerCase())
-    ) || [];
+ const filteredSubjects =
+  subjects.data?.filter((subject) =>
+    subject.subjectName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    (!form.class || subject.class === form.class)
+  ) || [];
+
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -186,7 +188,7 @@ export default function SubjectDashboard() {
               </td>
             </tr>
           ) : (
-            subjects.data?.map(({ _id, subjectName, class: cls, teachers }) => (
+            filteredSubjects?.map(({ _id, subjectName, class: cls, teachers }) => (
               <tr key={_id} className="border-b bg-slate-50 hover:bg-slate-100">
                 <td className="px-4 py-2 capitalize">{subjectName}</td>
                 <td className="px-4 py-2 text-center">{cls}</td>

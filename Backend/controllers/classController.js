@@ -101,23 +101,33 @@ exports.addSubjectToClass = async (req, res) => {
       return res.status(400).json({ error: "orgId is required to create subjects" });
     }
 
-    const classData = await Class.findById(classId);
+    const classData = await Class.findById(classId).populate("subjects");
     if (!classData) {
       return res.status(404).json({ error: "Class not found" });
     }
 
-    // Create class-specific subjects
-    const subjectPromises = subjectNames.map(async (name) => {
-      let subject = await Subject.findOne({ name, orgId, class: classId });
+    const existingSubjects = await Subject.find({ class: classId, orgId });
 
-      if (!subject) {
-        subject = await Subject.create({ name, orgId, class: classId });
-      }
+    const existingNames = existingSubjects.map((subj) => subj.name);
+    const namesToDelete = existingNames.filter((name) => !subjectNames.includes(name));
 
-      return subject._id;
+    await Subject.deleteMany({
+      class: classId,
+      orgId,
+      name: { $in: namesToDelete },
     });
 
-    const subjectIds = await Promise.all(subjectPromises);
+    const subjectIds = await Promise.all(
+      subjectNames.map(async (name) => {
+        let subject = await Subject.findOne({ name, orgId, class: classId });
+
+        if (!subject) {
+          subject = await Subject.create({ name, orgId, class: classId });
+        }
+
+        return subject._id;
+      })
+    );
 
     classData.subjects = subjectIds;
     await classData.save();
