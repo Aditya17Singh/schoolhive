@@ -8,7 +8,7 @@ const verifyToken = require("../middleware/verifyToken");
 
 // Class Routes
 router.get("/", verifyToken, classController.getAllClasses);
-router.get("/:id", classController.getClassById);
+// router.get("/:id", classController.getClassById);
 
 // Modified to work without token during registration
 router.post("/", classController.createClass);

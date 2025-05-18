@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CirclePlus } from "lucide-react";
@@ -31,6 +31,21 @@ export default function ClassList() {
     );
   };
 
+    // Fetch Classes from API
+  const fetchClasses = useCallback(async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/classes", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setClasses(res.data);
+    } catch (error) {
+      console.error(error);
+      showToast("Error fetching classes", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // User Authentication Check
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -49,23 +64,9 @@ export default function ClassList() {
 
     setUser(parsedUser);
     fetchClasses();
-  }, []);
+  }, [fetchClasses, router]);
 
-  // Fetch Classes from API
-  const fetchClasses = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/classes", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
 
-      setClasses(res.data);
-    } catch (error) {
-      console.error(error);
-      showToast("Error fetching classes", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Handle Search for Classes
   const handleClassSearch = (e) => setSearch(e.target.value);
@@ -93,44 +94,48 @@ export default function ClassList() {
     setDialogOpen(true);
   };
 
-  const handleSaveSubjects = async (subjects) => {
-    if (selectedClassId) {
-      try {
-        const res = await fetch(
-          "http://localhost:5000/api/classes/add-subject",
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-              classId: selectedClassId,
-              subjectNames: subjects, // Send names to match with DB
-            }),
-          }
-        );
 
-        const data = await res.json();
+ const handleSaveSubjects = async (subjects) => {
+   if (!selectedClassId) return;
 
-        if (res.ok) {
-          setClasses((prevClasses) =>
-            prevClasses.map((cls) =>
-              cls._id === selectedClassId
-                ? { ...cls, subjects: data.classData.subjects }
-                : cls
-            )
-          );
-          setDialogOpen(false);
-          showToast("Subjects updated successfully!");
-        } else {
-          console.error(data.error || "Failed to add subjects");
-        }
-      } catch (error) {
-        console.error("Error adding subjects to class:", error);
-      }
-    }
-  };
+   try {
+     const user = JSON.parse(localStorage.getItem("user"));
+     const orgId = user?.id;
+
+     const res = await fetch("http://localhost:5000/api/classes/add-subject", {
+       method: "PUT",
+       headers: {
+         "Content-Type": "application/json",
+         Authorization: `Bearer ${localStorage.getItem("token")}`,
+       },
+       body: JSON.stringify({
+         classId: selectedClassId,
+         subjectNames: subjects,
+         orgId, 
+       }),
+     });
+
+     const data = await res.json();
+
+     if (res.ok && data.classData?.subjects) {
+       setClasses((prevClasses) =>
+         prevClasses.map((cls) =>
+           cls._id === selectedClassId
+             ? { ...cls, subjects: data.classData.subjects }
+             : cls
+         )
+       );
+       showToast("Subjects updated successfully!");
+       setDialogOpen(false);
+     } else {
+       console.error(data.error || "Failed to add subjects");
+       showToast("Failed to update subjects", "error");
+     }
+   } catch (error) {
+     console.error("Error adding subjects to class:", error);
+     showToast("Error adding subjects", "error");
+   }
+ };
 
   //for section
   const [showSectionDialog, setShowSectionDialog] = useState(false);
@@ -156,11 +161,26 @@ export default function ClassList() {
         `http://localhost:5000/api/classes/${selectedClassId}/sections`,
         { sections: selectedSections },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
-      showToast("Sections updated successfully!");
-      fetchClasses();
+
+      if (res.status === 200) {
+        // Update the local class list instead of refetching
+        setClasses((prevClasses) =>
+          prevClasses.map((cls) =>
+            cls._id === selectedClassId
+              ? { ...cls, sections: selectedSections }
+              : cls
+          )
+        );
+
+        showToast("Sections updated successfully!");
+      } else {
+        showToast("Failed to update sections", "error");
+      }
     } catch (error) {
       console.error(error);
       showToast("Failed to update sections", "error");
