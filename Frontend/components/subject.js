@@ -1,5 +1,6 @@
 "use client";
 
+import * as Dialog from '@radix-ui/react-dialog';
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import axios from "axios";
 
@@ -10,6 +11,10 @@ export default function SubjectDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [classDropdownOpen, setClassDropdownOpen] = useState(false);
   const [loading, setLoading] = useState({ subjects: true, classes: true });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [teachers1, setTeachers] = useState([]);
+  const [selectedSubject, setSelectedSubject] = useState(null);
+  const [selectedTeachers, setSelectedTeachers] = useState([]);
 
   const fetchData = useCallback(async (endpoint, setter, key) => {
     try {
@@ -31,9 +36,33 @@ export default function SubjectDashboard() {
     }
   }, []);
 
+  const fetchTeachers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5000/api/teachers", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setTeachers(data.data);
+      } else {
+        console.error("Failed to fetch teachers:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching teachers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData("subjects", setSubjects, "subjects");
     fetchData("classes", setClasses, "classes");
+    fetchTeachers();
   }, [fetchData]);
 
   const filteredSubjects = useMemo(() => {
@@ -48,6 +77,18 @@ export default function SubjectDashboard() {
     setForm((prev) => ({ ...prev, class: cls }));
     setClassDropdownOpen(false);
   };
+
+  const handleEditClick = (subject) => {
+    setSelectedSubject(subject);
+    // Convert teacher names to their ObjectIds (if needed)
+    const assignedIds = subject.teachers.map(name => {
+      const teacher = teachers1.find(t => t.name === name); // Match by name
+      return teacher?._id; // Get ID
+    }).filter(Boolean); // Remove undefined
+    setSelectedTeachers(assignedIds);
+    setDialogOpen(true);
+  };
+
 
   const renderDropdown = () => (
     <div className="relative w-[180px]">
@@ -95,9 +136,8 @@ export default function SubjectDashboard() {
                 key={cls._id || cls.id || cls}
                 role="option"
                 aria-selected={form.class === cls.name}
-                className={`cursor-pointer py-2 px-3 hover:bg-indigo-600 hover:text-white ${
-                  form.class === cls.name ? "bg-indigo-600 text-white" : ""
-                }`}
+                className={`cursor-pointer py-2 px-3 hover:bg-indigo-600 hover:text-white ${form.class === cls.name ? "bg-indigo-600 text-white" : ""
+                  }`}
                 onClick={() => handleClassSelect(cls.name || cls)}
               >
                 {cls.name || cls}
@@ -126,6 +166,7 @@ export default function SubjectDashboard() {
     </tr>
   );
 
+
   return (
     <div className="p-4 max-w-5xl mx-auto">
       <div className="flex justify-between items-center pb-2 gap-4">
@@ -142,7 +183,7 @@ export default function SubjectDashboard() {
       <table className="w-full text-sm caption-bottom">
         <thead className="border-b">
           <tr className="hover:bg-muted/50">
-            {["Subject Name", "Class", "Teachers", "Actions"].map((header) => (
+            {["Subject Name", "Class", "Teachers", "Assign or Remove Teachers"].map((header) => (
               <th
                 key={header}
                 className="px-2 py-3 text-left font-medium text-muted-foreground"
@@ -184,19 +225,106 @@ export default function SubjectDashboard() {
                     )}
                   </td>
                   <td className="px-2 py-2 text-left">
-                    <button className="flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
-                      </svg>
-                      <span className="text-xs">Edit</span>
-                    </button>
+                    <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
+                      <Dialog.Trigger asChild>
+                        <button
+                          onClick={() => handleEditClick({ _id, subjectName, class: cls, teachers })}
+                          className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+                          </svg>
+                          <span className="text-xs">Edit</span>
+                        </button>
+                      </Dialog.Trigger>
+
+                      <Dialog.Portal>
+                        <Dialog.Overlay className="fixed inset-0 bg-black/10 z-40" />
+                        <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md bg-white rounded-lg p-6">
+                          <Dialog.Title className="text-lg font-semibold mb-2">Teacher Assignment</Dialog.Title>
+                          <Dialog.Description className="text-sm text-gray-500 mb-4">
+                            Assign or remove teachers for this subject.
+                          </Dialog.Description>
+
+                          <div className="mb-4 max-h-48 overflow-y-auto border rounded p-2 space-y-2">
+                            {teachers1.length === 0 ? (
+                              <p className="text-sm text-gray-500">No teachers available.</p>
+                            ) : (
+                                teachers1.map((teacher) => (
+                                  <label
+                                    key={teacher._id}
+                                    className="flex items-center gap-2 text-sm cursor-pointer"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      className="accent-indigo-600"
+                                      checked={selectedTeachers.includes(teacher._id)}
+                                      onChange={() => {
+                                        if (selectedTeachers.includes(teacher._id)) {
+                                          // Remove teacher from selection
+                                          setSelectedTeachers(selectedTeachers.filter(id => id !== teacher._id));
+                                        } else {
+                                          // Add teacher to selection
+                                          setSelectedTeachers([...selectedTeachers, teacher._id]);
+                                        }
+                                      }}
+                                    />
+                                    <span>{teacher.fName} {teacher.lastName}</span>
+                                  </label>
+                              ))
+                            )}
+                          </div>
+
+                          <div className="flex justify-end gap-2">
+                            <Dialog.Close asChild>
+                              <button className="px-3 py-1.5 text-sm rounded border border-gray-300 hover:bg-gray-100">
+                                Cancel
+                              </button>
+                            </Dialog.Close>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem("token");
+                                  const res = await fetch(`http://localhost:5000/api/subjects/assign-teacher/${selectedSubject._id}`, {
+                                    method: "PUT",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                   body: JSON.stringify({
+  teacherIds: selectedTeachers,  // send all selected IDs as an array
+}),
+
+                                  });
+
+                                  const result = await res.json();
+
+                                  if (result.success) {
+                                    setDialogOpen(false);
+                                    await fetchData("subjects", setSubjects, "subjects");
+                                  } else {
+                                    console.error("Error:", result.message);
+                                  }
+                                } catch (error) {
+                                  console.error("Assign teacher failed:", error);
+                                }
+                              }}
+                              className="px-4 py-1 rounded bg-green-600 text-white text-sm hover:bg-green-700"
+                            >
+                              Save
+                            </button>
+
+                          </div>
+
+                        </Dialog.Content>
+                      </Dialog.Portal>
+                    </Dialog.Root>
                   </td>
                 </tr>
               )
