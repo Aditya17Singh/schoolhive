@@ -1,17 +1,17 @@
 "use client";
 
+import * as Dialog from '@radix-ui/react-dialog';
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 
 export default function TeacherDashboard() {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [classes, setClasses] = useState([]);
-  const [sections, setSections] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // Fetch teachers
   useEffect(() => {
@@ -43,47 +43,48 @@ export default function TeacherDashboard() {
       const res = await axios.get("http://localhost:5000/api/classes", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log(res);
-      
+
       setClasses(res.data || []);
     } catch (error) {
       console.error("Error fetching classes", error);
     }
   }, []);
 
-  // Fetch sections based on class
-//   const fetchSections = useCallback(async (className) => {
-//     try {
-//       const token = localStorage.getItem("token");
-//       const res = await axios.get(`http://localhost:5000/api/classes/${className}/sections`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setSections(res.data.sections || []);
-//     } catch (error) {
-//       console.error("Error fetching sections", error);
-//     }
-//   }, []);
+  const handleAssignClass = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const { _id } = selectedTeacher;
 
-  const openEditModal = (teacher) => {
-    setSelectedTeacher(teacher);
-    setIsEditModalOpen(true);
-    fetchClasses(); // fetch available classes
+      const res = await axios.put(
+        `http://localhost:5000/api/teachers/assign/${_id}`,
+        { assignedClass: selectedClass, assignedSection: selectedSection },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.data.success) {
+        alert("Class assigned successfully!");
+        setTeachers((prev) =>
+          prev.map((t) => (t._id === _id ? res.data.data : t))
+        );
+        setDialogOpen(false);
+      } else {
+        alert("Failed to assign class");
+      }
+    } catch (error) {
+      console.error("Error assigning class:", error);
+      alert("Something went wrong!");
+    }
   };
-
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-    setSelectedTeacher(null);
-    setSelectedClass("");
-    setSelectedSection("");
-    setSections([]);
-  };
-
+  
   const handleClassChange = (e) => {
     const cls = e.target.value;
     setSelectedClass(cls);
-    // fetchSections(cls);
   };
-  const allSections = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+
+  const selectedClassObj = classes.find(cls => cls.name === selectedClass);
+  const sectionsForSelectedClass = selectedClassObj ? selectedClassObj.sections : [];
   if (loading) return <div className="p-4">Loading...</div>;
 
   return (
@@ -120,22 +121,108 @@ export default function TeacherDashboard() {
                   </td>
                   <td className="p-2 text-sm">{teacher.phone}</td>
                   <td className="p-2">
-                    <div className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
-                      Not Assigned
-                    </div>
+                    {teacher.assignedClass ? (
+                      <div className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-medium border border-green-100">
+                        {teacher.assignedClass} - {teacher.assignedSection}
+                      </div>
+                    ) : (
+                      <div className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                        Not Assigned
+                      </div>
+                    )}
                   </td>
+
                   <td className="p-2 text-xs text-gray-600">N/A</td>
                   <td className="p-2">
                     <div className="flex gap-2 justify-end">
                       <a href={`/dashboard/teachers/dashboard/DAV${String(index + 1).padStart(6, "0")}`}>
                         <button className="rounded-md text-xs h-8 w-8 border border-blue-200 hover:bg-blue-50">👁</button>
                       </a>
-                      <button
-                        className="rounded-md text-xs h-8 w-8 border border-gray-200 hover:bg-gray-50"
-                        onClick={() => openEditModal(teacher)}
-                      >
-                        ✏️
-                      </button>
+                      <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
+                        <Dialog.Trigger asChild>
+                          <button onClick={() => {
+                            setSelectedTeacher(teacher);
+                            fetchClasses();
+                            setDialogOpen(true);
+                          }} className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+                            </svg>
+                            <span className="text-xs">Edit</span>
+                          </button>
+                        </Dialog.Trigger>
+
+                        <Dialog.Portal>
+                          <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" />
+                          <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md bg-white rounded-lg p-6 shadow-lg">
+                            <Dialog.Title className="text-lg font-semibold mb-2">Edit Teacher</Dialog.Title>
+                            <Dialog.Description className="text-sm text-gray-500 mb-4">
+                              Update basic details and assign class/section
+                            </Dialog.Description>
+
+                            <form className="space-y-4">
+                              <div>
+                                <label className="text-sm font-medium">Class</label>
+                                <select
+                                  value={selectedClass}
+                                  onChange={handleClassChange}
+                                  className="mt-1 w-full h-9 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                                >
+                                  <option value="">Select a class</option>
+                                  {classes.map((cls, i) => (
+                                    <option key={i} value={cls.name}>
+                                      {cls.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium">Section</label>
+                                <select
+                                  value={selectedSection}
+                                  onChange={(e) => setSelectedSection(e.target.value)}
+                                  disabled={!selectedClass}
+                                  className={`mt-1 w-full h-9 px-3 py-2 border rounded-md text-sm
+      ${!selectedClass ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gray-50 border-gray-300"}
+    `}
+                                >
+                                  <option value="">{selectedClass ? "Select a section" : "Select a class first"}</option>
+                                  {selectedClass &&
+                                    sectionsForSelectedClass.map((section, i) => (
+                                      <option key={i} value={section}>
+                                        {section}
+                                      </option>
+                                    ))
+                                  }
+                                </select>
+                              </div>
+
+
+                            </form>
+
+                            <div className="mt-6 flex justify-end gap-2">
+                              <Dialog.Close asChild>
+                                <button className="cursor-pointer px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-100">
+                                  Cancel
+                                </button>
+                              </Dialog.Close>
+                              <button
+                                onClick={handleAssignClass}
+                                className="cursor-pointer px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </Dialog.Content>
+                        </Dialog.Portal>
+                      </Dialog.Root>
                       <button className="rounded-md text-xs h-8 w-8 border border-red-200 hover:bg-red-50">🗑️</button>
                     </div>
                   </td>
@@ -145,79 +232,6 @@ export default function TeacherDashboard() {
           </table>
         </div>
       </div>
-
-      {/* Dark Overlay + Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="z-50 bg-white p-6 w-full max-w-lg rounded-lg shadow-xl relative">
-            <h2 className="text-lg font-semibold">Edit Teacher</h2>
-            <p className="text-sm text-gray-500 mb-4">Assign class and section</p>
-
-            <form className="space-y-4">
-              {/* Class Dropdown */}
-              <div>
-                <label className="text-sm font-medium">Class</label>
-                <select
-                  value={selectedClass}
-                  onChange={handleClassChange}
-                  className="mt-1 w-full h-9 px-3 py-2 border rounded-md bg-gray-50"
-                >
-                  <option value="">Select a class</option>
-                  {classes.map((cls, i) => (
-                    <option key={i} value={cls.name}>
-                      {cls.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Section Dropdown */}
-              <div>
-                <label className="text-sm font-medium">Section</label>
-                <select
-                  value={selectedSection}
-                  onChange={(e) => setSelectedSection(e.target.value)}
-                  className="mt-1 w-full h-9 px-3 py-2 border rounded-md bg-gray-50"
-                >
-                  <option value="">Select a section</option>
-                  {allSections.map((section, i) => (
-                    <option key={i} value={section.name}>
-                      {section.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </form>
-
-            {/* Actions */}
-            <div className="flex justify-end gap-2 mt-6">
-              <button
-                onClick={closeEditModal}
-                className="h-9 px-4 py-2 rounded-md bg-gray-100 text-gray-800 hover:bg-gray-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  alert(`Saved class: ${selectedClass}, section: ${selectedSection}`);
-                  closeEditModal();
-                }}
-                className="h-9 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </div>
-
-            {/* Close button top right */}
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-              onClick={closeEditModal}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

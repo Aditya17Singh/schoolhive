@@ -77,6 +77,29 @@ const createTeacherProfile = async (req, res) => {
   }
 };
 
+const assignClassToTeacher = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    const { assignedClass, assignedSection } = req.body;
+
+    const updatedTeacher = await Teacher.findByIdAndUpdate(
+      teacherId,
+      { assignedClass, assignedSection },
+      { new: true }
+    );
+
+    if (!updatedTeacher) {
+      return res.status(404).json({ success: false, message: "Teacher not found" });
+    }
+
+    res.status(200).json({ success: true, data: updatedTeacher });
+  } catch (error) {
+    console.error("Error assigning class to teacher:", error);
+    res.status(500).json({ success: false, message: "Failed to assign class" });
+  }
+};
+
+
 const getAllTeachers = async (req, res) => {
   try {
     const teachers = await Teacher.find();
@@ -86,4 +109,4 @@ const getAllTeachers = async (req, res) => {
   }
 };
 
-module.exports = { createTeacherProfile, getAllTeachers };
+module.exports = { createTeacherProfile, getAllTeachers, assignClassToTeacher };

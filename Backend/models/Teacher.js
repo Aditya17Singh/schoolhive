@@ -28,6 +28,15 @@ const teacherSchema = new mongoose.Schema({
   maritalStatus: { type: String },
   residentialAddress: addressSchema,
   permanentAddress: addressSchema,
+  assignedClass: {
+    type: String,
+    default: null,
+  },
+  assignedSection: {
+    type: String,
+    default: null,
+  },
+
 }, { timestamps: true });
 
 module.exports = mongoose.model("Teacher", teacherSchema);
