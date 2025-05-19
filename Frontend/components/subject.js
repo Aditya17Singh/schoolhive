@@ -1,6 +1,6 @@
 "use client";
 
-import * as Dialog from '@radix-ui/react-dialog';
+import * as Dialog from "@radix-ui/react-dialog";
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import axios from "axios";
 
@@ -15,6 +15,7 @@ export default function SubjectDashboard() {
   const [teachers1, setTeachers] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [selectedTeachers, setSelectedTeachers] = useState([]);
+  const [originalTeachers, setOriginalTeachers] = useState([]);
 
   const fetchData = useCallback(async (endpoint, setter, key) => {
     try {
@@ -78,16 +79,19 @@ export default function SubjectDashboard() {
     setClassDropdownOpen(false);
   };
 
-  const handleEditClick = (subject) => {
-    setSelectedSubject(subject);
-    // Convert teacher names to their ObjectIds (if needed)
-    const assignedIds = subject.teachers.map(name => {
-      const teacher = teachers1.find(t => t.name === name); // Match by name
-      return teacher?._id; // Get ID
-    }).filter(Boolean); // Remove undefined
-    setSelectedTeachers(assignedIds);
-    setDialogOpen(true);
-  };
+const handleEditClick = (subject) => {
+  setSelectedSubject(subject);
+
+  // Match teacher names from subject with full teacher list to get IDs
+  const assignedIds = teachers1
+    .filter((t) => subject.teachers.includes(`${t.fName} ${t.lastName}`))
+    .map((t) => t._id);
+
+  setSelectedTeachers(assignedIds);
+  setOriginalTeachers(assignedIds);
+  setDialogOpen(true);
+};
+
 
 
   const renderDropdown = () => (
@@ -136,8 +140,9 @@ export default function SubjectDashboard() {
                 key={cls._id || cls.id || cls}
                 role="option"
                 aria-selected={form.class === cls.name}
-                className={`cursor-pointer py-2 px-3 hover:bg-indigo-600 hover:text-white ${form.class === cls.name ? "bg-indigo-600 text-white" : ""
-                  }`}
+                className={`cursor-pointer py-2 px-3 hover:bg-indigo-600 hover:text-white ${
+                  form.class === cls.name ? "bg-indigo-600 text-white" : ""
+                }`}
                 onClick={() => handleClassSelect(cls.name || cls)}
               >
                 {cls.name || cls}
@@ -166,7 +171,6 @@ export default function SubjectDashboard() {
     </tr>
   );
 
-
   return (
     <div className="p-4 max-w-5xl mx-auto">
       <div className="flex justify-between items-center pb-2 gap-4">
@@ -183,7 +187,12 @@ export default function SubjectDashboard() {
       <table className="w-full text-sm caption-bottom">
         <thead className="border-b">
           <tr className="hover:bg-muted/50">
-            {["Subject Name", "Class", "Teachers", "Assign or Remove Teachers"].map((header) => (
+            {[
+              "Subject Name",
+              "Class",
+              "Teachers",
+              "Assign or Remove Teachers",
+            ].map((header) => (
               <th
                 key={header}
                 className="px-2 py-3 text-left font-medium text-muted-foreground"
@@ -228,8 +237,16 @@ export default function SubjectDashboard() {
                     <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
                       <Dialog.Trigger asChild>
                         <button
-                          onClick={() => handleEditClick({ _id, subjectName, class: cls, teachers })}
-                          className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300">
+                          onClick={() =>
+                            handleEditClick({
+                              _id,
+                              subjectName,
+                              class: cls,
+                              teachers,
+                            })
+                          }
+                          className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300"
+                        >
                           <svg
                             className="w-4 h-4"
                             fill="none"
@@ -247,36 +264,54 @@ export default function SubjectDashboard() {
                       <Dialog.Portal>
                         <Dialog.Overlay className="fixed inset-0 bg-black/10 z-40" />
                         <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md bg-white rounded-lg p-6">
-                          <Dialog.Title className="text-lg font-semibold mb-2">Teacher Assignment</Dialog.Title>
+                          <Dialog.Title className="text-lg font-semibold mb-2">
+                            Teacher Assignment
+                          </Dialog.Title>
                           <Dialog.Description className="text-sm text-gray-500 mb-4">
                             Assign or remove teachers for this subject.
                           </Dialog.Description>
 
                           <div className="mb-4 max-h-48 overflow-y-auto border rounded p-2 space-y-2">
                             {teachers1.length === 0 ? (
-                              <p className="text-sm text-gray-500">No teachers available.</p>
+                              <p className="text-sm text-gray-500">
+                                No teachers available.
+                              </p>
                             ) : (
-                                teachers1.map((teacher) => (
-                                  <label
-                                    key={teacher._id}
-                                    className="flex items-center gap-2 text-sm cursor-pointer"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      className="accent-indigo-600"
-                                      checked={selectedTeachers.includes(teacher._id)}
-                                      onChange={() => {
-                                        if (selectedTeachers.includes(teacher._id)) {
-                                          // Remove teacher from selection
-                                          setSelectedTeachers(selectedTeachers.filter(id => id !== teacher._id));
-                                        } else {
-                                          // Add teacher to selection
-                                          setSelectedTeachers([...selectedTeachers, teacher._id]);
-                                        }
-                                      }}
-                                    />
-                                    <span>{teacher.fName} {teacher.lastName}</span>
-                                  </label>
+                              teachers1.map((teacher) => (
+                                
+                                <label
+                                key={teacher._id}
+                                className="flex items-center gap-2 text-sm cursor-pointer"
+                                >
+                                  {console.log(selectedTeachers, 'selectedTeachers')}
+                                  <input
+                                    type="checkbox"
+                                    className="accent-indigo-600"
+                                    checked={selectedTeachers.includes(teacher._id)}
+
+                                    onChange={() => {
+                                      if (
+                                        selectedTeachers.includes(teacher._id)
+                                      ) {
+                                        // Remove teacher from selection
+                                        setSelectedTeachers(
+                                          selectedTeachers.filter(
+                                            (id) => id !== teacher._id
+                                          )
+                                        );
+                                      } else {
+                                        // Add teacher to selection
+                                        setSelectedTeachers([
+                                          ...selectedTeachers,
+                                          teacher._id,
+                                        ]);
+                                      }
+                                    }}
+                                  />
+                                  <span>
+                                    {teacher.fName} {teacher.lastName}
+                                  </span>
+                                </label>
                               ))
                             )}
                           </div>
@@ -291,37 +326,79 @@ export default function SubjectDashboard() {
                               onClick={async () => {
                                 try {
                                   const token = localStorage.getItem("token");
-                                  const res = await fetch(`http://localhost:5000/api/subjects/assign-teacher/${selectedSubject._id}`, {
-                                    method: "PUT",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                      Authorization: `Bearer ${token}`,
-                                    },
-                                   body: JSON.stringify({
-  teacherIds: selectedTeachers,  // send all selected IDs as an array
-}),
 
-                                  });
+                                  // Find added and removed teachers
+                                  const toAdd = selectedTeachers.filter(
+                                    (id) => !originalTeachers.includes(id)
+                                  );
+                                  const toRemove = originalTeachers.filter(
+                                    (id) => !selectedTeachers.includes(id)
+                                  );
+                                  const responses = [];
+                                  if (toAdd.length) {
+                                    const res = await fetch(
+                                      `http://localhost:5000/api/subjects/assign-teacher/${selectedSubject._id}`,
+                                      {
+                                        method: "PUT",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                          Authorization: `Bearer ${token}`,
+                                        },
+                                        body: JSON.stringify({
+                                          action: "add",
+                                          teacherIds: toAdd,
+                                        }),
+                                      }
+                                    );
+                                    responses.push(await res.json());
+                                  }
 
-                                  const result = await res.json();
+                                  if (toRemove.length) {
+                                    const res = await fetch(
+                                      `http://localhost:5000/api/subjects/assign-teacher/${selectedSubject._id}`,
+                                      {
+                                        method: "PUT",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                          Authorization: `Bearer ${token}`,
+                                        },
+                                        body: JSON.stringify({
+                                          action: "remove",
+                                          teacherIds: toRemove,
+                                        }),
+                                      }
+                                    );
+                                    responses.push(await res.json());
+                                  }
 
-                                  if (result.success) {
+                                  const hasError = responses.some(
+                                    (r) => !r.success
+                                  );
+                                  if (!hasError) {
                                     setDialogOpen(false);
-                                    await fetchData("subjects", setSubjects, "subjects");
+                                    await fetchData(
+                                      "subjects",
+                                      setSubjects,
+                                      "subjects"
+                                    );
                                   } else {
-                                    console.error("Error:", result.message);
+                                    console.error(
+                                      "Error assigning/removing teachers",
+                                      responses
+                                    );
                                   }
                                 } catch (error) {
-                                  console.error("Assign teacher failed:", error);
+                                  console.error(
+                                    "Error updating teacher assignment:",
+                                    error
+                                  );
                                 }
                               }}
                               className="px-4 py-1 rounded bg-green-600 text-white text-sm hover:bg-green-700"
                             >
                               Save
                             </button>
-
                           </div>
-
                         </Dialog.Content>
                       </Dialog.Portal>
                     </Dialog.Root>
