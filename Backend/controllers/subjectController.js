@@ -16,15 +16,14 @@ exports.getAllSubjects = async (req, res) => {
       .populate("teacher", "fName lName")
       .populate("class", "name");
 
-    // Format to send teacher info as an array with 0 or 1 teacher:
-   const formattedSubjects = subjects.map((subj) => ({
-  _id: subj._id,
-  subjectName: subj.subjectName || subj.name,
-  class: subj.class?.name || subj.class || null,
-  teachers: Array.isArray(subj.teacher)
-    ? subj.teacher.map((t) => `${t.fName} ${t.lName}`)
-    : [], // fallback in case it's not populated
-}));
+    const formattedSubjects = subjects.map((subj) => ({
+      _id: subj._id,
+      subjectName: subj.subjectName || subj.name,
+      class: subj.class?.name || subj.class || null,
+      teachers: Array.isArray(subj.teacher)
+        ? subj.teacher.map((t) => ({ _id: t._id, fName: t.fName, lName: t.lName }))
+        : [],
+    }));
 
 
     res.json({
@@ -39,44 +38,37 @@ exports.getAllSubjects = async (req, res) => {
 
 exports.assignOrRemoveTeacher = async (req, res) => {
   const subjectId = req.params.id;
-  const { teacherIds = [], action } = req.body;
+  const { add = [], remove = [] } = req.body;
 
   try {
     const subject = await Subject.findById(subjectId);
-    if (!subject) return res.status(404).json({ error: "Subject not found" });
-
-    if (!Array.isArray(teacherIds)) {
-      return res.status(400).json({ error: "teacherIds must be an array" });
+    if (!subject) {
+      return res.status(404).json({ success: false, message: "Subject not found" });
     }
 
-    // ✅ Ensure teacher array exists
     if (!Array.isArray(subject.teacher)) {
       subject.teacher = [];
     }
 
-    if (action === "add") {
-      teacherIds.forEach((id) => {
-        if (!subject.teacher.includes(id)) {
-          subject.teacher.push(id);
-        }
-      });
-    } else if (action === "remove") {
-      subject.teacher = subject.teacher.filter(
-        (id) => !teacherIds.includes(id.toString())
-      );
-    } else {
-      return res.status(400).json({ error: "Invalid action" });
-    }
+    add.forEach((id) => {
+      if (!subject.teacher.includes(id)) {
+        subject.teacher.push(id);
+      }
+    });
+
+    subject.teacher = subject.teacher.filter(
+      (id) => !remove.includes(id.toString())
+    );
 
     await subject.save();
 
     res.json({
       success: true,
-      message: `Teacher(s) ${action === "add" ? "assigned" : "removed"} successfully`,
+      message: "Teacher assignments updated successfully",
       data: subject,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 

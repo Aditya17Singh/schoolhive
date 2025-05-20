@@ -60,6 +60,44 @@ export default function SubjectDashboard() {
     }
   };
 
+  const handleTeacherAssignment = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const toAdd = selectedTeachers.filter(
+        (id) => !originalTeachers.includes(id)
+      );
+      const toRemove = originalTeachers.filter(
+        (id) => !selectedTeachers.includes(id)
+      );
+
+      const res = await fetch(
+        `http://localhost:5000/api/subjects/assign-teacher/${selectedSubject._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            add: toAdd,
+            remove: toRemove,
+          }),
+        }
+      );
+
+      const result = await res.json();
+
+      if (result.success) {
+        setDialogOpen(false);
+        await fetchData("subjects", setSubjects, "subjects");
+      } else {
+        console.error("Error assigning/removing teachers", result);
+      }
+    } catch (error) {
+      console.error("Error updating teacher assignment:", error);
+    }
+  };
+
   useEffect(() => {
     fetchData("subjects", setSubjects, "subjects");
     fetchData("classes", setClasses, "classes");
@@ -79,18 +117,13 @@ export default function SubjectDashboard() {
     setClassDropdownOpen(false);
   };
 
-const handleEditClick = (subject) => {
-  setSelectedSubject(subject);
-
-  // Match teacher names from subject with full teacher list to get IDs
-  const assignedIds = teachers1
-    .filter((t) => subject.teachers.includes(`${t.fName} ${t.lastName}`))
-    .map((t) => t._id);
-
-  setSelectedTeachers(assignedIds);
-  setOriginalTeachers(assignedIds);
-  setDialogOpen(true);
-};
+  const handleEditClick = ({ _id, subjectName, class: cls, teachers }) => {
+    setSelectedSubject({ _id, subjectName, class: cls });
+    const teacherIds = teachers.map((t) => t._id); // fix: use teacher IDs not names
+    setSelectedTeachers(teacherIds);
+    setOriginalTeachers(teacherIds);
+    setDialogOpen(true);
+  };
 
 
 
@@ -140,9 +173,8 @@ const handleEditClick = (subject) => {
                 key={cls._id || cls.id || cls}
                 role="option"
                 aria-selected={form.class === cls.name}
-                className={`cursor-pointer py-2 px-3 hover:bg-indigo-600 hover:text-white ${
-                  form.class === cls.name ? "bg-indigo-600 text-white" : ""
-                }`}
+                className={`cursor-pointer py-2 px-3 hover:bg-indigo-600 hover:text-white ${form.class === cls.name ? "bg-indigo-600 text-white" : ""
+                  }`}
                 onClick={() => handleClassSelect(cls.name || cls)}
               >
                 {cls.name || cls}
@@ -226,13 +258,19 @@ const handleEditClick = (subject) => {
                   <td className="px-2 py-2 text-left">{cls}</td>
                   <td className="px-2 py-2 text-left">
                     {teachers.length ? (
-                      teachers.join(", ")
+                      teachers.map((teacher, index) => (
+                        <span key={teacher._id}>
+                          {teacher.fName} {teacher.lName}
+                          {index < teachers.length - 1 ? ", " : ""}
+                        </span>
+                      ))
                     ) : (
                       <span className="text-xs px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-600">
                         No teachers assigned yet
                       </span>
                     )}
                   </td>
+
                   <td className="px-2 py-2 text-left">
                     <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
                       <Dialog.Trigger asChild>
@@ -278,16 +316,15 @@ const handleEditClick = (subject) => {
                               </p>
                             ) : (
                               teachers1.map((teacher) => (
-                                
+
                                 <label
-                                key={teacher._id}
-                                className="flex items-center gap-2 text-sm cursor-pointer"
+                                  key={teacher._id}
+                                  className="flex items-center gap-2 text-sm cursor-pointer"
                                 >
-                                  {console.log(selectedTeachers, 'selectedTeachers')}
                                   <input
                                     type="checkbox"
                                     className="accent-indigo-600"
-                                    checked={selectedTeachers.includes(teacher._id)}
+                                    checked={selectedTeachers.includes(String(teacher._id))}
 
                                     onChange={() => {
                                       if (
@@ -323,77 +360,7 @@ const handleEditClick = (subject) => {
                               </button>
                             </Dialog.Close>
                             <button
-                              onClick={async () => {
-                                try {
-                                  const token = localStorage.getItem("token");
-
-                                  // Find added and removed teachers
-                                  const toAdd = selectedTeachers.filter(
-                                    (id) => !originalTeachers.includes(id)
-                                  );
-                                  const toRemove = originalTeachers.filter(
-                                    (id) => !selectedTeachers.includes(id)
-                                  );
-                                  const responses = [];
-                                  if (toAdd.length) {
-                                    const res = await fetch(
-                                      `http://localhost:5000/api/subjects/assign-teacher/${selectedSubject._id}`,
-                                      {
-                                        method: "PUT",
-                                        headers: {
-                                          "Content-Type": "application/json",
-                                          Authorization: `Bearer ${token}`,
-                                        },
-                                        body: JSON.stringify({
-                                          action: "add",
-                                          teacherIds: toAdd,
-                                        }),
-                                      }
-                                    );
-                                    responses.push(await res.json());
-                                  }
-
-                                  if (toRemove.length) {
-                                    const res = await fetch(
-                                      `http://localhost:5000/api/subjects/assign-teacher/${selectedSubject._id}`,
-                                      {
-                                        method: "PUT",
-                                        headers: {
-                                          "Content-Type": "application/json",
-                                          Authorization: `Bearer ${token}`,
-                                        },
-                                        body: JSON.stringify({
-                                          action: "remove",
-                                          teacherIds: toRemove,
-                                        }),
-                                      }
-                                    );
-                                    responses.push(await res.json());
-                                  }
-
-                                  const hasError = responses.some(
-                                    (r) => !r.success
-                                  );
-                                  if (!hasError) {
-                                    setDialogOpen(false);
-                                    await fetchData(
-                                      "subjects",
-                                      setSubjects,
-                                      "subjects"
-                                    );
-                                  } else {
-                                    console.error(
-                                      "Error assigning/removing teachers",
-                                      responses
-                                    );
-                                  }
-                                } catch (error) {
-                                  console.error(
-                                    "Error updating teacher assignment:",
-                                    error
-                                  );
-                                }
-                              }}
+                              onClick={handleTeacherAssignment}
                               className="px-4 py-1 rounded bg-green-600 text-white text-sm hover:bg-green-700"
                             >
                               Save
