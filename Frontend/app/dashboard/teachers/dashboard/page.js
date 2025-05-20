@@ -12,29 +12,51 @@ export default function TeacherDashboard() {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [teacherSubjects, setTeacherSubjects] = useState({});
 
   // Fetch teachers
-  useEffect(() => {
-    const fetchTeachers = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("No token found.");
+ useEffect(() => {
+  const fetchTeachersAndSubjects = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found.");
 
-        const { data } = await axios.get("http://localhost:5000/api/teachers", {
-          headers: { Authorization: `Bearer ${token}` },
+      const { data: teacherData } = await axios.get("http://localhost:5000/api/teachers", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (teacherData.success) {
+        setTeachers(teacherData.data);
+
+        // Fetch subjects for each teacher
+        const subjectResponses = await Promise.all(
+          teacherData.data.map((teacher) =>
+            axios.get(`http://localhost:5000/api/teachers/by-teacher/${teacher._id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+          )
+        );
+
+        const subjectMap = {};
+        subjectResponses.forEach((res, i) => {
+          const teacherId = teacherData.data[i]._id;
+          subjectMap[teacherId] = res.data.data;
         });
 
-        if (data.success) setTeachers(data.data);
-        else console.error("Failed to fetch teachers");
-      } catch (error) {
-        console.error("Error fetching teachers:", error);
-      } finally {
-        setLoading(false);
+        setTeacherSubjects(subjectMap);
+      } else {
+        console.error("Failed to fetch teachers");
       }
-    };
+    } catch (error) {
+      console.error("Error fetching teachers or subjects:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchTeachers();
-  }, []);
+  fetchTeachersAndSubjects();
+}, []);
+
 
   // Fetch class list
   const fetchClasses = useCallback(async () => {
@@ -132,7 +154,11 @@ export default function TeacherDashboard() {
                     )}
                   </td>
 
-                  <td className="p-2 text-xs text-gray-600">N/A</td>
+<td className="p-2 text-xs text-gray-600">
+  {teacherSubjects[teacher._id]?.length > 0
+    ? teacherSubjects[teacher._id].map((subj) => subj.subjectName).join(", ")
+    : "N/A"}
+</td>
                   <td className="p-2">
                     <div className="flex gap-2 justify-end">
                       <a href={`/dashboard/teachers/dashboard/DAV${String(index + 1).padStart(6, "0")}`}>

@@ -1,4 +1,5 @@
 const Teacher = require("../models/Teacher");
+const Subject = require("../models/Subject");
 
 const createTeacherProfile = async (req, res) => {
   try {
@@ -109,4 +110,34 @@ const getAllTeachers = async (req, res) => {
   }
 };
 
-module.exports = { createTeacherProfile, getAllTeachers, assignClassToTeacher };
+const getSubjectsByTeacher = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+
+    const subjects = await Subject.find({ teacher: teacherId })
+      .populate("teacher", "fName lName")
+      .populate("class", "name");
+
+    const formattedSubjects = subjects.map((subj) => ({
+      _id: subj._id,
+      subjectName: subj.subjectName || subj.name,
+      class: subj.class?.name || subj.class || null,
+      teachers: subj.teacher.map((t) => ({
+        _id: t._id,
+        fName: t.fName,
+        lName: t.lName,
+      })),
+    }));
+
+    res.json({
+      success: true,
+      message: "Subjects fetched successfully",
+      data: formattedSubjects,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+
+module.exports = { createTeacherProfile, getAllTeachers, assignClassToTeacher, getSubjectsByTeacher };
