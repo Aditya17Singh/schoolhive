@@ -17,17 +17,14 @@ export default function SubjectDashboard() {
   const [selectedTeachers, setSelectedTeachers] = useState([]);
   const [originalTeachers, setOriginalTeachers] = useState([]);
 
-  const fetchData = useCallback(async (endpoint, setter, key) => {
+   const fetchData = useCallback(async (endpoint, setter, key) => {
     try {
       setLoading((prev) => ({ ...prev, [key]: true }));
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found.");
-
       const { data } = await axios.get(
         `http://localhost:5000/api/${endpoint}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setter(endpoint === "subjects" ? data.data : data);
     } catch (err) {
@@ -37,17 +34,13 @@ export default function SubjectDashboard() {
     }
   }, []);
 
-  const fetchTeachers = async () => {
+   const fetchTeachers = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/teachers", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      if (!token) throw new Error("No token found.");
+      const { data } = await axios.get("http://localhost:5000/api/teachers", {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      const data = await res.json();
-
       if (data.success) {
         setTeachers(data.data);
       } else {
@@ -56,42 +49,26 @@ export default function SubjectDashboard() {
     } catch (error) {
       console.error("Error fetching teachers:", error);
     } finally {
-      setLoading(false);
+      setLoading((prev) => ({ ...prev, teachers: false }));
     }
-  };
+  }, []);
 
   const handleTeacherAssignment = async () => {
     try {
       const token = localStorage.getItem("token");
-      const toAdd = selectedTeachers.filter(
-        (id) => !originalTeachers.includes(id)
-      );
-      const toRemove = originalTeachers.filter(
-        (id) => !selectedTeachers.includes(id)
-      );
-
-      const res = await fetch(
+      if (!token) throw new Error("No token found.");
+      const toAdd = selectedTeachers.filter((id) => !originalTeachers.includes(id));
+      const toRemove = originalTeachers.filter((id) => !selectedTeachers.includes(id));
+      const { data } = await axios.put(
         `http://localhost:5000/api/subjects/assign-teacher/${selectedSubject._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            add: toAdd,
-            remove: toRemove,
-          }),
-        }
+        { add: toAdd, remove: toRemove },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      const result = await res.json();
-
-      if (result.success) {
+      if (data.success) {
         setDialogOpen(false);
         await fetchData("subjects", setSubjects, "subjects");
       } else {
-        console.error("Error assigning/removing teachers", result);
+        console.error("Error assigning/removing teachers", data);
       }
     } catch (error) {
       console.error("Error updating teacher assignment:", error);
@@ -102,30 +79,28 @@ export default function SubjectDashboard() {
     fetchData("subjects", setSubjects, "subjects");
     fetchData("classes", setClasses, "classes");
     fetchTeachers();
-  }, [fetchData]);
+  }, [fetchData, fetchTeachers]);
 
   const filteredSubjects = useMemo(() => {
-    return subjects.filter(
-      ({ subjectName, class: cls }) =>
-        subjectName.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        (!form.class || form.class === cls)
+    return subjects.filter(({ subjectName, class: cls }) =>
+      subjectName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      (!form.class || form.class === cls)
     );
   }, [subjects, searchQuery, form.class]);
 
-  const handleClassSelect = (cls) => {
+
+   const handleClassSelect = (cls) => {
     setForm((prev) => ({ ...prev, class: cls }));
     setClassDropdownOpen(false);
   };
 
-  const handleEditClick = ({ _id, subjectName, class: cls, teachers }) => {
+   const handleEditClick = ({ _id, subjectName, class: cls, teachers }) => {
     setSelectedSubject({ _id, subjectName, class: cls });
-    const teacherIds = teachers.map((t) => t._id); // fix: use teacher IDs not names
+    const teacherIds = teachers.map((t) => t._id);
     setSelectedTeachers(teacherIds);
     setOriginalTeachers(teacherIds);
     setDialogOpen(true);
   };
-
-
 
   const renderDropdown = () => (
     <div className="relative w-[180px]">
@@ -330,14 +305,12 @@ export default function SubjectDashboard() {
                                       if (
                                         selectedTeachers.includes(teacher._id)
                                       ) {
-                                        // Remove teacher from selection
                                         setSelectedTeachers(
                                           selectedTeachers.filter(
                                             (id) => id !== teacher._id
                                           )
                                         );
                                       } else {
-                                        // Add teacher to selection
                                         setSelectedTeachers([
                                           ...selectedTeachers,
                                           teacher._id,
