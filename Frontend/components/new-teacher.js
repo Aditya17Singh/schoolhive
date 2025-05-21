@@ -235,28 +235,6 @@ export default function TeacherRegistrationForm() {
 
         {/* Category & Marital Status Combobox Buttons */}
         <div className="grid md:grid-cols-2 gap-4">
-          {/* <button type="button" className={comboboxClass}>
-            <select name="category" className={inputClass}>
-  <option value="">Category</option>
-  <option value="General">General</option>
-  <option value="SC">SC</option>
-  <option value="ST">ST</option>
-  <option value="OBC">OBC</option>
-</select>
-
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 15 15"
-              className="h-4 w-4 opacity-50"
-            >
-              <path
-                d="M4.93 5.43a.5.5 0 0 0 0 .64c.18.18.47.18.65 0L7.5 4.14l1.92 1.93a.46.46 0 0 0 .64 0 .5.5 0 0 0 0-.64L7.82 3.18a.5.5 0 0 0-.64 0L4.93 5.43ZM10.07 9.57a.5.5 0 0 0 0-.64.46.46 0 0 0-.64 0L7.5 10.86 5.57 8.93a.46.46 0 0 0-.64 0 .5.5 0 0 0 0 .64l2.25 2.25a.5.5 0 0 0 .64 0l2.25-2.25Z"
-                fill="currentColor"
-              />
-            </svg>
-          </button> */}
-
           <select name="category" className={inputClass}>
             <option value="">Category</option>
             <option value="General">General</option>
@@ -293,6 +271,3 @@ const inputClass =
 
 const labelClass =
   "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70";
-
-const comboboxClass =
-  "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md bg-[#F7F8FA] border px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
