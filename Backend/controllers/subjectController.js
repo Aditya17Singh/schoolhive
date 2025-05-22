@@ -2,7 +2,12 @@ const Subject = require("../models/Subject");
 
 exports.createSubject = async (req, res) => {
   try {
-    const subject = new Subject(req.body);
+    const orgId = req.user.id;
+    if (!orgId) return res.status(400).json({ error: "Organization ID missing" });
+
+    const subjectData = { ...req.body, orgId };
+
+    const subject = new Subject(subjectData);
     await subject.save();
     res.status(201).json(subject);
   } catch (err) {
@@ -10,12 +15,19 @@ exports.createSubject = async (req, res) => {
   }
 };
 
+
 exports.getAllSubjects = async (req, res) => {
   try {
-    const subjects = await Subject.find()
+    const orgId = req.user.id;   
+    if (!orgId) {
+      return res.status(400).json({ error: "Organization ID missing" });
+    }
+
+    const subjects = await Subject.find({ orgId })
       .populate("teacher", "fName lName")
       .populate("class", "name");
 
+    // ... rest of your formatting code
     const formattedSubjects = subjects.map((subj) => ({
       _id: subj._id,
       subjectName: subj.subjectName || subj.name,
@@ -24,7 +36,6 @@ exports.getAllSubjects = async (req, res) => {
         ? subj.teacher.map((t) => ({ _id: t._id, fName: t.fName, lName: t.lName }))
         : [],
     }));
-
 
     res.json({
       success: true,
@@ -35,6 +46,7 @@ exports.getAllSubjects = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
 
 exports.assignOrRemoveTeacher = async (req, res) => {
   const subjectId = req.params.id;

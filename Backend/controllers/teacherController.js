@@ -35,6 +35,8 @@ const createTeacherProfile = async (req, res) => {
       maritalStatus,
     } = req.body;
 
+    const orgID = req.user.id;
+
     const newTeacher = await Teacher.create({
       fName,
       mName,
@@ -51,6 +53,7 @@ const createTeacherProfile = async (req, res) => {
       religion,
       category,
       maritalStatus,
+      orgID,
       residentialAddress: {
         line1: resLine1,
         line2: resLine2,
@@ -82,28 +85,30 @@ const assignClassToTeacher = async (req, res) => {
   try {
     const { teacherId } = req.params;
     const { assignedClass, assignedSection } = req.body;
+    const orgID = req.user.id;
 
-    const updatedTeacher = await Teacher.findByIdAndUpdate(
-      teacherId,
-      { assignedClass, assignedSection },
-      { new: true }
-    );
+    const teacher = await Teacher.findOne({ _id: teacherId, orgID });
 
-    if (!updatedTeacher) {
-      return res.status(404).json({ success: false, message: "Teacher not found" });
+    if (!teacher) {
+      return res.status(404).json({ success: false, message: "Teacher not found or unauthorized" });
     }
 
-    res.status(200).json({ success: true, data: updatedTeacher });
+    teacher.assignedClass = assignedClass;
+    teacher.assignedSection = assignedSection;
+    await teacher.save();
+
+    res.status(200).json({ success: true, data: teacher });
   } catch (error) {
     console.error("Error assigning class to teacher:", error);
     res.status(500).json({ success: false, message: "Failed to assign class" });
   }
 };
 
-
 const getAllTeachers = async (req, res) => {
   try {
-    const teachers = await Teacher.find();
+    const orgID = req.user.id;
+    const teachers = await Teacher.find({ orgID });
+
     res.status(200).json({ success: true, data: teachers });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -113,6 +118,12 @@ const getAllTeachers = async (req, res) => {
 const getSubjectsByTeacher = async (req, res) => {
   try {
     const { teacherId } = req.params;
+    const orgID = req.user.id;
+
+    const teacher = await Teacher.findOne({ _id: teacherId, orgID });
+    if (!teacher) {
+      return res.status(404).json({ success: false, message: "Teacher not found or unauthorized" });
+    }
 
     const subjects = await Subject.find({ teacher: teacherId })
       .populate("teacher", "fName lName")
@@ -139,5 +150,9 @@ const getSubjectsByTeacher = async (req, res) => {
   }
 };
 
-
-module.exports = { createTeacherProfile, getAllTeachers, assignClassToTeacher, getSubjectsByTeacher };
+module.exports = {
+  createTeacherProfile,
+  getAllTeachers,
+  assignClassToTeacher,
+  getSubjectsByTeacher,
+};

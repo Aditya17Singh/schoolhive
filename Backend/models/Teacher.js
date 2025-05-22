@@ -36,7 +36,11 @@ const teacherSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-
+    orgID: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Organization",
+    required: true,
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Teacher", teacherSchema);
