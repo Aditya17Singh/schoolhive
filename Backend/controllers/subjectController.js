@@ -13,17 +13,18 @@ exports.createSubject = async (req, res) => {
 exports.getAllSubjects = async (req, res) => {
   try {
     const subjects = await Subject.find()
-      .populate("employee", "firstName lastName")
-      .populate("class", "name"); 
+      .populate("teacher", "fName lName")
+      .populate("class", "name");
 
     const formattedSubjects = subjects.map((subj) => ({
       _id: subj._id,
-      subjectName: subj.name,
-      class: subj.class?.name || null, 
-      teachers: subj.employee
-        ? [`${subj.employee.firstName} ${subj.employee.lastName}`]
-        : [], 
+      subjectName: subj.subjectName || subj.name,
+      class: subj.class?.name || subj.class || null,
+      teachers: Array.isArray(subj.teacher)
+        ? subj.teacher.map((t) => ({ _id: t._id, fName: t.fName, lName: t.lName }))
+        : [],
     }));
+
 
     res.json({
       success: true,
@@ -35,7 +36,41 @@ exports.getAllSubjects = async (req, res) => {
   }
 };
 
+exports.assignOrRemoveTeacher = async (req, res) => {
+  const subjectId = req.params.id;
+  const { add = [], remove = [] } = req.body;
 
+  try {
+    const subject = await Subject.findById(subjectId);
+    if (!subject) {
+      return res.status(404).json({ success: false, message: "Subject not found" });
+    }
+
+    if (!Array.isArray(subject.teacher)) {
+      subject.teacher = [];
+    }
+
+    add.forEach((id) => {
+      if (!subject.teacher.includes(id)) {
+        subject.teacher.push(id);
+      }
+    });
+
+    subject.teacher = subject.teacher.filter(
+      (id) => !remove.includes(id.toString())
+    );
+
+    await subject.save();
+
+    res.json({
+      success: true,
+      message: "Teacher assignments updated successfully",
+      data: subject,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 
 exports.getSubjectById = async (req, res) => {
   try {

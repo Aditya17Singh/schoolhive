@@ -2,6 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -16,7 +26,13 @@ export default function Dashboard() {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingNotice, setEditingNotice] = useState(null);
-
+  const [attendanceData , setAttendanceData] = useState([
+  { date: "2025-05-01", present: 95, absent: 5 },
+  { date: "2025-05-02", present: 90, absent: 10 },
+  { date: "2025-05-03", present: 92, absent: 8 },
+  { date: "2025-05-04", present: 88, absent: 12 },
+  { date: "2025-05-05", present: 91, absent: 9 },
+]);
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -117,140 +133,250 @@ export default function Dashboard() {
     }
   };
 
+
+
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
+      </div>
+    );
   }
 
   if (!user) {
-    return <div className="flex items-center justify-center min-h-screen">Unauthorized. Please login.</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Unauthorized. Please login.
+      </div>
+    );
   }
 
   return (
-    <div className="p-6">
+    <>
       <h1 className="text-3xl font-bold text-blue-800 mb-6">
         Welcome, {user.name}!
       </h1>
+      <div className="p-6 grid md:grid-cols-2 gap-2">
+        <div>
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-6">
+            <StatCard
+              title="Students"
+              value={stats.totalStudents}
+              color="text-blue-600"
+              link="/dashboard/students"
+            />
+            <StatCard
+              title="Classes"
+              value={stats.totalClasses}
+              color="text-green-600"
+              link="/dashboard/classes"
+            />
+            <StatCard
+              title="Teachers"
+              value={stats.totalTeachers}
+              color="text-purple-600"
+              link="/dashboard/teachers"
+            />
+            {/* <StatCard
+              title="Fee Collection"
+              value={`₹${stats.feeCollection}`}
+              color="text-red-600" /> */}
+          </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <StatCard
-          title="Total Students"
-          value={stats.totalStudents}
-          color="text-blue-600"
-          link="/dashboard/students"
-        />
-        <StatCard
-          title="Total Classes"
-          value={stats.totalClasses}
-          color="text-green-600"
-          link="/dashboard/classes"
-        />
-        <StatCard
-          title="Total Teachers"
-          value={stats.totalTeachers}
-          color="text-purple-600"
-          link="/dashboard/teachers"
-        />
-        <StatCard
-          title="Fee Collection"
-          value={`₹${stats.feeCollection}`}
-          color="text-red-600"
-        />
-      </div>
+          <AttendanceChart data={attendanceData} />
 
-      {/* Notices */}
-      <div className="bg-white shadow-lg rounded-lg p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Latest Notices</h2>
-          <button
-            onClick={() => fetchStatsAndNotices(localStorage.getItem("token"))}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md"
-          >
-            Refresh Notices
-          </button>
         </div>
-
-        {notices.length > 0 ? (
-          <ul className="space-y-4">
-            {notices.map((notice) => (
-              <li
-                key={notice._id}
-                className="border-b pb-2 flex justify-between items-center"
+        <div>
+          {/* Notices */}
+          <div className="rounded-xl bg-white text-gray-900 shadow-md hover:shadow-lg transition-shadow duration-300 mb-6">
+            <div className="flex flex-col space-y-1.5 p-6 bg-gray-100">
+              <h3 className="font-semibold leading-none tracking-tight text-lg">
+                Quick Actions
+              </h3>
+            </div>
+            <div className="p-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {/* Each Quick Action */}
+                <QuickAction
+                  href="/dashboard/attendance/dashboard"
+                  icon="clock"
+                  label="Attendance"
+                />
+                <QuickAction
+                  href="/dashboard/admission/stats"
+                  icon="users"
+                  label="Admission"
+                />
+                <QuickAction
+                  href="/dashboard/fee/dashboard"
+                  icon="badge-indian-rupee"
+                  label="Fees"
+                />
+                <QuickAction
+                  href="/dashboard/result/dashboard"
+                  icon="chart-no-axes-combined"
+                  label="Result"
+                />
+                <QuickAction
+                  href="/dashboard/classes"
+                  icon="users"
+                  label="Classes"
+                />
+                <QuickAction
+                  href="/dashboard/subjects"
+                  icon="book-open"
+                  label="Subjects"
+                />
+                <QuickAction
+                  href="/dashboard/students"
+                  icon="graduation-cap"
+                  label="Students"
+                />
+                <QuickAction
+                  href="/dashboard/teachers/dashboard"
+                  icon="user"
+                  label="Teachers"
+                />
+              </div>
+            </div>
+          </div>
+           <div className="bg-white shadow-lg rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Latest Notices</h2>
+              <button
+                onClick={() =>
+                  fetchStatsAndNotices(localStorage.getItem("token"))
+                }
+                className="bg-blue-500 text-white px-4 py-2 rounded-md"
               >
-                {editingNotice?._id === notice._id ? (
-                  <div className="w-full">
-                    <input
-                      type="text"
-                      value={editingNotice.title}
-                      onChange={(e) =>
-                        setEditingNotice({
-                          ...editingNotice,
-                          title: e.target.value,
-                        })
-                      }
-                      className="w-full border p-2 mb-2"
-                    />
-                    <textarea
-                      value={editingNotice.description}
-                      onChange={(e) =>
-                        setEditingNotice({
-                          ...editingNotice,
-                          description: e.target.value,
-                        })
-                      }
-                      className="w-full border p-2"
-                    />
-                    <div className="flex justify-end space-x-2 mt-2">
-                      <button
-                        onClick={handleSaveEdit}
-                        className="bg-green-500 text-white px-3 py-1 rounded"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => setEditingNotice(null)}
-                        className="bg-gray-400 text-white px-3 py-1 rounded"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full">
-                    <h3 className="text-lg font-medium">{notice.title}</h3>
-                    <p className="text-gray-700">{notice.description}</p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(notice.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                )}
+                Refresh Notices
+              </button>
+            </div>
 
-                <div className="flex space-x-2">
-                  {user?.role === "admin" && (
-                    <>
-                      <button
-                        onClick={() => handleEdit(notice)}
-                        className="bg-yellow-500 text-white px-3 py-1 rounded"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(notice._id)}
-                        className="bg-red-500 text-white px-3 py-1 rounded"
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-600">No notices available.</p>
-        )}
+            {notices.length > 0 ? (
+              <ul className="space-y-4">
+                {notices.map((notice) => (
+                  <li
+                    key={notice._id}
+                    className="border-b pb-2 flex justify-between items-center"
+                  >
+                    {editingNotice?._id === notice._id ? (
+                      <div className="w-full">
+                        <input
+                          type="text"
+                          value={editingNotice.title}
+                          onChange={(e) =>
+                            setEditingNotice({
+                              ...editingNotice,
+                              title: e.target.value,
+                            })
+                          }
+                          className="w-full border p-2 mb-2"
+                        />
+                        <textarea
+                          value={editingNotice.description}
+                          onChange={(e) =>
+                            setEditingNotice({
+                              ...editingNotice,
+                              description: e.target.value,
+                            })
+                          }
+                          className="w-full border p-2"
+                        />
+                        <div className="flex justify-end space-x-2 mt-2">
+                          <button
+                            onClick={handleSaveEdit}
+                            className="bg-green-500 text-white px-3 py-1 rounded"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingNotice(null)}
+                            className="bg-gray-400 text-white px-3 py-1 rounded"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full">
+                        <h3 className="text-lg font-medium">{notice.title}</h3>
+                        <p className="text-gray-700">{notice.description}</p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(notice.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex space-x-2">
+                      {user?.role === "admin" && (
+                        <>
+                          <button
+                            onClick={() => handleEdit(notice)}
+                            className="bg-yellow-500 text-white px-3 py-1 rounded"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(notice._id)}
+                            className="bg-red-500 text-white px-3 py-1 rounded"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-600">No notices available.</p>
+            )}
+          </div>
+        </div>
       </div>
+    </>
+  );
+}
+
+function AttendanceChart({ data }) {
+  return (
+    <div className="bg-white shadow-lg rounded-lg p-6 mb-6">
+      <h2 className="text-xl font-semibold mb-4">Attendance Overview</h2>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey="present"
+            stroke="#4ade80"
+            name="Present"
+          />
+          <Line
+            type="monotone"
+            dataKey="absent"
+            stroke="#f87171"
+            name="Absent"
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
+  );
+}
+
+function QuickAction({ href, icon, label }) {
+  return (
+    <a href={href}>
+      <button className="items-center cursor-pointer justify-center whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border border-input bg-background shadow-sm w-full h-auto py-4 px-3 flex flex-col gap-2 transition-all duration-200 hover:bg-gray-50 hover:text-blue-600">
+        {/* {iconMap[icon] || <User className="h-4 w-4" />} */}
+        <span className="text-xs font-medium">{label}</span>
+      </button>
+    </a>
   );
 }
 
@@ -265,7 +391,9 @@ function StatCard({ title, value, color, link }) {
 
   return (
     <div
-      className={`bg-white p-6 rounded-lg shadow-lg text-center cursor-${link ? "pointer" : "default"} hover:shadow-xl transition`}
+      className={`bg-white px-1 py-4 flex justify-center gap-2 items-center rounded-lg shadow-lg text-center cursor-${
+        link ? "pointer" : "default"
+      } hover:shadow-xl transition`}
       onClick={handleClick}
     >
       <h2 className="text-xl font-semibold text-gray-700">{title}</h2>
@@ -273,4 +401,3 @@ function StatCard({ title, value, color, link }) {
     </div>
   );
 }
-
