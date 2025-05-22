@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ResponsiveContainer,
   LineChart,
@@ -12,6 +13,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
+
 
 export default function Dashboard() {
   const router = useRouter();
@@ -153,11 +155,8 @@ export default function Dashboard() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold text-blue-800 mb-6">
-        Welcome, {user.name}!
-      </h1>
-      <div className="p-6 grid md:grid-cols-2 gap-2">
-        <div>
+      <div className="p-6 flex gap-2">
+        <div className="flex-[0_1_65%]">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-6">
             <StatCard
@@ -187,7 +186,7 @@ export default function Dashboard() {
           <AttendanceChart data={attendanceData} />
 
         </div>
-        <div>
+        <div className="flex-[0_1_35%]">
           {/* Notices */}
           <div className="rounded-xl bg-white text-gray-900 shadow-md hover:shadow-lg transition-shadow duration-300 mb-6">
             <div className="flex flex-col space-y-1.5 p-6 bg-gray-100">
@@ -196,7 +195,7 @@ export default function Dashboard() {
               </h3>
             </div>
             <div className="p-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {/* Each Quick Action */}
                 <QuickAction
                   href="/dashboard/attendance/dashboard"
@@ -241,17 +240,17 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-           <div className="bg-white shadow-lg rounded-lg p-6">
+          <div className="bg-white shadow-lg rounded-lg p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Latest Notices</h2>
-              <button
+              {/* <button
                 onClick={() =>
                   fetchStatsAndNotices(localStorage.getItem("token"))
                 }
                 className="bg-blue-500 text-white px-4 py-2 rounded-md"
               >
                 Refresh Notices
-              </button>
+              </button> */}
             </div>
 
             {notices.length > 0 ? (
@@ -371,12 +370,11 @@ function AttendanceChart({ data }) {
 
 function QuickAction({ href, icon, label }) {
   return (
-    <a href={href}>
-      <button className="items-center cursor-pointer justify-center whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border border-input bg-background shadow-sm w-full h-auto py-4 px-3 flex flex-col gap-2 transition-all duration-200 hover:bg-gray-50 hover:text-blue-600">
-        {/* {iconMap[icon] || <User className="h-4 w-4" />} */}
-        <span className="text-xs font-medium">{label}</span>
-      </button>
-    </a>
+    <Link href={href}>
+      <div className="items-center cursor-pointer justify-center whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border border-input bg-background shadow-sm w-full h-auto py-4 px-3 flex flex-col gap-2 transition-all duration-200 hover:bg-gray-50 hover:text-blue-600">
+        <span>{label}</span>
+      </div>
+    </Link>
   );
 }
 
