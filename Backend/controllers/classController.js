@@ -15,19 +15,6 @@ exports.getAllClasses = async (req, res) => {
   }
 };
 
-// Get Class by ID
-// exports.getClassById = async (req, res) => {
-//   try {
-//     const classData = await Class.findById(req.params.id)
-//       .populate({ path: "subjects", select: "name code employee" })
-//       .populate({ path: "students", select: "firstName lastName rollNo" });
-//     if (!classData) return res.status(404).json({ error: "Class not found" });
-//     res.json(classData);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
 // Create Class
 exports.createClass = async (req, res) => {
   try {

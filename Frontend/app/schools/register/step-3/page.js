@@ -49,6 +49,7 @@ export default function Step2Page() {
 
 		const academicYearData = {
 			year: `${formData.academicYearStart}-${formData.academicYearEnd}`,
+			orgId: organizationId,
 			start: formData.academicYearStart,
 			end: formData.academicYearEnd,
 			startDate: `${formData.academicYearStart}-04-01`,

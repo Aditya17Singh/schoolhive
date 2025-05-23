@@ -5,25 +5,24 @@ exports.createAcademicYear = async (req, res) => {
   try {
     const { year, orgId, isActive = false } = req.body;
 
-    // Check if academic year for the given orgId already exists
-    const existingYear = await AcademicYear.findOne({ year, orgId });
-    if (existingYear) {
-      return res.status(400).json({ error: "Academic year already exists for this school." });
+    if (!orgId) {
+      return res.status(400).json({ error: "Organization ID is required." });
     }
 
-    // Create new academic year
-    const newAcademicYear = new AcademicYear({
-      year,
-      orgId,
-      isActive,
-    });
+    const existingYear = await AcademicYear.findOne({ year, orgId });
+    if (existingYear) {
+      return res.status(400).json({ error: "Academic year already exists for this organization." });
+    }
 
+    const newAcademicYear = new AcademicYear({ year, orgId, isActive });
     await newAcademicYear.save();
+
     res.status(201).json({ message: "Academic Year created successfully", academicYear: newAcademicYear });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Get All Academic Years for a School
 exports.getAllAcademicYears = async (req, res) => {
