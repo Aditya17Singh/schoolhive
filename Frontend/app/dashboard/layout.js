@@ -75,7 +75,7 @@ export default function DashboardLayout({ children }) {
         className="fixed top-0 left-0 bg-blue-900 text-white p-4 overflow-y-auto"
         style={{ width: `${sidebarWidth}px`, height: "100vh" }}
       >
-        <h2 className="text-xl font-bold mb-6">{user.schoolName || "School Hive"}</h2>
+        <h2 className="text-xl font-bold mb-6">School Hive</h2>
         <ul className="space-y-2 text-sm">
           <MenuItem href="/dashboard" icon="🏠" label="Home" />
           <Dropdown label="Academics" icon="🎓" open={openMenus.academics} toggle={() => toggleMenu("academics")}>

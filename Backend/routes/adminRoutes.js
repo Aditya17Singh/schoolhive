@@ -1,15 +1,13 @@
-const express = require("express");
+// routes/adminRoutes.js
+const express = require('express');
 const router = express.Router();
-const adminController = require("../controllers/adminController");
+const adminController = require('../controllers/adminController');
+const verifyToken = require("../middleware/verifyToken");
 
-// Routes
-router.get("/", adminController.getAllAdmins);
-router.get("/:id", adminController.getAdminById);
+// POST /admins - create admin
+router.post('/',verifyToken,adminController.createAdmin);
 
-// Create an admin for a specific school
-router.post('/:schoolId/add-admin', adminController.createAdmin);
-
-router.put("/:id", adminController.updateAdmin);
-router.delete("/:id", adminController.deleteAdmin);
+// GET /admins - fetch all admins
+router.get('/', verifyToken, adminController.getAdmins);
 
 module.exports = router;

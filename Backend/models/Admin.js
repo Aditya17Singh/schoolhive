@@ -1,15 +1,15 @@
 // models/Admin.js
-const mongoose = require("mongoose");
-const { Schema } = mongoose;
+const mongoose = require('mongoose');
 
-const AdminSchema = new Schema({
-  schoolId: { type: Schema.Types.ObjectId, ref: 'School', required: true, index: true },
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['admin', 'superAdmin'], default: 'admin' },
-  isActive: { type: Boolean, default: true },
-  mobile: { type: String, required: true, unique: true },
+const AdminSchema = new mongoose.Schema({
+  firstName: { type: String, required: true },
+  middleName: { type: String },
+  lastName: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  phone: { type: String, required: true },
+  address: { type: String },
+  orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
+  
 }, { timestamps: true });
 
-module.exports = mongoose.model("Admin", AdminSchema);
+module.exports = mongoose.model('Admin', AdminSchema);

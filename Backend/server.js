@@ -30,7 +30,7 @@ app.use("/api/teachers", teacherRoutes);
 app.use("/api/academics" , academicRoutes);
 app.use("/api/lessons", lessonRoutes);
 app.use("/api/employees", employeeRoutes);
-app.use("/api/schools", adminRoutes);
+app.use('/api/admins', adminRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/subjects", subjectRoutes);
