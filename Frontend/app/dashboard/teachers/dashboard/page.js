@@ -255,7 +255,6 @@ export default function TeacherDashboard() {
                               <Dialog.Description className="text-sm text-gray-500 mb-4">
                                 Update basic details and assign class/section
                               </Dialog.Description>
-
                               <form className="space-y-4">
                                 <div>
                                   <label className="text-sm font-medium">Class</label>
@@ -265,11 +264,13 @@ export default function TeacherDashboard() {
                                     className="mt-1 w-full h-9 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
                                   >
                                     <option value="">Select a class</option>
-                                    {classes.map((cls, i) => (
-                                      <option key={i} value={cls.name}>
-                                        {cls.name}
-                                      </option>
-                                    ))}
+                                    {[...classes]
+                                      .sort((a, b) => a.order - b.order)
+                                      .map((cls, i) => (
+                                        <option key={i} value={cls.name}>
+                                          {cls.name}
+                                        </option>
+                                      ))}
                                   </select>
                                 </div>
                                 <div>
@@ -279,16 +280,20 @@ export default function TeacherDashboard() {
                                     onChange={(e) => setSelectedSection(e.target.value)}
                                     disabled={!selectedClass}
                                     className={`mt-1 w-full h-9 px-3 py-2 border rounded-md text-sm ${!selectedClass
-                                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                      : "bg-gray-50 border-gray-300"
+                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                        : "bg-gray-50 border-gray-300"
                                       }`}
                                   >
-                                    <option value="">{selectedClass ? "Select a section" : "Select a class first"}</option>
-                                    {sectionsForSelectedClass.map((section, i) => (
-                                      <option key={i} value={section}>
-                                        {section}
-                                      </option>
-                                    ))}
+                                    <option value="">
+                                      {selectedClass ? "Select a section" : "Select a class first"}
+                                    </option>
+                                    {[...sectionsForSelectedClass]
+                                      .sort((a, b) => a.localeCompare(b))
+                                      .map((section, i) => (
+                                        <option key={i} value={section}>
+                                          {section}
+                                        </option>
+                                      ))}
                                   </select>
                                 </div>
                               </form>
