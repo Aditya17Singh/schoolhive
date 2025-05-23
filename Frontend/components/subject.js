@@ -191,86 +191,87 @@ export default function SubjectDashboard() {
         {renderDropdown()}
       </div>
 
-      <table className="w-full text-sm caption-bottom">
-        <thead className="border-b">
-          <tr className="hover:bg-muted/50">
-            {[
-              "Subject Name",
-              "Class",
-              "Teachers",
-              "Assign or Remove Teachers",
-            ].map((header) => (
-              <th
-                key={header}
-                className="px-2 py-3 text-left font-medium text-muted-foreground"
-              >
-                {header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {loading.subjects ? (
-            Array.from({ length: 3 }, (_, i) => (
-              <React.Fragment key={i}>{renderLoadingRow()}</React.Fragment>
-            ))
-          ) : filteredSubjects.length === 0 ? (
-            <tr>
-              <td colSpan={4} className="text-center py-4 text-gray-500">
-                No subjects found.
-              </td>
-            </tr>
-          ) : (
-            filteredSubjects.map(
-              ({ _id, subjectName, class: cls, teachers }) => (
-                <tr
-                  key={_id}
-                  className="border-b bg-slate-50 hover:bg-slate-100"
+      <div className="overflow-y-auto max-h-[450px] custom-scrollbar shadow-md p-2 rounded-md">
+        <table className="w-full text-sm caption-bottom">
+          <thead className="border-b">
+            <tr className="hover:bg-muted/50">
+              {[
+                "Subject Name",
+                "Class",
+                "Teachers",
+                "Assign or Remove Teachers",
+              ].map((header) => (
+                <th
+                  key={header}
+                  className="px-2 py-3 text-left font-medium text-muted-foreground"
                 >
-                  <td className="px-2 py-2 capitalize text-left">
-                    {subjectName}
-                  </td>
-                  <td className="px-2 py-2 text-left">{cls}</td>
-                  <td className="px-2 py-2 text-left">
-                    {teachers.length ? (
-                      teachers.map((teacher, index) => (
-                        <span key={teacher._id}>
-                          {teacher.fName} {teacher.lName}
-                          {index < teachers.length - 1 ? ", " : ""}
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading.subjects ? (
+              Array.from({ length: 3 }, (_, i) => (
+                <React.Fragment key={i}>{renderLoadingRow()}</React.Fragment>
+              ))
+            ) : filteredSubjects.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="text-center py-4 text-gray-500">
+                  No subjects found.
+                </td>
+              </tr>
+            ) : (
+              filteredSubjects.map(
+                ({ _id, subjectName, class: cls, teachers }) => (
+                  <tr
+                    key={_id}
+                    className="border-b bg-slate-50 hover:bg-slate-100"
+                  >
+                    <td className="px-2 py-2 capitalize text-left">
+                      {subjectName}
+                    </td>
+                    <td className="px-2 py-2 text-left">{cls}</td>
+                    <td className="px-2 py-2 text-left">
+                      {teachers.length ? (
+                        teachers.map((teacher, index) => (
+                          <span key={teacher._id}>
+                            {teacher.fName} {teacher.lName}
+                            {index < teachers.length - 1 ? ", " : ""}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-600">
+                          No teachers assigned yet
                         </span>
-                      ))
-                    ) : (
-                      <span className="text-xs px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-600">
-                        No teachers assigned yet
-                      </span>
-                    )}
-                  </td>
+                      )}
+                    </td>
 
-                  <td className="px-2 py-2 text-left">
-                    <button
-                      onClick={() => handleEditClick({ _id, subjectName, class: cls, teachers })}
-                      className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
+                    <td className="px-2 py-2 text-left">
+                      <button
+                        onClick={() => handleEditClick({ _id, subjectName, class: cls, teachers })}
+                        className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300"
                       >
-                        <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
-                      </svg>
-                      <span className="text-xs">Edit</span>
-                    </button>
-
-                  </td>
-                </tr>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+                        </svg>
+                        <span className="text-xs">Edit</span>
+                      </button>
+                    </td>
+                  </tr>
+                )
               )
-            )
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
       <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/10 z-40" />
