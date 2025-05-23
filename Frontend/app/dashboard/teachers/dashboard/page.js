@@ -232,7 +232,7 @@ export default function TeacherDashboard() {
                     <td className="p-4 text-right">
                       <div className="flex justify-end items-center gap-2">
                         <a href={`/dashboard/teachers/dashboard/DAV${String(index + 1).padStart(6, "0")}`}>
-                          <button className="rounded-md text-xs h-8 w-8 border border-blue-200 hover:bg-blue-50">👁</button>
+                          <button className="rounded-md text-xs p-2 cursor-pointer bg-blue-100">view</button>
                         </a>
                         <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
                           <Dialog.Trigger asChild>
@@ -244,12 +244,12 @@ export default function TeacherDashboard() {
                               }}
                               className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300 text-xs"
                             >
-                              ✏️ Edit
+                               Edit
                             </button>
                           </Dialog.Trigger>
 
                           <Dialog.Portal>
-                            <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" />
+                            <Dialog.Overlay className="fixed inset-0 bg-black/40 z-40" />
                             <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md bg-white rounded-lg p-6 shadow-lg">
                               <Dialog.Title className="text-lg font-semibold mb-2">Edit Teacher</Dialog.Title>
                               <Dialog.Description className="text-sm text-gray-500 mb-4">
@@ -313,7 +313,7 @@ export default function TeacherDashboard() {
                             </Dialog.Content>
                           </Dialog.Portal>
                         </Dialog.Root>
-                        <button className="rounded-md text-xs h-8 w-8 border border-red-200 hover:bg-red-50">🗑️</button>
+                        <button className="cursor-pointer rounded-md text-xs p-2 border border-red-200 hover:bg-red-50">Delete</button>
                       </div>
                     </td>
                   </tr>

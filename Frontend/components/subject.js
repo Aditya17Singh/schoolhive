@@ -17,7 +17,7 @@ export default function SubjectDashboard() {
   const [selectedTeachers, setSelectedTeachers] = useState([]);
   const [originalTeachers, setOriginalTeachers] = useState([]);
 
-   const fetchData = useCallback(async (endpoint, setter, key) => {
+  const fetchData = useCallback(async (endpoint, setter, key) => {
     try {
       setLoading((prev) => ({ ...prev, [key]: true }));
       const token = localStorage.getItem("token");
@@ -34,7 +34,7 @@ export default function SubjectDashboard() {
     }
   }, []);
 
-   const fetchTeachers = useCallback(async () => {
+  const fetchTeachers = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found.");
@@ -89,12 +89,12 @@ export default function SubjectDashboard() {
   }, [subjects, searchQuery, form.class]);
 
 
-   const handleClassSelect = (cls) => {
+  const handleClassSelect = (cls) => {
     setForm((prev) => ({ ...prev, class: cls }));
     setClassDropdownOpen(false);
   };
 
-   const handleEditClick = ({ _id, subjectName, class: cls, teachers }) => {
+  const handleEditClick = ({ _id, subjectName, class: cls, teachers }) => {
     setSelectedSubject({ _id, subjectName, class: cls });
     const teacherIds = teachers.map((t) => t._id);
     setSelectedTeachers(teacherIds);
@@ -191,164 +191,156 @@ export default function SubjectDashboard() {
         {renderDropdown()}
       </div>
 
-      <table className="w-full text-sm caption-bottom">
-        <thead className="border-b">
-          <tr className="hover:bg-muted/50">
-            {[
-              "Subject Name",
-              "Class",
-              "Teachers",
-              "Assign or Remove Teachers",
-            ].map((header) => (
-              <th
-                key={header}
-                className="px-2 py-3 text-left font-medium text-muted-foreground"
-              >
-                {header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {loading.subjects ? (
-            Array.from({ length: 3 }, (_, i) => (
-              <React.Fragment key={i}>{renderLoadingRow()}</React.Fragment>
-            ))
-          ) : filteredSubjects.length === 0 ? (
-            <tr>
-              <td colSpan={4} className="text-center py-4 text-gray-500">
-                No subjects found.
-              </td>
-            </tr>
-          ) : (
-            filteredSubjects.map(
-              ({ _id, subjectName, class: cls, teachers }) => (
-                <tr
-                  key={_id}
-                  className="border-b bg-slate-50 hover:bg-slate-100"
+      <div className="overflow-y-auto max-h-[450px] custom-scrollbar shadow-md p-2 rounded-md">
+        <table className="w-full text-sm caption-bottom">
+          <thead className="border-b">
+            <tr className="hover:bg-muted/50">
+              {[
+                "Subject Name",
+                "Class",
+                "Teachers",
+                "Assign or Remove Teachers",
+              ].map((header) => (
+                <th
+                  key={header}
+                  className="px-2 py-3 text-left font-medium text-muted-foreground"
                 >
-                  <td className="px-2 py-2 capitalize text-left">
-                    {subjectName}
-                  </td>
-                  <td className="px-2 py-2 text-left">{cls}</td>
-                  <td className="px-2 py-2 text-left">
-                    {teachers.length ? (
-                      teachers.map((teacher, index) => (
-                        <span key={teacher._id}>
-                          {teacher.fName} {teacher.lName}
-                          {index < teachers.length - 1 ? ", " : ""}
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading.subjects ? (
+              Array.from({ length: 3 }, (_, i) => (
+                <React.Fragment key={i}>{renderLoadingRow()}</React.Fragment>
+              ))
+            ) : filteredSubjects.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="text-center py-4 text-gray-500">
+                  No subjects found.
+                </td>
+              </tr>
+            ) : (
+              filteredSubjects.map(
+                ({ _id, subjectName, class: cls, teachers }) => (
+                  <tr
+                    key={_id}
+                    className="border-b bg-slate-50 hover:bg-slate-100"
+                  >
+                    <td className="px-2 py-2 capitalize text-left">
+                      {subjectName}
+                    </td>
+                    <td className="px-2 py-2 text-left">{cls}</td>
+                    <td className="px-2 py-2 text-left">
+                      {teachers.length ? (
+                        teachers.map((teacher, index) => (
+                          <span key={teacher._id}>
+                            {teacher.fName} {teacher.lName}
+                            {index < teachers.length - 1 ? ", " : ""}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-600">
+                          No teachers assigned yet
                         </span>
-                      ))
-                    ) : (
-                      <span className="text-xs px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-600">
-                        No teachers assigned yet
-                      </span>
-                    )}
-                  </td>
+                      )}
+                    </td>
 
-                  <td className="px-2 py-2 text-left">
-                    <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
-                      <Dialog.Trigger asChild>
-                        <button
-                          onClick={() =>
-                            handleEditClick({
-                              _id,
-                              subjectName,
-                              class: cls,
-                              teachers,
-                            })
-                          }
-                          className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300"
+                    <td className="px-2 py-2 text-left">
+                      <button
+                        onClick={() => handleEditClick({ _id, subjectName, class: cls, teachers })}
+                        className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
                         >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
-                          </svg>
-                          <span className="text-xs">Edit</span>
-                        </button>
-                      </Dialog.Trigger>
-
-                      <Dialog.Portal>
-                        <Dialog.Overlay className="fixed inset-0 bg-black/10 z-40" />
-                        <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md bg-white rounded-lg p-6">
-                          <Dialog.Title className="text-lg font-semibold mb-2">
-                            Teacher Assignment
-                          </Dialog.Title>
-                          <Dialog.Description className="text-sm text-gray-500 mb-4">
-                            Assign or remove teachers for this subject.
-                          </Dialog.Description>
-
-                          <div className="mb-4 max-h-48 overflow-y-auto border rounded p-2 space-y-2">
-                            {teachers1.length === 0 ? (
-                              <p className="text-sm text-gray-500">
-                                No teachers available.
-                              </p>
-                            ) : (
-                              teachers1.map((teacher) => (
-
-                                <label
-                                  key={teacher._id}
-                                  className="flex items-center gap-2 text-sm cursor-pointer"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    className="accent-indigo-600"
-                                    checked={selectedTeachers.includes(String(teacher._id))}
-
-                                    onChange={() => {
-                                      if (
-                                        selectedTeachers.includes(teacher._id)
-                                      ) {
-                                        setSelectedTeachers(
-                                          selectedTeachers.filter(
-                                            (id) => id !== teacher._id
-                                          )
-                                        );
-                                      } else {
-                                        setSelectedTeachers([
-                                          ...selectedTeachers,
-                                          teacher._id,
-                                        ]);
-                                      }
-                                    }}
-                                  />
-                                  <span>
-                                    {teacher.fName} {teacher.lastName}
-                                  </span>
-                                </label>
-                              ))
-                            )}
-                          </div>
-
-                          <div className="flex justify-end gap-2">
-                            <Dialog.Close asChild>
-                              <button className="px-3 py-1.5 text-sm rounded border border-gray-300 hover:bg-gray-100">
-                                Cancel
-                              </button>
-                            </Dialog.Close>
-                            <button
-                              onClick={handleTeacherAssignment}
-                              className="px-4 py-1 rounded bg-green-600 text-white text-sm hover:bg-green-700"
-                            >
-                              Save
-                            </button>
-                          </div>
-                        </Dialog.Content>
-                      </Dialog.Portal>
-                    </Dialog.Root>
-                  </td>
-                </tr>
+                          <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+                        </svg>
+                        <span className="text-xs">Edit</span>
+                      </button>
+                    </td>
+                  </tr>
+                )
               )
-            )
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/10 z-40" />
+          <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md bg-white rounded-lg p-6">
+            <Dialog.Title className="text-lg font-semibold mb-2">
+              Teacher Assignment
+            </Dialog.Title>
+            <Dialog.Description className="text-sm text-gray-500 mb-4">
+              Assign or remove teachers for this subject.
+            </Dialog.Description>
+
+            <div className="mb-4 max-h-48 overflow-y-auto border rounded p-2 space-y-2">
+              {teachers1.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  No teachers available.
+                </p>
+              ) : (
+                teachers1.map((teacher) => (
+
+                  <label
+                    key={teacher._id}
+                    className="flex items-center gap-2 text-sm cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      className="accent-indigo-600"
+                      checked={selectedTeachers.includes(String(teacher._id))}
+
+                      onChange={() => {
+                        if (
+                          selectedTeachers.includes(teacher._id)
+                        ) {
+                          setSelectedTeachers(
+                            selectedTeachers.filter(
+                              (id) => id !== teacher._id
+                            )
+                          );
+                        } else {
+                          setSelectedTeachers([
+                            ...selectedTeachers,
+                            teacher._id,
+                          ]);
+                        }
+                      }}
+                    />
+                    <span>
+                      {teacher.fName} {teacher.lastName}
+                    </span>
+                  </label>
+                ))
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Dialog.Close asChild>
+                <button className="px-3 py-1.5 text-sm rounded border border-gray-300 hover:bg-gray-100">
+                  Cancel
+                </button>
+              </Dialog.Close>
+              <button
+                onClick={handleTeacherAssignment}
+                className="px-4 py-1 rounded bg-green-600 text-white text-sm hover:bg-green-700"
+              >
+                Save
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }
