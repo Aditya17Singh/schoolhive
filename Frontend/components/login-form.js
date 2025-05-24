@@ -15,7 +15,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
- 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -29,13 +29,13 @@ export default function LoginForm() {
     }
 
     setError("");
-    setLoading(true); 
+    setLoading(true);
 
     let payload = { role, password };
 
     if (role === "admin") {
       payload = {
-        emailOrOrgUid: email || orgUid,
+        email: email || orgUid,
         password,
         role,
       };
@@ -69,12 +69,12 @@ export default function LoginForm() {
         router.push("/dashboard");
       } else {
         setError(data.message || "Login failed");
-        setLoading(false); 
+        setLoading(false);
       }
     } catch (err) {
       console.error(err);
       setError("Something went wrong");
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
