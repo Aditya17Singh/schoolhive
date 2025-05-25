@@ -108,7 +108,9 @@ export default function DashboardLayout({ children }) {
             <MenuItem href="/dashboard/fee/payments" label="Payments" icon="💳" />
           </Dropdown>
           <MenuItem href="/dashboard/results" label="Result" icon="📈" />
-          <MenuItem href="/dashboard/other" label="Other" icon="🧩" />
+          <div className="mt-10">
+            Others
+          </div>
           <MenuItem href="/dashboard/news" label="What's New" icon="📰" />
           <MenuItem href="/dashboard/organization" label="Organization" icon="🏢" />
           <MenuItem href="/dashboard/admins" label="Admins" icon="🧑‍💼" />
@@ -150,12 +152,13 @@ export default function DashboardLayout({ children }) {
                 <div className="absolute top-full right-0 mt-2 left-0 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                   <ul className="text-sm">
                     <li>
-                      <button
-                        className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
-                        onClick={() => setOpen(false)}
-                      >
-                        👤 Profile
-                      </button>
+                      <Link
+    href="/dashboard/organization"
+    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
+    onClick={() => setOpen(false)}
+  >
+    👤 Profile
+  </Link>
                     </li>
                     <li>
                       <button

@@ -12,6 +12,7 @@ export default function Admins() {
   const [admins, setAdmins] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -85,6 +86,7 @@ export default function Admins() {
   };
 
   const fetchAdmins = async () => {
+    setLoading(true);
     try {
       const res = await API.get("/admins");
       const data = res.data;
@@ -96,12 +98,14 @@ export default function Admins() {
           }`.trim(),
           email: admin.email,
           phone: admin.phone,
-          permissions: admin.permissions || [], 
-          showPermissionsPopover: false, 
+          permissions: admin.permissions || [],
+          showPermissionsPopover: false,
         }))
       );
     } catch (err) {
       console.error("Fetch admins error:", err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -208,7 +212,7 @@ export default function Admins() {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="flex items-center gap-1 whitespace-nowrap rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex items-center cursor-pointer gap-1 whitespace-nowrap rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             + New Admin
           </button>
@@ -255,103 +259,127 @@ export default function Admins() {
           </thead>
 
           <tbody>
-            {filteredAdmins.length === 0 && (
+            {loading ? (
+              <>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse border-b">
+                    <td className="p-2">
+                      <div className="h-4 w-10 rounded bg-gray-300 mx-auto" />
+                    </td>
+                    <td className="p-2">
+                      <div className="h-4 w-10 bg-gray-300 rounded" />
+                    </td>
+                    <td className="p-2">
+                      <div className="h-4 w-10 bg-gray-300 rounded" />
+                    </td>
+                    <td className="p-2">
+                      <div className="h-4 w-10 bg-gray-300 rounded" />
+                    </td>
+                    <td className="p-2">
+                      <div className="h-4 w-10 bg-gray-300 rounded" />
+                    </td>
+                  </tr>
+                ))}
+              </>
+            ) : filteredAdmins.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-4 text-center text-gray-500">
                   No admins found.
                 </td>
               </tr>
-            )}
-
-            {filteredAdmins.map((admin) => (
-              <tr
-                key={admin.id}
-                className="border-b bg-white hover:bg-blue-50 transition-colors"
-              >
-                <td className="p-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(admin.id)}
-                    onChange={() => toggleSelectOne(admin.id)}
-                    aria-label={`Select admin ${admin.name}`}
-                    className="h-4 w-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500"
-                  />
-                </td>
-                <td className="p-2">{admin.id}</td>
-                <td className="p-2">{admin.name}</td>
-                <td className="p-2">{admin.email}</td>
-                <td className="p-2">{admin.phone}</td>
-                <td className="p-2 relative">
-                  <Popover.Root>
-                    <Popover.Trigger asChild>
-                      <button className="flex flex-wrap gap-1 px-2 py-1 border rounded bg-white hover:bg-gray-100">
-                        {admin.permissions.length === 0 ? (
-                          <span className="text-xs text-gray-500 cursor-pointer">
-                            Select Permissions
-                          </span>
-                        ) : (
-                          admin.permissions.map((perm, idx) => (
-                            <span
-                              key={idx}
-                              className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 capitalize"
-                            >
-                              {perm}
+            ) : (
+              filteredAdmins.map((admin) => (
+                <tr
+                  key={admin.id}
+                  className="border-b bg-white hover:bg-blue-50 transition-colors"
+                >
+                  <td className="p-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(admin.id)}
+                      onChange={() => toggleSelectOne(admin.id)}
+                      aria-label={`Select admin ${admin.name}`}
+                      className="h-4 w-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500"
+                    />
+                  </td>
+                  <td className="p-2">{admin.id}</td>
+                  <td className="p-2">{admin.name}</td>
+                  <td className="p-2">{admin.email}</td>
+                  <td className="p-2">{admin.phone}</td>
+                  <td className="p-2 relative">
+                    <Popover.Root>
+                      <Popover.Trigger asChild>
+                        <button className="flex flex-wrap gap-1 px-2 py-1 border rounded bg-white hover:bg-gray-100">
+                          {admin.permissions.length === 0 ? (
+                            <span className="text-xs text-gray-500 cursor-pointer">
+                              Select Permissions
                             </span>
-                          ))
-                        )}
-                      </button>
-                    </Popover.Trigger>
-                    <Popover.Portal>
-                      <Popover.Content
-                        side="bottom"
-                        align="start"
-                        className="z-50 w-48 rounded-md border bg-white shadow-lg p-2 space-y-1"
-                        sideOffset={4}
+                          ) : (
+                            admin.permissions.map((perm, idx) => (
+                              <span
+                                key={idx}
+                                className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 capitalize"
+                              >
+                                {perm}
+                              </span>
+                            ))
+                          )}
+                        </button>
+                      </Popover.Trigger>
+                      <Popover.Portal>
+                        <Popover.Content
+                          side="bottom"
+                          align="start"
+                          className="z-50 w-48 rounded-md border bg-white shadow-lg p-2 space-y-1"
+                          sideOffset={4}
+                        >
+                          {permissions.map((perm) => (
+                            <label
+                              key={perm}
+                              className="flex items-center space-x-2 px-2 py-1 text-sm hover:bg-gray-100 rounded"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={admin.permissions.includes(perm)}
+                                onChange={() =>
+                                  togglePermission(admin.id, perm)
+                                }
+                                className="accent-blue-600"
+                              />
+                              <span>{perm}</span>
+                            </label>
+                          ))}
+                        </Popover.Content>
+                      </Popover.Portal>
+                    </Popover.Root>
+                    {admin.unsaved && (
+                      <button
+                        onClick={() => savePermissions(admin.id)}
+                        className="mt-2 text-xs cursor-pointer text-blue-600 hover:underline"
                       >
-                        {permissions.map((perm) => (
-                          <label
-                            key={perm}
-                            className="flex items-center space-x-2 px-2 py-1 text-sm hover:bg-gray-100 rounded"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={admin.permissions.includes(perm)}
-                              onChange={() => togglePermission(admin.id, perm)}
-                              className="accent-blue-600"
-                            />
-                            <span>{perm}</span>
-                          </label>
-                        ))}
-                      </Popover.Content>
-                    </Popover.Portal>
-                  </Popover.Root>
-                  {admin.unsaved && (
-                    <button
-                      onClick={() => savePermissions(admin.id)}
-                      className="mt-2 text-xs cursor-pointer text-blue-600 hover:underline"
-                    >
-                      Save Permissions
-                    </button>
-                  )}
-                  {admin.justSaved && (
-                    <span className="ml-2 text-xs text-green-600">
-                      ✔ Saved!
-                    </span>
-                  )}
-                </td>
+                        Save Permissions
+                      </button>
+                    )}
+                    {admin.justSaved && (
+                      <span className="ml-2 text-xs text-green-600">
+                        ✔ Saved!
+                      </span>
+                    )}
+                  </td>
 
-                <td className="p-2">
-                  <button
-                    onClick={() =>
-                      alert(`Deleting admin ${admin.name} (id: ${admin.id})`)
-                    }
-                    className="rounded bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200 transition"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  <td className="p-2">
+                    <button
+                      onClick={() =>
+                        alert(`Deleting admin ${admin.name} (id: ${admin.id})`)
+                      }
+                      className="rounded bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200 transition"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

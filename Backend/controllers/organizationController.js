@@ -41,3 +41,18 @@ exports.registerOrganization = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+exports.getOrganizationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const organization = await Organization.findById(id);
+    if (!organization) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    res.status(200).json({ organization });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};

@@ -160,22 +160,22 @@ export default function Dashboard() {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-6">
             <StatCard
-              title="Students"
+              title="Admins"
               value={stats.totalStudents}
               color="text-blue-600"
-              link="/dashboard/students"
+              link="/dashboard/admins"
             />
+              <StatCard
+                title="Teachers"
+                value={stats.totalTeachers}
+                color="text-purple-600"
+                link="/dashboard/teachers/dashboard"
+              />
             <StatCard
-              title="Classes"
+              title="Students"
               value={stats.totalClasses}
               color="text-green-600"
               link="/dashboard/classes"
-            />
-            <StatCard
-              title="Teachers"
-              value={stats.totalTeachers}
-              color="text-purple-600"
-              link="/dashboard/teachers"
             />
             {/* <StatCard
               title="Fee Collection"

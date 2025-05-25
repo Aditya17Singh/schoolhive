@@ -31,7 +31,7 @@ router.post("/login", async (req, res) => {
           id: org._id,
           role: "organization",
           name: org.orgName,
-          schoolCode: org.prefix,
+          orgID: org.prefix,
         },
         JWT_SECRET,
         { expiresIn: "1d" }
@@ -43,7 +43,7 @@ router.post("/login", async (req, res) => {
           id: org._id,
           name: org.orgName,
           role: "organization",
-          schoolCode: org.prefix,
+          orgID: org.prefix,
         },
       });
     }
