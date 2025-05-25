@@ -2,8 +2,10 @@
 const express = require("express");
 const router = express.Router();
 const schoolController = require("../controllers/organizationController");
+const verifyToken = require("../middleware/verifyToken");
 
 // Super Admin only - you can protect it with auth middleware later
 router.post("/register", schoolController.registerOrganization);
+router.get("/:id", verifyToken, schoolController.getOrganizationById);
 
 module.exports = router;
