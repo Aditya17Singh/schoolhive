@@ -3,6 +3,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import axios from "axios";
+import Link from "next/link";
 
 export default function TeacherDashboard() {
   const [teachers, setTeachers] = useState([]);
@@ -27,7 +28,8 @@ export default function TeacherDashboard() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        if (!teacherData.success) return console.error("Failed to fetch teachers");
+        if (!teacherData.success)
+          return console.error("Failed to fetch teachers");
 
         const fetchedTeachers = teacherData.data;
         setTeachers(fetchedTeachers);
@@ -88,9 +90,7 @@ export default function TeacherDashboard() {
 
       if (data.success) {
         alert("Class assigned successfully!");
-        setTeachers((prev) =>
-          prev.map((t) => (t._id === _id ? data.data : t))
-        );
+        setTeachers((prev) => prev.map((t) => (t._id === _id ? data.data : t)));
         setDialogOpen(false);
       } else {
         alert("Failed to assign class");
@@ -110,17 +110,20 @@ export default function TeacherDashboard() {
 
   const filteredTeachers = useMemo(() => {
     const lowerSearch = searchTerm.toLowerCase();
-    return teachers.filter((teacher) =>
-      `${teacher.fName} ${teacher.lName}`.toLowerCase().includes(lowerSearch) ||
-      teacher.email?.toLowerCase().includes(lowerSearch) ||
-      teacher.phone?.toLowerCase().includes(lowerSearch)
+    return teachers.filter(
+      (teacher) =>
+        `${teacher.fName} ${teacher.lName}`
+          .toLowerCase()
+          .includes(lowerSearch) ||
+        teacher.email?.toLowerCase().includes(lowerSearch) ||
+        teacher.phone?.toLowerCase().includes(lowerSearch)
     );
   }, [searchTerm, teachers]);
 
   const schoolPrefix = useMemo(() => {
     try {
       const org = JSON.parse(localStorage.getItem("user") || "{}");
-      return org.name?.split(" ")[0]?.toUpperCase() || "SCH"; 
+      return org.name?.split(" ")[0]?.toUpperCase() || "SCH";
     } catch {
       return "SCH";
     }
@@ -142,7 +145,6 @@ export default function TeacherDashboard() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-
         </div>
         <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm">
           + Add New Teacher
@@ -155,18 +157,33 @@ export default function TeacherDashboard() {
           <table className="w-full caption-bottom text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="h-12 px-4 text-left font-semibold text-gray-600">ID</th>
-                <th className="h-12 px-4 text-left font-semibold text-gray-600">Teacher Name</th>
-                <th className="h-12 px-4 text-left font-semibold text-gray-600">Contact</th>
-                <th className="h-12 px-4 text-left font-semibold text-gray-600">Class</th>
-                <th className="h-12 px-4 text-left font-semibold text-gray-600">Subjects</th>
-                <th className="h-12 px-4 text-left font-semibold text-gray-600 text-right">Actions</th>
+                <th className="h-12 px-4 text-left font-semibold text-gray-600">
+                  ID
+                </th>
+                <th className="h-12 px-4 text-left font-semibold text-gray-600">
+                  Teacher Name
+                </th>
+                <th className="h-12 px-4 text-left font-semibold text-gray-600">
+                  Contact
+                </th>
+                <th className="h-12 px-4 text-left font-semibold text-gray-600">
+                  Class
+                </th>
+                <th className="h-12 px-4 text-left font-semibold text-gray-600">
+                  Subjects
+                </th>
+                <th className="h-12 px-4 text-left font-semibold text-gray-600 text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {filteredTeachers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-6 text-gray-500 text-sm">
+                  <td
+                    colSpan={6}
+                    className="text-center py-6 text-gray-500 text-sm"
+                  >
                     No teacher found
                   </td>
                 </tr>
@@ -174,17 +191,24 @@ export default function TeacherDashboard() {
                 filteredTeachers.map((teacher, index) => (
                   <tr
                     key={teacher._id}
-                    className={`hover:bg-gray-50 ${index === teachers.length - 1 ? "" : "border-b"}`}
+                    className={`hover:bg-gray-50 ${
+                      index === teachers.length - 1 ? "" : "border-b"
+                    }`}
                   >
-                    <td className="p-4">{`${schoolPrefix}${String(index + 1).padStart(6, "0")}`}</td>
+                    <td className="p-4">{`${schoolPrefix}${String(
+                      index + 1
+                    ).padStart(6, "0")}`}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-sm font-medium text-slate-600">
-                          {teacher.fName[0]}{teacher.lName?.[0]}
+                          {teacher.fName[0]}
+                          {teacher.lName?.[0]}
                         </div>
                         <div>
                           <div className="font-medium">{`${teacher.fName} ${teacher.lName}`}</div>
-                          <div className="text-xs text-gray-500">{teacher.email}</div>
+                          <div className="text-xs text-gray-500">
+                            {teacher.email}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -210,9 +234,10 @@ export default function TeacherDashboard() {
                               "bg-rose-50 text-rose-700 border-rose-100",
                               "bg-yellow-50 text-yellow-700 border-yellow-100",
                               "bg-sky-50 text-sky-700 border-sky-100",
-                              "bg-purple-50 text-purple-700 border-purple-100"
+                              "bg-purple-50 text-purple-700 border-purple-100",
                             ];
-                            const color = colorClasses[idx % colorClasses.length];
+                            const color =
+                              colorClasses[idx % colorClasses.length];
                             return (
                               <span
                                 key={idx}
@@ -220,7 +245,6 @@ export default function TeacherDashboard() {
                               >
                                 {`${subj.subjectName}_${subj.class}`}
                               </span>
-
                             );
                           })}
                         </div>
@@ -231,10 +255,19 @@ export default function TeacherDashboard() {
 
                     <td className="p-4 text-right">
                       <div className="flex justify-end items-center gap-2">
-                        <a href={`/dashboard/teachers/dashboard/DAV${String(index + 1).padStart(6, "0")}`}>
-                          <button className="rounded-md text-xs p-2 cursor-pointer bg-blue-100">view</button>
-                        </a>
-                        <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
+                        <Link
+                          href={`/dashboard/teachers/dashboard/DAV${String(
+                            index + 1
+                          ).padStart(6, "0")}`}
+                        >
+                          <button className="rounded-md text-xs p-2 cursor-pointer bg-blue-100">
+                            view
+                          </button>
+                        </Link>
+                        <Dialog.Root
+                          open={dialogOpen}
+                          onOpenChange={setDialogOpen}
+                        >
                           <Dialog.Trigger asChild>
                             <button
                               onClick={() => {
@@ -244,20 +277,24 @@ export default function TeacherDashboard() {
                               }}
                               className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300 text-xs"
                             >
-                               Edit
+                              Edit
                             </button>
                           </Dialog.Trigger>
 
                           <Dialog.Portal>
                             <Dialog.Overlay className="fixed inset-0 bg-black/40 z-40" />
                             <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md bg-white rounded-lg p-6 shadow-lg">
-                              <Dialog.Title className="text-lg font-semibold mb-2">Edit Teacher</Dialog.Title>
+                              <Dialog.Title className="text-lg font-semibold mb-2">
+                                Edit Teacher
+                              </Dialog.Title>
                               <Dialog.Description className="text-sm text-gray-500 mb-4">
                                 Update basic details and assign class/section
                               </Dialog.Description>
                               <form className="space-y-4">
                                 <div>
-                                  <label className="text-sm font-medium">Class</label>
+                                  <label className="text-sm font-medium">
+                                    Class
+                                  </label>
                                   <select
                                     value={selectedClass}
                                     onChange={handleClassChange}
@@ -274,18 +311,25 @@ export default function TeacherDashboard() {
                                   </select>
                                 </div>
                                 <div>
-                                  <label className="text-sm font-medium">Section</label>
+                                  <label className="text-sm font-medium">
+                                    Section
+                                  </label>
                                   <select
                                     value={selectedSection}
-                                    onChange={(e) => setSelectedSection(e.target.value)}
+                                    onChange={(e) =>
+                                      setSelectedSection(e.target.value)
+                                    }
                                     disabled={!selectedClass}
-                                    className={`mt-1 w-full h-9 px-3 py-2 border rounded-md text-sm ${!selectedClass
+                                    className={`mt-1 w-full h-9 px-3 py-2 border rounded-md text-sm ${
+                                      !selectedClass
                                         ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                         : "bg-gray-50 border-gray-300"
-                                      }`}
+                                    }`}
                                   >
                                     <option value="">
-                                      {selectedClass ? "Select a section" : "Select a class first"}
+                                      {selectedClass
+                                        ? "Select a section"
+                                        : "Select a class first"}
                                     </option>
                                     {[...sectionsForSelectedClass]
                                       .sort((a, b) => a.localeCompare(b))
@@ -313,13 +357,14 @@ export default function TeacherDashboard() {
                             </Dialog.Content>
                           </Dialog.Portal>
                         </Dialog.Root>
-                        <button className="cursor-pointer rounded-md text-xs p-2 border border-red-200 hover:bg-red-50">Delete</button>
+                        <button className="cursor-pointer rounded-md text-xs p-2 border border-red-200 hover:bg-red-50">
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))
               )}
-
             </tbody>
           </table>
         </div>

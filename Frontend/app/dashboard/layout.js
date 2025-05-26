@@ -85,6 +85,7 @@ export default function DashboardLayout({ children }) {
             <MenuItem href="/dashboard/session" label="Session" icon="📝" />
           </Dropdown>
           <MenuItem href="/dashboard/notices" label="Notices" icon="📢" />
+          <MenuItem href="/dashboard/calendar" label="Calendar" icon="📢" />
           <Dropdown label="Teachers" icon="👨‍🏫" open={openMenus.teachers} toggle={() => toggleMenu("teachers")}>
             <MenuItem href="/dashboard/teachers/dashboard" label="Dashboard" icon="📊" />
             <MenuItem href="/dashboard/teachers/applications" label="Manage Applications" icon="📄" />

@@ -17,6 +17,8 @@ const organizationRoutes = require("./routes/organizationRoute");
 const loginRoutes = require("./routes/loginRoutes");  
 const lessonRoutes = require("./routes/lessonRoute");
 const employeeRoutes = require("./routes/employeeRoute");
+const scheduleRoute = require("./routes/scheduleRoute");
+
 const app = express();
 
 app.use(cors({
@@ -38,6 +40,7 @@ app.use("/api/notices", noticeRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/organization", organizationRoutes);
+app.use("/api/schedule", scheduleRoute);
 app.use("/api", loginRoutes);  
 
 // Connect to MongoDB
