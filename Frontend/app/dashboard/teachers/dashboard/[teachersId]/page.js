@@ -58,7 +58,44 @@ export default function TeacherProfilePage() {
   }, [teacherId]);
 
   if (loading) {
-    return <div className="p-8 text-lg text-gray-700">Loading teacher...</div>;
+    return (
+      <div className="p-6 md:p-10 bg-gray-50 min-h-screen">
+        <div className="bg-white p-8 rounded-2xl shadow-md">
+          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+            {/* Skeleton Profile Image */}
+            <div className="relative">
+              <div className="w-48 h-48 rounded-full bg-gray-200 animate-pulse ring-4 ring-white shadow-xl" />
+            </div>
+
+            {/* Skeleton Profile Details */}
+            <div className="flex-1 space-y-6 text-center md:text-left">
+              <div>
+                <div className="h-8 w-48 bg-gray-200 rounded-md animate-pulse mx-auto md:mx-0" />
+                <div className="h-4 w-36 bg-gray-100 rounded mt-2 animate-pulse mx-auto md:mx-0" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="p-5 rounded-xl bg-white border border-gray-100 shadow-sm animate-pulse"
+                  >
+                    <div className="h-4 w-20 bg-gray-200 rounded mb-2" />
+                    <div className="h-5 w-full bg-gray-100 rounded" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Skeleton Calendar Section */}
+        <div className="bg-white p-8 rounded-2xl shadow-md mt-4">
+          <div className="h-6 w-48 bg-gray-200 rounded mb-6 animate-pulse" />
+          <div className="h-64 bg-gray-100 rounded-xl animate-pulse" />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -96,7 +133,10 @@ export default function TeacherProfilePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <InfoCard label="Email" value={teacher?.email} isLink />
               <InfoCard label="Phone" value={teacher?.phone} />
-              <InfoCard label="Blood Group" value={teacher?.bloodGroup || "N/A"} />
+              <InfoCard
+                label="Blood Group"
+                value={teacher?.bloodGroup || "N/A"}
+              />
               <InfoCard
                 label="Joined"
                 value={

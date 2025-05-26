@@ -2,7 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import axios from "axios";
+import API from "@/lib/api";
 
 export default function SubjectDashboard() {
   const [subjects, setSubjects] = useState([]);
@@ -20,12 +20,7 @@ export default function SubjectDashboard() {
   const fetchData = useCallback(async (endpoint, setter, key) => {
     try {
       setLoading((prev) => ({ ...prev, [key]: true }));
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found.");
-      const { data } = await axios.get(
-        `http://localhost:5000/api/${endpoint}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const { data } = await API.get(`/${endpoint}`);
       setter(endpoint === "subjects" ? data.data : data);
     } catch (err) {
       console.error(err);
@@ -36,11 +31,7 @@ export default function SubjectDashboard() {
 
   const fetchTeachers = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found.");
-      const { data } = await axios.get("http://localhost:5000/api/teachers", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await API.get("/teachers");
       if (data.success) {
         setTeachers(data.data);
       } else {
@@ -55,15 +46,18 @@ export default function SubjectDashboard() {
 
   const handleTeacherAssignment = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found.");
-      const toAdd = selectedTeachers.filter((id) => !originalTeachers.includes(id));
-      const toRemove = originalTeachers.filter((id) => !selectedTeachers.includes(id));
-      const { data } = await axios.put(
-        `http://localhost:5000/api/subjects/assign-teacher/${selectedSubject._id}`,
-        { add: toAdd, remove: toRemove },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const toAdd = selectedTeachers.filter(
+        (id) => !originalTeachers.includes(id)
       );
+      const toRemove = originalTeachers.filter(
+        (id) => !selectedTeachers.includes(id)
+      );
+
+      const { data } = await API.put(
+        `/subjects/assign-teacher/${selectedSubject._id}`,
+        { add: toAdd, remove: toRemove }
+      );
+
       if (data.success) {
         setDialogOpen(false);
         await fetchData("subjects", setSubjects, "subjects");
@@ -82,12 +76,12 @@ export default function SubjectDashboard() {
   }, [fetchData, fetchTeachers]);
 
   const filteredSubjects = useMemo(() => {
-    return subjects.filter(({ subjectName, class: cls }) =>
-      subjectName.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (!form.class || form.class === cls)
+    return subjects.filter(
+      ({ subjectName, class: cls }) =>
+        subjectName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        (!form.class || form.class === cls)
     );
   }, [subjects, searchQuery, form.class]);
-
 
   const handleClassSelect = (cls) => {
     setForm((prev) => ({ ...prev, class: cls }));
@@ -148,8 +142,9 @@ export default function SubjectDashboard() {
                 key={cls._id || cls.id || cls}
                 role="option"
                 aria-selected={form.class === cls.name}
-                className={`cursor-pointer py-2 px-3 hover:bg-indigo-600 hover:text-white ${form.class === cls.name ? "bg-indigo-600 text-white" : ""
-                  }`}
+                className={`cursor-pointer py-2 px-3 hover:bg-indigo-600 hover:text-white ${
+                  form.class === cls.name ? "bg-indigo-600 text-white" : ""
+                }`}
                 onClick={() => handleClassSelect(cls.name || cls)}
               >
                 {cls.name || cls}
@@ -249,7 +244,14 @@ export default function SubjectDashboard() {
 
                     <td className="px-2 py-2 text-left">
                       <button
-                        onClick={() => handleEditClick({ _id, subjectName, class: cls, teachers })}
+                        onClick={() =>
+                          handleEditClick({
+                            _id,
+                            subjectName,
+                            class: cls,
+                            teachers,
+                          })
+                        }
                         className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300"
                       >
                         <svg
@@ -285,12 +287,9 @@ export default function SubjectDashboard() {
 
             <div className="mb-4 max-h-48 overflow-y-auto border rounded p-2 space-y-2">
               {teachers1.length === 0 ? (
-                <p className="text-sm text-gray-500">
-                  No teachers available.
-                </p>
+                <p className="text-sm text-gray-500">No teachers available.</p>
               ) : (
                 teachers1.map((teacher) => (
-
                   <label
                     key={teacher._id}
                     className="flex items-center gap-2 text-sm cursor-pointer"
@@ -299,15 +298,10 @@ export default function SubjectDashboard() {
                       type="checkbox"
                       className="accent-indigo-600"
                       checked={selectedTeachers.includes(String(teacher._id))}
-
                       onChange={() => {
-                        if (
-                          selectedTeachers.includes(teacher._id)
-                        ) {
+                        if (selectedTeachers.includes(teacher._id)) {
                           setSelectedTeachers(
-                            selectedTeachers.filter(
-                              (id) => id !== teacher._id
-                            )
+                            selectedTeachers.filter((id) => id !== teacher._id)
                           );
                         } else {
                           setSelectedTeachers([
