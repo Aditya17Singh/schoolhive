@@ -2,39 +2,44 @@
 
 import { useParams, notFound } from "next/navigation";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import Image from "next/image";
-import CalendarComponent from "@/components/timetable-calendar";
+import CalendarComponent from "@/components/teacher-calendar";
+import API from "@/lib/api";
 
 export default function TeacherProfilePage() {
   const params = useParams();
   const teacherId = params?.teachersId;
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState([]);
 
-  const events = [
-    {
-      title: "Math - Grade 8B",
-      start: new Date(2025, 4, 26, 9, 0), 
-      end: new Date(2025, 4, 26, 9, 45),
-    },
-    {
-      title: "Science - Grade 8B",
-      start: new Date(2025, 4, 26, 10, 0),
-      end: new Date(2025, 4, 26, 10, 45),
-    },
-  ];
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user.id) return;
+
+    const fetchEvents = async () => {
+      try {
+        const res = await API.get(`/schedule/${user.id}`);
+        const events = res.data.data.map((e) => ({
+          ...e,
+          start: new Date(e.start),
+          end: new Date(e.end),
+        }));
+
+        setEvents(events);
+      } catch (err) {
+        console.error("Failed to fetch events:", err);
+      }
+    };
+
+    fetchEvents();
+  }, [teacher?._id]);
 
   useEffect(() => {
     const fetchTeacher = async () => {
       try {
         const index = parseInt(teacherId.replace(/^\D+/g, ""), 10) - 1;
-        const token = localStorage.getItem("token");
-
-        const response = await axios.get("http://localhost:5000/api/teachers", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
+        const response = await API.get("/teachers");
         const teachers = response.data.data || [];
         const teacherData = teachers[index];
 
@@ -91,10 +96,7 @@ export default function TeacherProfilePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <InfoCard label="Email" value={teacher?.email} isLink />
               <InfoCard label="Phone" value={teacher?.phone} />
-              <InfoCard
-                label="Blood Group"
-                value={teacher?.bloodGroup || "N/A"}
-              />
+              <InfoCard label="Blood Group" value={teacher?.bloodGroup || "N/A"} />
               <InfoCard
                 label="Joined"
                 value={
@@ -117,7 +119,7 @@ export default function TeacherProfilePage() {
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">
           Teacher Calendar
         </h2>
-        <CalendarComponent teacherId={teacher._id} />
+        <CalendarComponent events={events} />
       </div>
     </div>
   );
