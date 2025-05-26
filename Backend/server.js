@@ -17,6 +17,8 @@ const organizationRoutes = require("./routes/organizationRoute");
 const loginRoutes = require("./routes/loginRoutes");  
 const lessonRoutes = require("./routes/lessonRoute");
 const employeeRoutes = require("./routes/employeeRoute");
+const timetableRoutes = require("./routes/timetableRoute");
+
 const app = express();
 
 app.use(cors({
@@ -39,6 +41,7 @@ app.use("/api/complaints", complaintRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/organization", organizationRoutes);
 app.use("/api", loginRoutes);  
+app.use("/api/timetable", timetableRoutes);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)

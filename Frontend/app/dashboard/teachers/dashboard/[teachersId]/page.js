@@ -4,7 +4,7 @@ import { useParams, notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Image from "next/image";
-import CalendarComponent from "@/components/schedule-calendar";
+import CalendarComponent from "@/components/timetable-calendar";
 
 export default function TeacherProfilePage() {
   const params = useParams();
@@ -117,7 +117,7 @@ export default function TeacherProfilePage() {
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">
           Teacher Calendar
         </h2>
-        <CalendarComponent events={events} />
+        <CalendarComponent teacherId={teacher._id} />
       </div>
     </div>
   );
