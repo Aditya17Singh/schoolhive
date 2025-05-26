@@ -2,8 +2,8 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { useCallback, useEffect, useState, useMemo } from "react";
-import axios from "axios";
 import Link from "next/link";
+import API from "@/lib/api";
 
 export default function TeacherDashboard() {
   const [teachers, setTeachers] = useState([]);
@@ -21,13 +21,7 @@ export default function TeacherDashboard() {
   useEffect(() => {
     const fetchTeachersAndSubjects = async () => {
       try {
-        if (!token) throw new Error("No token found.");
-
-        const { data: teacherData } = await axios.get(
-          "http://localhost:5000/api/teachers",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
+        const { data: teacherData } = await API.get("/teachers");
         if (!teacherData.success)
           return console.error("Failed to fetch teachers");
 
@@ -35,19 +29,13 @@ export default function TeacherDashboard() {
         setTeachers(fetchedTeachers);
 
         const subjectResponses = await Promise.all(
-          fetchedTeachers.map((t) =>
-            axios.get(
-              `http://localhost:5000/api/teachers/by-teacher/${t._id}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            )
-          )
+          fetchedTeachers.map((t) => API.get(`/teachers/by-teacher/${t._id}`))
         );
 
         const subjectMap = subjectResponses.reduce((acc, res, i) => {
           acc[fetchedTeachers[i]._id] = res.data.data;
           return acc;
         }, {});
-
         setTeacherSubjects(subjectMap);
       } catch (error) {
         console.error("Error fetching teachers or subjects:", error);
@@ -57,36 +45,27 @@ export default function TeacherDashboard() {
     };
 
     fetchTeachersAndSubjects();
-  }, [token]);
+  }, []);
 
   const fetchClasses = useCallback(async () => {
     try {
-      if (!token) return;
-
-      const { data } = await axios.get("http://localhost:5000/api/classes", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
+      const { data } = await API.get("/classes");
       setClasses(data || []);
     } catch (error) {
       console.error("Error fetching classes", error);
     }
-  }, [token]);
+  }, []);
 
   const handleAssignClass = async () => {
     try {
-      if (!token || !selectedTeacher) return;
+      if (!selectedTeacher) return;
 
       const { _id } = selectedTeacher;
 
-      const { data } = await axios.put(
-        `http://localhost:5000/api/teachers/assign/${_id}`,
-        {
-          assignedClass: selectedClass,
-          assignedSection: selectedSection,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const { data } = await API.put(`/teachers/assign/${_id}`, {
+        assignedClass: selectedClass,
+        assignedSection: selectedSection,
+      });
 
       if (data.success) {
         alert("Class assigned successfully!");
@@ -131,7 +110,21 @@ export default function TeacherDashboard() {
 
   const sectionsForSelectedClass = selectedClassObj?.sections || [];
 
-  if (loading) return <div className="p-4">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="p-4 space-y-4">
+        <div className="w-48 h-10 bg-gray-200 rounded animate-pulse"></div>
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="w-full h-12 bg-gray-100 rounded animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 space-y-4">
@@ -146,9 +139,11 @@ export default function TeacherDashboard() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm">
-          + Add New Teacher
-        </button>
+        <Link href="/dashboard/teachers">
+          <button className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm">
+            + Add New Teacher
+          </button>
+        </Link>
       </div>
 
       {/* Table Section */}
