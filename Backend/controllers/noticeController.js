@@ -1,33 +1,43 @@
 const Notice = require("../models/Notice");
 
+
 exports.getAllNotices = async (req, res) => {
   try {
-    // Ensure the 'schoolCode' is available in req.user (set by the verifyToken middleware)
-    const { schoolCode } = req.user;  // 'schoolCode' should now be available here
+    const user = req.user;
 
-    if (!schoolCode) {
-      return res.status(400).json({ message: "School code is missing from user data" });
+    let notices;
+
+    if (user.role === "admin") {
+      // Allow all admins to view notices regardless of permission
+      notices = await Notice.find({ orgId: user.orgId }).sort({ date: -1 });
+    } else if (user.role === "organization") {
+      notices = await Notice.find({ orgId: user.id }).sort({ date: -1 });
+    } else {
+      return res.status(403).json({ message: "Unauthorized" });
     }
 
-    // Fetch notices filtered by the admin's schoolCode
-    const notices = await Notice.find({ schoolCode });
-
     res.json(notices);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching notices", error: err.message });
   }
 };
 
+
 exports.createNotice = async (req, res) => {
   try {
-    const { schoolCode } = req.user;  // Ensure that 'req.user' contains 'schoolCode'
+    const { role, orgId, permissions, _id } = req.user;
+
+    if (role !== "admin" || !permissions?.includes("Notice")) {
+      return res.status(403).json({ message: "Unauthorized: You don't have permission to post notices." });
+    }
+
     const { title, description } = req.body;
 
     const newNotice = new Notice({
       title,
       description,
-      schoolCode,  // Attach the schoolCode to the notice
-      issuedBy: req.user._id,  // Assuming the admin is authenticated and we have their ID
+      orgId,
+      issuedBy: _id,
     });
 
     await newNotice.save();
@@ -36,6 +46,7 @@ exports.createNotice = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 // Delete a notice by ID
 exports.deleteNotice = async (req, res) => {

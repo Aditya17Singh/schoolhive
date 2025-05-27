@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import API from "@/lib/api";
 
 export default function NoticesPage() {
   const [user, setUser] = useState(null);
@@ -34,18 +35,8 @@ export default function NoticesPage() {
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/notices", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setNotices(data);
-        } else {
-          console.error("Failed to fetch notices");
-        }
+        const res = await API.get("/notices");
+        setNotices(res.data);
       } catch (error) {
         console.error("Error fetching notices:", error);
       } finally {
@@ -67,49 +58,34 @@ export default function NoticesPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/notices", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title,
-          description,
-          schoolCode: user?.schoolCode,
-        }),
+      const res = await API.post("/notices", {
+        title,
+        description,
+        orgId: user?.id,
       });
 
-      if (res.ok) {
+      if (res.status === 200 || res.status === 201) {
         alert("Notice added successfully!");
         setTitle("");
         setDescription("");
 
         // Refresh notices
-        const updatedRes = await fetch("http://localhost:5000/api/notices", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (updatedRes.ok) {
-          const updatedNotices = await updatedRes.json();
-          setNotices(updatedNotices);
-        }
-      } else {
-        const error = await res.json();
-        alert("Error: " + error.message);
+        const updatedRes = await API.get("/notices");
+        setNotices(updatedRes.data);
       }
     } catch (error) {
       console.error("Error adding notice:", error);
+      alert("Error: " + (error.response?.data?.message || "Something went wrong"));
     }
   };
+
+  const allowedRoles = ["admin", "organization"];
 
   if (checkingAuth || loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  if (!user || user.role !== "admin") {
+  if (!user || !allowedRoles.includes(user.role)) {
     return <div className="flex items-center justify-center min-h-screen">Unauthorized</div>;
   }
 
@@ -117,30 +93,31 @@ export default function NoticesPage() {
     <div className="p-6">
       <h1 className="text-3xl font-bold text-blue-800 mb-6">Notices</h1>
 
-      {/* Notice Form */}
-      <form onSubmit={handleSubmit} className="mb-6 bg-white p-4 rounded-lg shadow-md">
-        <input
-          type="text"
-          placeholder="Notice Title"
-          className="w-full p-2 border rounded-md mb-3"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-        <textarea
-          placeholder="Notice Description"
-          className="w-full p-2 border rounded-md mb-3"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-        >
-          Post Notice
-        </button>
-      </form>
+      {user.role === "admin" && user?.permissions?.includes("Notice") && (
+        <form onSubmit={handleSubmit} className="mb-6 bg-white p-4 rounded-lg shadow-md">
+          <input
+            type="text"
+            placeholder="Notice Title"
+            className="w-full p-2 border rounded-md mb-3"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+          <textarea
+            placeholder="Notice Description"
+            className="w-full p-2 border rounded-md mb-3"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Post Notice
+          </button>
+        </form>
+      )}
 
       {/* Notices List */}
       <h2 className="text-2xl font-bold text-gray-700 mb-4">All Notices</h2>
