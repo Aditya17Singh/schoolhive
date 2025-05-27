@@ -1,47 +1,58 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+const mongoose = require('mongoose');
 
-const studentSchema = new mongoose.Schema({
-  // Section 1: Basic Student Info
-  name: { type: String, required: true },
-  admissionNumber: { type: String, required: true, unique: true },
-  email: { type: String, unique: true },
-  phone: { type: String }, // mobile number
-  profilePicture: { type: String }, // URL or path to uploaded image
-  dateOfAdmission: { type: Date },
-  fee: { type: Number },
-  class: { type: mongoose.Schema.Types.ObjectId, ref: "Class" },
+const studentApplicationSchema = new mongoose.Schema({
+  fName: { type: String, required: true },
+  mName: { type: String },
+  lName: { type: String },
+  dob: { type: Date, required: true },
+  gender: { type: String, required: true, enum: ['Male', 'Female', 'Other'] },
+  religion: { type: String, required: true },
+  nationality: { type: String, required: true },
+  category: { type: String, required: true },
+  admissionClass: { type: String, required: true },
+  contactNumber: { type: String, required: true, match: /^[0-9]{10}$/ },
+  email: { type: String, required: true },
+  permanentAddress: {
+    line1: { type: String, required: true },
+    line2: { type: String },
+    city: { type: String, required: true },
+    district: { type: String, required: true },
+    state: { type: String, required: true },
+    pincode: { type: String, required: true },
+  },
+  residentialAddress: {
+    line1: { type: String, required: true },
+    line2: { type: String },
+    city: { type: String, required: true },
+    district: { type: String, required: true },
+    state: { type: String, required: true },
+    pincode: { type: String, required: true },
+  },
 
-  // Section 2: Other Information
-  dob: { type: Date },
-  gender: { type: String, enum: ["Male", "Female", "Other"] },
-  orphan: { type: Boolean, default: false },
-  identifiableMark: { type: String },
-  religion: { type: String },
-  siblings: { type: Number },
-  bloodGroup: { type: String },
-  disease: { type: String },
-  address: { type: String },
+  sameAsPermanent: { type: Boolean, default: false },
 
-  // Section 3: Father/Guardian Info
-  fatherName: { type: String },
-  fatherOccupation: { type: String },
-  fatherMobile: { type: String },
-  fatherEducation: { type: String },
+  fatherName: { type: String, required: true },
+  fatherPhone: { type: String },
+  fatherEmail: { type: String },
 
-  // Section 4: Mother Info
-  motherName: { type: String },
-  motherOccupation: { type: String },
-  motherMobile: { type: String },
+  motherName: { type: String, required: true },
+  motherPhone: { type: String },
+  motherEmail: { type: String },
+
+  guardianName: { type: String },
+  guardianPhone: { type: String },
+
+  session: { type: String, required: true },
+  aadhaarNumber: { type: String, required: true },
+  abcId: { type: String },
+
+  avatar: { type: String },
+  aadharCard: { type: String },
+  previousSchoolTC: { type: String },
+  medicalCertificate: { type: String },
+  birthCertificate: { type: String },
+}, {
+  timestamps: true,
 });
 
-studentSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-const Student = mongoose.models.Student || mongoose.model("Student", studentSchema);
-
-module.exports = Student;
+module.exports = mongoose.models.Student || mongoose.model("Student", studentApplicationSchema);
