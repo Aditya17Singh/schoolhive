@@ -6,7 +6,9 @@ import axios from "axios";
 export default function ApplicationForm() {
 	const [classes, setClasses] = useState([]);
 	const [loading, setLoading] = useState(true);
-
+      const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  
 	const [form, setForm] = useState({
 		fName: '',
 		mName: '',
@@ -64,11 +66,98 @@ export default function ApplicationForm() {
 		}
 	};
 
-	const handleSubmit = (e) => {
-		e.preventDefault();
-		console.log('Submitted:', form);
-		// Handle API POST here, including files
-	};
+	const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError("");
+
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    const requiredFields = ["fName", "lName", "email", "contactNumber", "dob"];
+    for (let field of requiredFields) {
+      if (!formData[field]) {
+        setError("Please fill in all required fields.");
+        setSubmitting(false);
+        return;
+      }
+    }
+
+    try {
+      const form = new FormData();
+
+      // Basic fields
+      form.append("orgId", user?.id);
+      form.append("classId", formData.classId);
+      [
+        "fName",
+        "mName",
+        "lName",
+        "dob",
+        "gender",
+        "religion",
+        "nationality",
+        "category",
+        "admissionClass",
+        "contactNumber",
+        "email",
+        "sameAsPermanent",
+        "fatherName",
+        "fatherPhone",
+        "fatherEmail",
+        "motherName",
+        "motherPhone",
+        "motherEmail",
+        "guardianName",
+        "guardianPhone",
+        "session",
+        "aadhaarNumber",
+        "abcId",
+      ].forEach((key) => {
+        if (formData[key]) form.append(key, formData[key]);
+      });
+
+      // Nested addresses
+      for (const [key, value] of Object.entries(
+        formData.permanentAddress || {}
+      )) {
+        form.append(`permanentAddress[${key}]`, value);
+      }
+      for (const [key, value] of Object.entries(
+        formData.residentialAddress || {}
+      )) {
+        form.append(`residentialAddress[${key}]`, value);
+      }
+
+      // Files (ensure file objects are set in formData)
+      if (formData.avatar) form.append("avatar", formData.avatar);
+      if (formData.aadharCard) form.append("aadharCard", formData.aadharCard);
+      if (formData.previousSchoolTC)
+        form.append("previousSchoolTC", formData.previousSchoolTC);
+      if (formData.medicalCertificate)
+        form.append("medicalCertificate", formData.medicalCertificate);
+      if (formData.birthCertificate)
+        form.append("birthCertificate", formData.birthCertificate);
+
+      await API.post("/students", form, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      // Reset
+      await fetchStudents(); // Optional: reload list
+      setOpen(false);
+      setFormData(initialState); // Define initialState with all fields cleared
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || "Failed to create student"
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
 
 	const fetchClasses = useCallback(async () => {
 		try {
