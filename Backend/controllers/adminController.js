@@ -61,10 +61,15 @@ exports.updateAdminPermissions = async (req, res) => {
 
 exports.getAdmins = async (req, res) => {
   try {
-    // You can also populate orgId to get organization details
-    const admins = await Admin.find()
-      .populate('orgId', 'name code') // Adjust fields per your Organization schema
+   const orgId = req.user.id;
+    if (!orgId) {
+      return res.status(400).json({ message: "orgId is required" });
+    }
+
+    const admins = await Admin.find({ orgId })
+      .populate("orgId", "name code")
       .sort({ createdAt: -1 });
+
     res.json(admins);
   } catch (error) {
     console.error(error);

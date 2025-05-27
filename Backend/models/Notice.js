@@ -5,7 +5,7 @@ const noticeSchema = new mongoose.Schema({
   description: { type: String, required: true },
   date: { type: Date, default: Date.now },
   issuedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
-  schoolCode: { type: String, required: true },
+  orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
 });
 
 module.exports = mongoose.model("Notice", noticeSchema);

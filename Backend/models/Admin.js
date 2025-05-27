@@ -10,7 +10,6 @@ const AdminSchema = new mongoose.Schema({
   address: { type: String },
   orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
   permissions: { type: [String], default: [] },
-  
 }, { timestamps: true });
 
 module.exports = mongoose.model('Admin', AdminSchema);

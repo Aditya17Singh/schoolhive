@@ -2,7 +2,6 @@ const Class = require("../models/Class");
 const Subject = require("../models/Subject");
 const Student = require("../models/Student");
 
-// Get All Classes with Subjects and Students
 exports.getAllClasses = async (req, res) => {
   try {
     const orgId = req.user.id;
