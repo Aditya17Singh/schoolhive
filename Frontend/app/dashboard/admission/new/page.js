@@ -2,161 +2,180 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import axios from "axios";
+import API from "@/lib/api";
 
 export default function ApplicationForm() {
 	const [classes, setClasses] = useState([]);
 	const [loading, setLoading] = useState(true);
-      const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  
+	const [submitting, setSubmitting] = useState(false);
+	const [error, setError] = useState("");
+
 	const [form, setForm] = useState({
-		fName: '',
-		mName: '',
-		lName: '',
-		dob: '',
-		gender: '',
-		religion: '',
-		nationality: '',
-		category: '',
-		admissionClass: '',
-		contactNumber: '',
-		email: '',
-		permanentAddress: '',
-		residentialAddress: '',
-		sameAsPermanent: false,
-		fatherName: '',
-		fatherPhone: '',
-		fatherEmail: '',
-		motherName: '',
-		motherPhone: '',
-		motherEmail: '',
-		guardianName: '',
-		guardianPhone: '',
-		session: '',
-		aadhaarNumber: '',
-		abcId: '',
-		avatar: null,
-		aadharCard: null,
-		previousSchoolTC: null,
-		medicalCertificate: null,
-		birthCertificate: null,
-	});
+  fName: '',
+  mName: '',
+  lName: '',
+  dob: '',
+  gender: '',
+  religion: '',
+  nationality: '',
+  category: '',
+  admissionClass: '',
+  contactNumber: '',
+  email: '',
+  sameAsPermanent: false,
+  permanentAddress: {
+    line1: '',
+		 line2: '',
+    city: '',
+    district: '',
+    state: '',
+    pincode: ''
+  },
+  residentialAddress: {
+    line1: '',
+		 line2: '',
+    city: '',
+    district: '',
+    state: '',
+    pincode: ''
+  },
+  fatherName: '',
+  fatherPhone: '',
+  fatherEmail: '',
+  motherName: '',
+  motherPhone: '',
+  motherEmail: '',
+  guardianName: '',
+  guardianPhone: '',
+  session: '',
+  aadhaarNumber: '',
+  abcId: '',
+  avatar: null,
+  aadharCard: null,
+  previousSchoolTC: null,
+  medicalCertificate: null,
+  birthCertificate: null,
+});
+
 
 	const handleChange = (e) => {
-		const { id, value, type, checked, files } = e.target;
-		if (type === 'checkbox') {
-			setForm(prev => {
-				if (id === 'sameAsPermanent' && checked) {
-					// Copy permanentAddress to residentialAddress
-					return { ...prev, [id]: checked, residentialAddress: prev.permanentAddress };
-				}
-				if (id === 'sameAsPermanent' && !checked) {
-					return { ...prev, [id]: checked };
-				}
-				return prev;
-			});
-		} else if (type === 'file') {
-			setForm(prev => ({ ...prev, [id]: files[0] }));
-		} else {
-			setForm(prev => ({ ...prev, [id]: value }));
-			if (id === 'permanentAddress' && form.sameAsPermanent) {
-				// Sync residentialAddress if checkbox checked
-				setForm(prev => ({ ...prev, residentialAddress: value }));
+  const { id, value, type, checked, files, name } = e.target;
+
+  setForm(prev => {
+    if (type === 'checkbox') {
+			if (id === 'sameAsPermanent') {
+				return {
+					...prev,
+					sameAsPermanent: checked,
+					residentialAddress: checked ? { ...prev.permanentAddress } : {
+						line1: '',
+						line2: '',
+						city: '',
+						district: '',
+						state: '',
+						pincode: ''
+					}
+				};
 			}
-		}
-	};
-
-	const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError("");
-
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-    const requiredFields = ["fName", "lName", "email", "contactNumber", "dob"];
-    for (let field of requiredFields) {
-      if (!formData[field]) {
-        setError("Please fill in all required fields.");
-        setSubmitting(false);
-        return;
-      }
+      return { ...prev, [id]: checked };
     }
 
-    try {
-      const form = new FormData();
+    if (type === 'file') {
+      return { ...prev, [id]: files[0] };
+    }
 
-      // Basic fields
-      form.append("orgId", user?.id);
-      form.append("classId", formData.classId);
-      [
-        "fName",
-        "mName",
-        "lName",
-        "dob",
-        "gender",
-        "religion",
-        "nationality",
-        "category",
-        "admissionClass",
-        "contactNumber",
-        "email",
-        "sameAsPermanent",
-        "fatherName",
-        "fatherPhone",
-        "fatherEmail",
-        "motherName",
-        "motherPhone",
-        "motherEmail",
-        "guardianName",
-        "guardianPhone",
-        "session",
-        "aadhaarNumber",
-        "abcId",
-      ].forEach((key) => {
-        if (formData[key]) form.append(key, formData[key]);
-      });
-
-      // Nested addresses
-      for (const [key, value] of Object.entries(
-        formData.permanentAddress || {}
-      )) {
-        form.append(`permanentAddress[${key}]`, value);
-      }
-      for (const [key, value] of Object.entries(
-        formData.residentialAddress || {}
-      )) {
-        form.append(`residentialAddress[${key}]`, value);
-      }
-
-      // Files (ensure file objects are set in formData)
-      if (formData.avatar) form.append("avatar", formData.avatar);
-      if (formData.aadharCard) form.append("aadharCard", formData.aadharCard);
-      if (formData.previousSchoolTC)
-        form.append("previousSchoolTC", formData.previousSchoolTC);
-      if (formData.medicalCertificate)
-        form.append("medicalCertificate", formData.medicalCertificate);
-      if (formData.birthCertificate)
-        form.append("birthCertificate", formData.birthCertificate);
-
-      await API.post("/students", form, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${user.token}`,
+    // Handle nested address fields like permanentAddress.line1
+    if (id.startsWith('permanentAddress.') || id.startsWith('residentialAddress.')) {
+      const [section, field] = id.split('.');
+      return {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: value
         },
-      });
-
-      // Reset
-      await fetchStudents(); // Optional: reload list
-      setOpen(false);
-      setFormData(initialState); // Define initialState with all fields cleared
-    } catch (err) {
-      setError(
-        err.response?.data?.message || err.message || "Failed to create student"
-      );
-    } finally {
-      setSubmitting(false);
+        // If syncing addresses
+        ...(section === 'permanentAddress' && prev.sameAsPermanent && {
+          residentialAddress: {
+            ...prev.permanentAddress,
+            [field]: value
+          }
+        })
+      };
     }
-  };
+
+    return { ...prev, [id]: value };
+  });
+};
+
+
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSubmitting(true);
+  setError("");
+	
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+	
+  // const requiredFields = ["fName", "lName", "email", "contactNumber", "dob"];
+  // for (let field of requiredFields) {
+	// 	if (!form[field]) {
+	// 		setError("Please fill in all required fields.");
+  //     setSubmitting(false);
+  //     return;
+  //   }
+  // }
+	console.log("Submitting...");
+
+  try {
+    const payload = new FormData();
+
+    payload.append("orgId", user?.id);
+
+    // Append simple fields
+    [
+      "fName", "mName", "lName", "dob", "gender", "religion", "nationality", "category",
+      "admissionClass", "contactNumber", "email", "sameAsPermanent",
+      "fatherName", "fatherPhone", "fatherEmail",
+      "motherName", "motherPhone", "motherEmail",
+      "guardianName", "guardianPhone", "session", "aadhaarNumber", "abcId"
+    ].forEach((key) => {
+      if (form[key]) payload.append(key, form[key]);
+    });
+
+    // Append nested address fields
+    Object.entries(form.permanentAddress).forEach(([key, val]) => {
+      payload.append(`permanentAddress.${key}`, val);
+    });
+
+    Object.entries(form.residentialAddress).forEach(([key, val]) => {
+      payload.append(`residentialAddress.${key}`, val);
+    });
+
+    // Append files
+    if (form.avatar) payload.append("avatar", form.avatar);
+    if (form.aadharCard) payload.append("aadharCard", form.aadharCard);
+    if (form.previousSchoolTC) payload.append("previousSchoolTC", form.previousSchoolTC);
+    if (form.medicalCertificate) payload.append("medicalCertificate", form.medicalCertificate);
+    if (form.birthCertificate) payload.append("birthCertificate", form.birthCertificate);
+
+    // Use API instance — no need to set Authorization manually
+    await API.post("/students", payload, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    // Success: refresh and reset
+    await fetchStudents(); // optional
+    setOpen(false);
+    // reset form if needed
+    // setForm(initialState);
+  } catch (err) {
+    setError(err.response?.data?.message || err.message || "Failed to create student");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
 
 	const fetchClasses = useCallback(async () => {
@@ -410,208 +429,62 @@ export default function ApplicationForm() {
 				</div>
 
 				{/* Residential Address */}
-				<div className="space-y-2 md:col-span-2 mt-6">
-					<label className="text-sm font-medium text-gray-700">Residential Address</label>
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<input
-							id="residentialAddress.line1"
-							value={form.residentialAddress.line1}
-							onChange={handleChange}
-							placeholder="Address Line 1"
-							className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-							required
-						/>
-						<input
-							id="residentialAddress.line2"
-							value={form.residentialAddress.line2}
-							onChange={handleChange}
-							placeholder="Address Line 2"
-							className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-						/>
-						<input
-							id="residentialAddress.city"
-							value={form.residentialAddress.city}
-							onChange={handleChange}
-							placeholder="City"
-							className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-							required
-						/>
-						<input
-							id="residentialAddress.district"
-							value={form.residentialAddress.district}
-							onChange={handleChange}
-							placeholder="District"
-							className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-							required
-						/>
-						<input
-							id="residentialAddress.state"
-							value={form.residentialAddress.state}
-							onChange={handleChange}
-							placeholder="State"
-							className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-							required
-						/>
-						<input
-							id="residentialAddress.pincode"
-							value={form.residentialAddress.pincode}
-							onChange={handleChange}
-							placeholder="Pin Code"
-							className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
-							required
-						/>
-					</div>
-
-					<label className="text-sm flex items-center gap-2 mt-3 text-gray-700">
-						<input
-							type="checkbox"
-							id="sameAsPermanent"
-							checked={form.sameAsPermanent}
-							onChange={handleChange}
-							className="w-4 h-4 border-gray-300 rounded"
-						/>
-						Same as permanent address
-					</label>
-				</div>
+<div className="space-y-2 md:col-span-2 mt-6">
+  <label className="text-sm font-medium text-gray-700">Residential Address</label>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <input
+      id="residentialAddress.line1"
+      value={form.residentialAddress.line1}
+      onChange={handleChange}
+      placeholder="Address Line 1"
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm"
+      required
+    />
+    <input
+      id="residentialAddress.line2"
+      value={form.residentialAddress.line2}
+      onChange={handleChange}
+      placeholder="Address Line 2"
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm"
+    />
+    <input
+      id="residentialAddress.city"
+      value={form.residentialAddress.city}
+      onChange={handleChange}
+      placeholder="City"
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm"
+      required
+    />
+    <input
+      id="residentialAddress.district"
+      value={form.residentialAddress.district}
+      onChange={handleChange}
+      placeholder="District"
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm"
+      required
+    />
+    <input
+      id="residentialAddress.state"
+      value={form.residentialAddress.state}
+      onChange={handleChange}
+      placeholder="State"
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm"
+      required
+    />
+    <input
+      id="residentialAddress.pincode"
+      value={form.residentialAddress.pincode}
+      onChange={handleChange}
+      placeholder="Pin Code"
+      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm"
+      required
+    />
+  </div>
+</div>
 
 
-				{/* Father Info */}
-				<div className="space-y-2">
-					<label htmlFor="fatherName" className="text-sm font-medium leading-none">Father's Name</label>
-					<input
-						id="fatherName"
-						value={form.fatherName}
-						onChange={handleChange}
-						className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-						required
-					/>
-				</div>
-				<div className="space-y-2">
-					<label htmlFor="fatherPhone" className="text-sm font-medium leading-none">Father's Phone Number</label>
-					<input
-						id="fatherPhone"
-						type="tel"
-						value={form.fatherPhone}
-						onChange={handleChange}
-						placeholder="10-digit phone number"
-						className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-						pattern="[0-9]{10}"
-						title="Enter 10 digit phone number"
-						required
-					/>
-				</div>
-				<div className="space-y-2">
-					<label htmlFor="fatherEmail" className="text-sm font-medium leading-none">Father's Email Address</label>
-					<input
-						id="fatherEmail"
-						type="email"
-						value={form.fatherEmail}
-						onChange={handleChange}
-						className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-						required
-					/>
-				</div>
 
-				{/* Mother Info */}
-				<div className="space-y-2">
-					<label htmlFor="motherName" className="text-sm font-medium leading-none">Mother's Name</label>
-					<input
-						id="motherName"
-						value={form.motherName}
-						onChange={handleChange}
-						className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-						required
-					/>
-				</div>
-				<div className="space-y-2">
-					<label htmlFor="motherPhone" className="text-sm font-medium leading-none">Mother's Phone Number</label>
-					<input
-						id="motherPhone"
-						type="tel"
-						value={form.motherPhone}
-						onChange={handleChange}
-						placeholder="10-digit phone number"
-						className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-						pattern="[0-9]{10}"
-						title="Enter 10 digit phone number"
-						required
-					/>
-				</div>
-				<div className="space-y-2">
-					<label htmlFor="motherEmail" className="text-sm font-medium leading-none">Mother's Email Address</label>
-					<input
-						id="motherEmail"
-						type="email"
-						value={form.motherEmail}
-						onChange={handleChange}
-						className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-						required
-					/>
-				</div>
-
-				{/* Guardian Info */}
-				<div className="space-y-2 md:col-span-2">
-					<label htmlFor="guardianName" className="text-sm font-medium leading-none">Guardian's Name (If Applicable)</label>
-					<input
-						id="guardianName"
-						value={form.guardianName}
-						onChange={handleChange}
-						placeholder="Optional"
-						className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-					/>
-				</div>
-				<div className="space-y-2 md:col-span-1">
-					<label htmlFor="guardianPhone" className="text-sm font-medium leading-none">Guardian's Phone Number</label>
-					<input
-						id="guardianPhone"
-						type="tel"
-						value={form.guardianPhone}
-						onChange={handleChange}
-						placeholder="Optional"
-						className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-					/>
-				</div>
-
-				{/* Session */}
-				<div className="space-y-2">
-					<label htmlFor="session" className="text-sm font-medium leading-none">Session</label>
-					<input
-						id="session"
-						value={form.session}
-						onChange={handleChange}
-						placeholder="E.g. 2024-25"
-						className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-						required
-					/>
-				</div>
-
-				{/* Aadhaar Number */}
-				<div className="space-y-2">
-					<label htmlFor="aadhaarNumber" className="text-sm font-medium leading-none">Aadhaar Number</label>
-					<input
-						id="aadhaarNumber"
-						type="text"
-						value={form.aadhaarNumber}
-						onChange={handleChange}
-						placeholder="12-digit Aadhaar Number"
-						className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-						pattern="[0-9]{12}"
-						title="Enter 12 digit Aadhaar number"
-						required
-					/>
-				</div>
-
-				{/* ABC ID */}
-				<div className="space-y-2">
-					<label htmlFor="abcId" className="text-sm font-medium leading-none">ABC ID</label>
-					<input
-						id="abcId"
-						value={form.abcId}
-						onChange={handleChange}
-						placeholder="If applicable"
-						className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-					/>
-				</div>
+			
 
 				{/* Documents Section */}
 				<fieldset className="md:col-span-3 border border-gray-300 rounded-md p-4">
