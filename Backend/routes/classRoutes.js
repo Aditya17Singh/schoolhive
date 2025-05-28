@@ -3,7 +3,7 @@
 const express = require("express");
 const router = express.Router();
 const classController = require("../controllers/classController");
-const studentController = require("../controllers/studentController");
+// const studentController = require("../controllers/studentController");
 const verifyToken = require("../middleware/verifyToken");
 
 // Class Routes
@@ -18,7 +18,7 @@ router.put("/add-subject", verifyToken, classController.addSubjectToClass);
 router.delete("/:id", verifyToken, classController.deleteClass);
 router.put("/:id", classController.updateClass);
 router.put("/add-student", classController.addStudentToClass);
-router.post("/:classId/students", studentController.createStudentInClass);
-router.get("/:classId/students", studentController.getStudentsByClass);
+// router.post("/:classId/students", studentController.createStudentInClass);
+// router.get("/:classId/students", studentController.getStudentsByClass);
 
 module.exports = router;

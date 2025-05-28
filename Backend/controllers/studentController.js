@@ -1,46 +1,36 @@
-const Student = require("../models/Student");
-const Class = require("../models/Class");
-const School = require("../models/Organization");
+const Student = require("../models/Student"); 
 
-// ✅ Get all students in a specific class
-exports.getStudentsByClass = async (req, res) => {
-  try {
-    const students = await Student.find({ class: req.params.classId });
-    res.json(students);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-
-exports.createStudentInClass = async (req, res) => {
+exports.createStudent = async (req, res) => {
   try {
     if (!req.body) {
       return res.status(400).json({ error: "No form data received" });
     }
-    const { admissionNumber } = req.body;
-      const classId = req.params.classId;
 
-     // Step 1: Find the class and school
-    const classDoc = await Class.findById(classId).populate("schoolId");
-    if (!classDoc) return res.status(404).json({ error: "Class not found" });
-    
-    const schoolCode = classDoc.schoolId.code;
-
-    // Step 2: Generate password from schoolCode + admissionNumber
-    const password = `${schoolCode}${admissionNumber}`;
+    const orgId = req.user.id; 
+    const {
+      classId, fName, mName, lName, dob, gender, religion, nationality, category,
+      admissionClass, contactNumber, email, permanentAddress, residentialAddress,
+      sameAsPermanent, fatherName, fatherPhone, fatherEmail,
+      motherName, motherPhone, motherEmail,
+      guardianName, guardianPhone, session, aadhaarNumber, abcId
+    } = req.body;
 
     const studentData = {
-      ...req.body,
-      class: req.params.classId,
-      orphan: req.body.orphan === "true", // checkbox sends strings
-      schoolCode,
-      password
+      fName, mName, lName, dob, gender, religion, nationality, category,
+      admissionClass, contactNumber, email, permanentAddress, residentialAddress,
+      sameAsPermanent, fatherName, fatherPhone, fatherEmail,
+      motherName, motherPhone, motherEmail, guardianName, guardianPhone,
+      session, aadhaarNumber, abcId,
+      class: classId,
+      orgId 
     };
 
-    // Handle file
-    if (req.file) {
-      studentData.profilePicture = req.file.buffer; // Or save to disk and use file.path
+    if (req.files) {
+      if (req.files.avatar) studentData.avatar = req.files.avatar[0].path;
+      if (req.files.aadharCard) studentData.aadharCard = req.files.aadharCard[0].path;
+      if (req.files.previousSchoolTC) studentData.previousSchoolTC = req.files.previousSchoolTC[0].path;
+      if (req.files.medicalCertificate) studentData.medicalCertificate = req.files.medicalCertificate[0].path;
+      if (req.files.birthCertificate) studentData.birthCertificate = req.files.birthCertificate[0].path;
     }
 
     const newStudent = new Student(studentData);
@@ -53,82 +43,21 @@ exports.createStudentInClass = async (req, res) => {
   }
 };
 
-exports.getAllStudents = async (req, res) => {
+
+exports.getAllStudentsForSchool = async (req, res) => {
   try {
-    const { schoolCode } = req.query;
-
-    const query = schoolCode ? { schoolCode } : {};
-
-    const students = await Student.find(query).populate("class");
-
-    res.json(students);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.getStudentById = async (req, res) => {
-  try {
-    const student = await Student.findById(req.params.id).populate("class");
-    if (!student) return res.status(404).json({ error: "Student not found" });
-    res.json(student);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// In your studentController.js
-exports.updateStudent = async (req, res) => {
-  try {
-    const studentId = req.params.id;
-    const updateData = req.body; 
-
-    //still to find
-    if (updateData.classId) {
-      updateData.class = updateData.classId;
-      delete updateData.classId;
+    const orgId = req.user.id;
+    if (!orgId) {
+      return res.status(400).json({ message: "orgId is required" });
     }
 
-    const updatedStudent = await Student.findByIdAndUpdate(
-      studentId,
-      updateData,
-      { new: true } // this will return the updated student
-    ).populate('class'); // optionally populate to get the class details
+    const students = await Student.find({ orgId })
+      .populate("class", "name section") 
+      .sort({ createdAt: -1 });
 
-    if (!updatedStudent) {
-      return res.status(404).json({ error: "Student not found" });
-    }
-
-    res.json(updatedStudent); // send the updated student back to the frontend
+    res.status(200).json(students);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ message: "Server error", details: error.message });
   }
 };
-
-exports.deleteStudent = async (req, res) => {
-  try {
-    const deletedStudent = await Student.findByIdAndDelete(req.params.id);
-    if (!deletedStudent) return res.status(404).json({ error: "Student not found" });
-    res.json({ message: "Student deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// ✅ Delete all students by schoolCode
-exports.deleteAllStudentsBySchoolCode = async (req, res) => {
-  try {
-    const { schoolCode } = req.query;
-
-    if (!schoolCode) {
-      return res.status(400).json({ error: "schoolCode is required" });
-    }
-
-    const result = await Student.deleteMany({ schoolCode });
-
-    res.json({ message: `${result.deletedCount} students deleted successfully.` });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-

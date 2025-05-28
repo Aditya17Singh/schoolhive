@@ -13,11 +13,10 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-
+import API from "@/lib/api";
 
 export default function Dashboard() {
   const router = useRouter();
-
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -28,45 +27,35 @@ export default function Dashboard() {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingNotice, setEditingNotice] = useState(null);
-  const [attendanceData , setAttendanceData] = useState([
-  { date: "2025-05-01", present: 95, absent: 5 },
-  { date: "2025-05-02", present: 90, absent: 10 },
-  { date: "2025-05-03", present: 92, absent: 8 },
-  { date: "2025-05-04", present: 88, absent: 12 },
-  { date: "2025-05-05", present: 91, absent: 9 },
-]);
+  const [attendanceData, setAttendanceData] = useState([
+    { date: "2025-05-01", present: 95, absent: 5 },
+    { date: "2025-05-02", present: 90, absent: 10 },
+    { date: "2025-05-03", present: 92, absent: 8 },
+    { date: "2025-05-04", present: 88, absent: 12 },
+    { date: "2025-05-05", present: 91, absent: 9 },
+  ]);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
 
     if (!token || !userData) {
-      router.push("/"); // redirect to login if not logged in
+      router.push("/"); 
     } else {
       setUser(JSON.parse(userData));
       fetchStatsAndNotices(token);
     }
   }, []);
 
-  const fetchStatsAndNotices = async (token) => {
+  const fetchStatsAndNotices = async () => {
     try {
       const [statsRes, noticesRes] = await Promise.all([
-        fetch("http://localhost:5000/api/stats", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        fetch("http://localhost:5000/api/notices", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
+        API.get("/stats"),
+        API.get("/notices"),
       ]);
 
-      const statsData = await statsRes.json();
-      const noticesData = await noticesRes.json();
-
-      setStats(statsData);
-      setNotices(noticesData);
+      setStats(statsRes.data);
+      setNotices(noticesRes.data);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -75,75 +64,60 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (id) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
     if (!window.confirm("Are you sure you want to delete this notice?")) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/notices/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        setNotices((prevNotices) =>
-          prevNotices.filter((notice) => notice._id !== id)
-        );
-      }
+      await API.delete(`/notices/${id}`);
+      setNotices((prevNotices) =>
+        prevNotices.filter((notice) => notice._id !== id)
+      );
     } catch (error) {
       console.error("Error deleting notice:", error);
     }
   };
+
 
   const handleEdit = (notice) => {
     setEditingNotice(notice);
   };
 
   const handleSaveEdit = async () => {
-    const token = localStorage.getItem("token");
-    if (!token || !editingNotice) return;
+    if (!editingNotice) return;
 
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/notices/${editingNotice._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: editingNotice.title,
-            description: editingNotice.description,
-          }),
-        }
-      );
+      await API.put(`/notices/${editingNotice._id}`, {
+        title: editingNotice.title,
+        description: editingNotice.description,
+      });
 
-      if (res.ok) {
-        setNotices((prevNotices) =>
-          prevNotices.map((n) =>
-            n._id === editingNotice._id ? editingNotice : n
-          )
-        );
-        setEditingNotice(null);
-      }
+      setNotices((prevNotices) =>
+        prevNotices.map((n) =>
+          n._id === editingNotice._id ? editingNotice : n
+        )
+      );
+      setEditingNotice(null);
     } catch (error) {
       console.error("Error updating notice:", error);
     }
   };
 
-
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        Loading...
+      <div className="p-6 animate-pulse grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-24 bg-gray-200 rounded-md" />
+        ))}
+        <div className="col-span-full h-80 bg-gray-200 rounded-md" />
+        <div className="col-span-full grid grid-cols-2 gap-3 mt-4">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-16 bg-gray-200 rounded-md" />
+          ))}
+        </div>
+        <div className="col-span-full h-64 bg-gray-200 rounded-md mt-6" />
       </div>
     );
   }
+
 
   if (!user) {
     return (
@@ -165,12 +139,12 @@ export default function Dashboard() {
               color="text-blue-600"
               link="/dashboard/admins"
             />
-              <StatCard
-                title="Teachers"
-                value={stats.totalTeachers}
-                color="text-purple-600"
-                link="/dashboard/teachers/dashboard"
-              />
+            <StatCard
+              title="Teachers"
+              value={stats.totalTeachers}
+              color="text-purple-600"
+              link="/dashboard/teachers/dashboard"
+            />
             <StatCard
               title="Students"
               value={stats.totalClasses}
@@ -389,9 +363,8 @@ function StatCard({ title, value, color, link }) {
 
   return (
     <div
-      className={`bg-white px-1 py-4 flex justify-center gap-2 items-center rounded-lg shadow-lg text-center cursor-${
-        link ? "pointer" : "default"
-      } hover:shadow-xl transition`}
+      className={`bg-white px-1 py-4 flex justify-center gap-2 items-center rounded-lg shadow-lg text-center cursor-${link ? "pointer" : "default"
+        } hover:shadow-xl transition`}
       onClick={handleClick}
     >
       <h2 className="text-xl font-semibold text-gray-700">{title}</h2>
