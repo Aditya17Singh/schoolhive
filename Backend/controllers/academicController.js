@@ -29,7 +29,7 @@ exports.createAcademicYear = async (req, res) => {
 // Get All Academic Years for a School
 exports.getAllAcademicYears = async (req, res) => {
   try {
-    const orgId = req.user.orgId;
+    const orgId = req.user.id;
     const academicYears = await AcademicYear.find({ orgId }).sort({ year: -1 });
     res.json(academicYears);
   } catch (error) {
