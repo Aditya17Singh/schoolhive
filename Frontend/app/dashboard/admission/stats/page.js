@@ -70,9 +70,9 @@ export default function AdmissionSettingsCard() {
 	};
 
 	return (
-		<div className="flex flex-wrap gap-4 mb-6">
+		<div className="flex flex-wrap gap-4 mt-4 ">
 			{/* Active Session Card */}
-			<div className="w-72 bg-white shadow rounded-lg p-4 flex flex-col space-y-3 text-sm">
+			<div className="w-72 bg-white bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-100 transition-all duration-200 p-4 flex flex-col space-y-3 text-sm">
 				<div className="flex justify-between items-center">
 					<h2 className="font-medium">{activeAcademicYear || "No Active Session"}</h2>
 					<span className="text-green-600 text-xs font-semibold">Active Session</span>

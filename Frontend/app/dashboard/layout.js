@@ -176,7 +176,7 @@ export default function DashboardLayout({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto pt-20 px-4 bg-white">{children}</main>
+        <main className="flex-1 pt-20 px-4 bg-white">{children}</main>
       </div>
     </div>
   );
