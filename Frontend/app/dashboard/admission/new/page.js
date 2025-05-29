@@ -175,12 +175,12 @@ export default function ApplicationForm() {
 				const data = res.data;
 
 				setIsAdmissionOpen(data.admissionOpen); 
-				setAdmissionFee(data.admissionFee || 0); 
+				// setAdmissionFee(data.admissionFee || 0); 
 				setError("");
 			} catch (err) {
 				setError(err.response?.data?.message || "Could not load admission settings.");
 				setIsAdmissionOpen(null);
-				setAdmissionFee(0);
+				// setAdmissionFee(0);
 			} finally {
 				setLoading(false);
 			}
@@ -188,6 +188,27 @@ export default function ApplicationForm() {
 
 		fetchSettings();
 	}, []);
+
+   useEffect(() => {
+    const fetchSettingsFee = async () => {
+      setLoading(true);
+      try {
+        const res = await API.get("/organization/admission/settings");
+        const data = res.data;
+
+        setAdmissionFee(data.admissionFee);
+        setError("");
+      } catch (err) {
+        setError(
+          err.response?.data?.message || "Could not load admission settings."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettingsFee();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">

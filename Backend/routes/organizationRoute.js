@@ -8,4 +8,7 @@ const verifyToken = require("../middleware/verifyToken");
 router.post("/register", schoolController.registerOrganization);
 router.get("/:id", verifyToken, schoolController.getOrganizationById);
 
+router.get("/admission/settings", verifyToken, schoolController.getAdmissionSettings);
+router.put("/admission/settings", verifyToken, schoolController.updateAdmissionSettings);
+
 module.exports = router;
