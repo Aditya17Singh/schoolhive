@@ -14,7 +14,10 @@ exports.createAcademicYear = async (req, res) => {
       return res.status(400).json({ error: "Academic year already exists for this organization." });
     }
 
-    const newAcademicYear = new AcademicYear({ year, orgId, isActive });
+    const count = await AcademicYear.countDocuments({ orgId });
+    const activeStatus = count === 0 ? true : isActive;
+
+    const newAcademicYear = new AcademicYear({ year, orgId, isActive: activeStatus });
     await newAcademicYear.save();
 
     res.status(201).json({ message: "Academic Year created successfully", academicYear: newAcademicYear });
@@ -23,55 +26,54 @@ exports.createAcademicYear = async (req, res) => {
   }
 };
 
-
 // Get All Academic Years for a School
 exports.getAllAcademicYears = async (req, res) => {
   try {
-    const orgId = req.user.orgId; 
-    const academicYears = await AcademicYear.find({ orgId }).sort({ year: -1 }); 
+    const orgId = req.user.orgId;
+    const academicYears = await AcademicYear.find({ orgId }).sort({ year: -1 });
     res.json(academicYears);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Get Academic Year by ID
-exports.getAcademicYearById = async (req, res) => {
+// Get the Active Academic Year
+exports.getActiveAcademicYear = async (req, res) => {
   try {
-    const academicYear = await AcademicYear.findById(req.params.id);
-    if (!academicYear) {
-      return res.status(404).json({ error: "Academic year not found" });
+    const orgId = req.user.id;
+    const activeYear = await AcademicYear.findOne({ orgId, isActive: true });
+
+    if (!activeYear) {
+      return res.status(404).json({ message: "No active academic year found." });
     }
-    res.json(academicYear);
+
+    res.json(activeYear);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Update Academic Year (e.g., to activate or deactivate)
-exports.updateAcademicYear = async (req, res) => {
+// Update Admission Settings (open/close & fee)
+exports.updateAdmissionSettings = async (req, res) => {
   try {
-    const updatedAcademicYear = await AcademicYear.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedAcademicYear) {
-      return res.status(404).json({ error: "Academic year not found" });
-    }
-    res.json(updatedAcademicYear);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
+    const { admissionOpen, admissionFee } = req.body;
+    const orgId = req.user.id;
 
-// Delete Academic Year
-exports.deleteAcademicYear = async (req, res) => {
-  try {
-    const academicYearId = req.params.id;
-
-    const deletedAcademicYear = await AcademicYear.findByIdAndDelete(academicYearId);
-    if (!deletedAcademicYear) {
-      return res.status(404).json({ error: "Academic year not found" });
+    const activeYear = await AcademicYear.findOne({ orgId, isActive: true });
+    if (!activeYear) {
+      return res.status(404).json({ message: "Active academic year not found." });
     }
 
-    res.json({ message: "Academic year deleted successfully" });
+    if (typeof admissionOpen !== "undefined") activeYear.admissionOpen = admissionOpen;
+    if (typeof admissionFee !== "undefined") activeYear.admissionFee = admissionFee;
+
+    await activeYear.save();
+
+    res.json({
+      message: "Admission settings updated successfully.",
+      admissionOpen: activeYear.admissionOpen,
+      admissionFee: activeYear.admissionFee,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
