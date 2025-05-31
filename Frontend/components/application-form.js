@@ -11,7 +11,19 @@ export default function ApplicationForm({ orgId }) {
   const [error, setError] = useState("");
   const [admissionFee, setAdmissionFee] = useState(null);
   const [isAdmissionOpen, setIsAdmissionOpen] = useState(null);
-  
+  const [copied, setCopied] = useState(false);
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const shareLink = `http://localhost:3000/forms/admission/${
+    user.id ? user.id : orgId
+  }`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const initialState = {
     fName: "",
     mName: "",
@@ -73,13 +85,13 @@ export default function ApplicationForm({ orgId }) {
             residentialAddress: checked
               ? { ...prev.permanentAddress }
               : {
-                line1: "",
-                line2: "",
-                city: "",
-                district: "",
-                state: "",
-                pincode: "",
-              },
+                  line1: "",
+                  line2: "",
+                  city: "",
+                  district: "",
+                  state: "",
+                  pincode: "",
+                },
           };
         }
         return { ...prev, [id]: checked };
@@ -102,11 +114,11 @@ export default function ApplicationForm({ orgId }) {
           },
           ...(section === "permanentAddress" &&
             prev.sameAsPermanent && {
-            residentialAddress: {
-              ...prev.permanentAddress,
-              [field]: value,
-            },
-          }),
+              residentialAddress: {
+                ...prev.permanentAddress,
+                [field]: value,
+              },
+            }),
         };
       }
 
@@ -114,13 +126,10 @@ export default function ApplicationForm({ orgId }) {
     });
   };
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError("");
-
 
     try {
       const {
@@ -134,10 +143,10 @@ export default function ApplicationForm({ orgId }) {
 
       const payload = {
         ...formData,
-        orgId : user.id ? user.id : orgId,
+        orgId: user.id ? user.id : orgId,
       };
 
-    await API.post("/students?public_key=letmein12345", payload);
+      await API.post("/students?public_key=letmein12345", payload);
       setOpen(false);
       setForm(initialState);
     } catch (err) {
@@ -164,39 +173,45 @@ export default function ApplicationForm({ orgId }) {
   useEffect(() => {
     fetchClasses();
   }, [fetchClasses]);
-  
- 	useEffect(() => {
-		const fetchSettings = async () => {
-			setLoading(true);
-			try {
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      setLoading(true);
+      try {
         const res = await API.get("/academics/active", {
           params: {
             public_key: "letmein12345",
             orgId: user.id ? user.id : orgId,
           },
         });
-				const data = res.data;
+        const data = res.data;
 
-				setIsAdmissionOpen(data.admissionOpen); 
-				// setAdmissionFee(data.admissionFee || 0); 
-				setError("");
-			} catch (err) {
-				setError(err.response?.data?.message || "Could not load admission settings.");
-				setIsAdmissionOpen(null);
-				// setAdmissionFee(0);
-			} finally {
-				setLoading(false);
-			}
-		};
+        setIsAdmissionOpen(data.admissionOpen);
+        // setAdmissionFee(data.admissionFee || 0);
+        setError("");
+      } catch (err) {
+        setError(
+          err.response?.data?.message || "Could not load admission settings."
+        );
+        setIsAdmissionOpen(null);
+        // setAdmissionFee(0);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-		fetchSettings();
-	}, []);
+    fetchSettings();
+  }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     const fetchSettingsFee = async () => {
       setLoading(true);
       try {
-        const res = await API.get(`/organization/admission/settings?public_key=letmein12345&orgId=${user.id ? user.id : orgId}`);
+        const res = await API.get(
+          `/organization/admission/settings?public_key=letmein12345&orgId=${
+            user.id ? user.id : orgId
+          }`
+        );
         const data = res.data;
 
         setAdmissionFee(data.admissionFee);
@@ -214,7 +229,11 @@ export default function ApplicationForm({ orgId }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
+    <div
+      className={`min-h-screen mt-4 rounded-lg bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4 ${
+        !orgId ? "flex gap-8" : ""
+      }`}
+    >
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-4">
@@ -228,7 +247,6 @@ export default function ApplicationForm({ orgId }) {
               </p>
             </div>
           </div>
-
         </div>
 
         {isAdmissionOpen === true ? (
@@ -886,7 +904,9 @@ export default function ApplicationForm({ orgId }) {
                       >
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <p className="mb-2 text-sm text-gray-500">
-                            <span className="font-semibold">Click to upload</span>{" "}
+                            <span className="font-semibold">
+                              Click to upload
+                            </span>{" "}
                             student photo
                           </p>
                           <p className="text-xs text-gray-400">
@@ -1046,9 +1066,45 @@ export default function ApplicationForm({ orgId }) {
             Admissions are currently closed.
           </div>
         ) : (
-          <div className="text-gray-600 text-center py-6">Checking admission status...</div>
+          <div className="text-gray-600 text-center py-6">
+            Checking admission status...
+          </div>
         )}
       </div>
+
+      {!orgId && (
+        <div className="rounded-xl bg-card shadow w-96">
+          <div className="flex flex-col space-y-1.5 p-6">
+            <h3 className="font-semibold leading-none tracking-tight">
+              Add Student Automatically
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Share this link with student to fill out the form. After
+              submission, you'll receive a notification to review and approve
+              their addition to the organization.
+            </p>
+          </div>
+          <div className="p-6 pt-0">
+            <div className="relative border rounded-lg">
+              <div className="flex items-center gap-1 bg-muted/50 rounded-xl p-2 transition-all duration-300">
+                <input
+                  readOnly
+                  className="bg-transparent flex-1 text-sm outline-none font-mono text-muted-foreground truncate"
+                  type="text"
+                  value={shareLink}
+                />
+                <button
+                  onClick={handleCopy}
+                  className="inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-secondary/80 bg-secondary text-secondary-foreground shadow-sm h-8 px-3 text-xs transition-all duration-300 rounded-lg shrink-0"
+                >
+                  {/* <Copy className="w-4 h-4" /> */}
+                  <span>{copied ? "Copied!" : "Copy"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
