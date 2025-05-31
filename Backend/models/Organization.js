@@ -19,7 +19,8 @@ const OrganizationSchema = new mongoose.Schema(
     prefix: { type: String, required: true },               
     shortName: { type: String, required: true },            
     logo: { type: String },                
-    address: { type: AddressSchema, required: true },    
+    address: { type: AddressSchema, required: true }, 
+    admissionFee: { type: Number, default: 0 },   
     role: { type: String, default: "organization" }
   },
   { timestamps: true }

@@ -56,3 +56,52 @@ exports.getOrganizationById = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+exports.updateAdmissionSettings = async (req, res) => {
+  try {
+    const { admissionOpen, admissionFee } = req.body;
+    const orgId = req.user.id; // assuming token middleware sets req.user
+
+    const updatedOrg = await Organization.findByIdAndUpdate(
+      orgId,
+      {
+        admissionFee,
+        admissionOpen,
+      },
+      { new: true }
+    );
+
+    if (!updatedOrg) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    res.status(200).json({
+      admissionFee: updatedOrg.admissionFee,
+      admissionOpen: updatedOrg.admissionOpen,
+    });
+  } catch (err) {
+    console.error("Error updating admission settings:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+exports.getAdmissionSettings = async (req, res) => {
+  try {
+    const orgId = req.user.id;
+
+    const org = await Organization.findById(orgId);
+    if (!org) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    res.status(200).json({
+      admissionFee: org.admissionFee || 0,
+      admissionOpen: org.admissionOpen || false,
+      year: new Date().getFullYear(), // Optional: Adjust as per academic year logic
+    });
+  } catch (err) {
+    console.error("Error fetching admission settings:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
