@@ -51,6 +51,9 @@ const studentApplicationSchema = new mongoose.Schema({
   previousSchoolTC: { type: String },
   medicalCertificate: { type: String },
   birthCertificate: { type: String },
+  
+  orgUID: { type: String, unique: true },
+  orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
 }, {
   timestamps: true,
 });

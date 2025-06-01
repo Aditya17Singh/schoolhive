@@ -22,4 +22,6 @@ router.post(
   studentController.createStudent
 );
 
+router.get("/gender-distribution", verifyToken, studentController.getGenderDistribution);
+
 module.exports = router;
