@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import API from "@/lib/api";
 
 export default function ApplicationForm({ orgId }) {
@@ -12,69 +11,78 @@ export default function ApplicationForm({ orgId }) {
   const [admissionFee, setAdmissionFee] = useState(null);
   const [isAdmissionOpen, setIsAdmissionOpen] = useState(null);
   const [copied, setCopied] = useState(false);
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [success, setSuccess] = useState("");
 
-  const shareLink = `http://localhost:3000/forms/admission/${
-    user.id ? user.id : orgId
-  }`;
+  const user = useMemo(
+    () => JSON.parse(localStorage.getItem("user") || "{}"),
+    []
+  );
 
-  const handleCopy = () => {
+  const shareLink = useMemo(
+    () => `http://localhost:3000/forms/admission/${user.id ? user.id : orgId}`,
+    [user.id, orgId]
+  );
+
+  const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(shareLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
+  }, [shareLink]);
 
-  const initialState = {
-    fName: "",
-    mName: "",
-    lName: "",
-    dob: "",
-    gender: "",
-    religion: "",
-    nationality: "",
-    category: "",
-    admissionClass: "",
-    contactNumber: "",
-    email: "",
-    sameAsPermanent: false,
-    permanentAddress: {
-      line1: "",
-      line2: "",
-      city: "",
-      district: "",
-      state: "",
-      pincode: "",
-    },
-    residentialAddress: {
-      line1: "",
-      line2: "",
-      city: "",
-      district: "",
-      state: "",
-      pincode: "",
-    },
-    fatherName: "",
-    fatherPhone: "",
-    fatherEmail: "",
-    motherName: "",
-    motherPhone: "",
-    motherEmail: "",
-    guardianName: "",
-    guardianPhone: "",
-    session: "",
-    aadhaarNumber: "",
-    abcId: "",
-    avatar: null,
-    aadharCard: null,
-    previousSchoolTC: null,
-    medicalCertificate: null,
-    birthCertificate: null,
-  };
+  const initialState = useMemo(
+    () => ({
+      fName: "",
+      mName: "",
+      lName: "",
+      dob: "",
+      gender: "",
+      religion: "",
+      nationality: "",
+      category: "",
+      admissionClass: "",
+      contactNumber: "",
+      email: "",
+      sameAsPermanent: false,
+      permanentAddress: {
+        line1: "",
+        line2: "",
+        city: "",
+        district: "",
+        state: "",
+        pincode: "",
+      },
+      residentialAddress: {
+        line1: "",
+        line2: "",
+        city: "",
+        district: "",
+        state: "",
+        pincode: "",
+      },
+      fatherName: "",
+      fatherPhone: "",
+      fatherEmail: "",
+      motherName: "",
+      motherPhone: "",
+      motherEmail: "",
+      guardianName: "",
+      guardianPhone: "",
+      session: "",
+      aadhaarNumber: "",
+      abcId: "",
+      avatar: null,
+      aadharCard: null,
+      previousSchoolTC: null,
+      medicalCertificate: null,
+      birthCertificate: null,
+    }),
+    []
+  );
 
   const [form, setForm] = useState(initialState);
 
-  const handleChange = (e) => {
-    const { id, value, type, checked, files, name } = e.target;
+  const handleChange = useCallback((e) => {
+    const { id, value, type, checked, files } = e.target;
 
     setForm((prev) => {
       if (type === "checkbox") {
@@ -124,113 +132,115 @@ export default function ApplicationForm({ orgId }) {
 
       return { ...prev, [id]: value };
     });
-  };
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError("");
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setSubmitting(true);
+      setError("");
+      setSuccess("");
 
-    try {
-      const {
-        avatar,
-        aadharCard,
-        previousSchoolTC,
-        medicalCertificate,
-        birthCertificate,
-        ...formData
-      } = form;
+      try {
+        const {
+          avatar,
+          aadharCard,
+          previousSchoolTC,
+          medicalCertificate,
+          birthCertificate,
+          ...formData
+        } = form;
 
-      const payload = {
-        ...formData,
-        orgId: user.id ? user.id : orgId,
-      };
+        const payload = {
+          ...formData,
+          orgId: user.id ? user.id : orgId,
+        };
 
-      await API.post("/students?public_key=letmein12345", payload);
-      setOpen(false);
-      setForm(initialState);
-    } catch (err) {
-      setError(
-        err.response?.data?.message || err.message || "Failed to create student"
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
+        await API.post("/students", payload, {
+          params: {
+            public_key: "letmein12345",
+          },
+        });
+
+        setForm(initialState);
+        setSuccess("Application submitted successfully.");
+      } catch (err) {
+        setError(
+          err.response?.data?.message ||
+            err.message ||
+            "Failed to create student"
+        );
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [form, user.id, orgId, initialState]
+  );
 
   const fetchClasses = useCallback(async () => {
+    const currentOrgId = user.id ? user.id : orgId;
+
     try {
-      const res = await API.get("/classes?public_key=letmein12345");
+      const res = await API.get("/classes?public_key=letmein12345", {
+        params: {
+          orgId: currentOrgId,
+        },
+      });
       setClasses(res.data);
     } catch (error) {
       console.error(error);
-      //   showToast("Error fetching classes", "error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [orgId, user.id]);
 
   useEffect(() => {
-    fetchClasses();
-  }, [fetchClasses]);
-
-  useEffect(() => {
-    const fetchSettings = async () => {
+    const fetchAdmissionSettings = async () => {
       setLoading(true);
-      try {
-        const res = await API.get("/academics/active", {
-          params: {
-            public_key: "letmein12345",
-            orgId: user.id ? user.id : orgId,
-          },
-        });
-        const data = res.data;
+      const currentOrgId = user.id ? user.id : orgId;
 
-        setIsAdmissionOpen(data.admissionOpen);
-        // setAdmissionFee(data.admissionFee || 0);
+      try {
+        const [academicRes, feeRes] = await Promise.all([
+          API.get("/academics/active", {
+            params: {
+              public_key: "letmein12345",
+              orgId: currentOrgId,
+            },
+          }),
+          API.get(
+            `/organization/admission/settings?public_key=letmein12345&orgId=${currentOrgId}`
+          ),
+        ]);
+
+        setIsAdmissionOpen(academicRes.data.admissionOpen);
+        setAdmissionFee(feeRes.data.admissionFee);
         setError("");
       } catch (err) {
         setError(
           err.response?.data?.message || "Could not load admission settings."
         );
         setIsAdmissionOpen(null);
-        // setAdmissionFee(0);
+        setAdmissionFee(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSettings();
-  }, []);
+    fetchClasses();
+    fetchAdmissionSettings();
+  }, [orgId, user.id, fetchClasses]);
 
   useEffect(() => {
-    const fetchSettingsFee = async () => {
-      setLoading(true);
-      try {
-        const res = await API.get(
-          `/organization/admission/settings?public_key=letmein12345&orgId=${
-            user.id ? user.id : orgId
-          }`
-        );
-        const data = res.data;
+    if (success) {
+      const timer = setTimeout(() => setSuccess(""), 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
-        setAdmissionFee(data.admissionFee);
-        setError("");
-      } catch (err) {
-        setError(
-          err.response?.data?.message || "Could not load admission settings."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSettingsFee();
-  }, []);
 
   return (
     <div
-      className={`min-h-screen mt-4 rounded-lg bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4 ${
+      className={`min-h-screen mt-4 relative rounded-lg bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4 ${
         !orgId ? "flex gap-8" : ""
       }`}
     >
@@ -251,6 +261,18 @@ export default function ApplicationForm({ orgId }) {
 
         {isAdmissionOpen === true ? (
           <>
+            {success && (
+              <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300">
+                {success}
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-100 text-red-800 px-4 py-3 rounded mb-4 font-medium text-center shadow">
+                {error}
+              </div>
+            )}
+
             {admissionFee > 0 && (
               <div className="bg-yellow-100 text-yellow-800 px-4 py-3 rounded mb-4 font-medium text-center shadow">
                 Admission Fee: ₹{admissionFee}
