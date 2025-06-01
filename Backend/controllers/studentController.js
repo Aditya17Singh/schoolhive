@@ -37,7 +37,8 @@ exports.createStudent = async (req, res) => {
       session, aadhaarNumber, abcId,
       orgUID,
       class: classId,
-      orgId 
+      orgId,
+      status: 'pending' 
     };
 
     if (req.files) {
@@ -64,7 +65,9 @@ exports.getAllStudentsForSchool = async (req, res) => {
     if (!orgId) {
       return res.status(400).json({ message: "orgId is required" });
     }
-    const students = await Student.find({ orgId }).sort({ createdAt: -1 });
+
+    // Only fetch admitted students
+    const students = await Student.find({ orgId, status: 'admitted' }).sort({ createdAt: -1 });
 
     res.status(200).json(students);
   } catch (error) {
@@ -72,6 +75,7 @@ exports.getAllStudentsForSchool = async (req, res) => {
     res.status(500).json({ message: "Server error", details: error.message });
   }
 };
+
 
 exports.getGenderDistribution = async (req, res) => {
   try {
@@ -102,5 +106,26 @@ exports.getGenderDistribution = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", details: error.message });
+  }
+};
+
+exports.updateStudentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['pending', 'admitted', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: "Invalid status value" });
+    }
+
+    const updated = await Student.findByIdAndUpdate(id, { status }, { new: true });
+    if (!updated) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error("Update status error:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 };

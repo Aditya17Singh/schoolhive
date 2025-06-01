@@ -209,9 +209,9 @@ export default function Students() {
                           No students found
                         </p>
                         <p className="text-gray-400 text-sm">
-                          {searchTerm
+                          {/* {searchTerm
                             ? "Try adjusting your search criteria"
-                            : "Get started by adding your first student"}
+                            : "Get started by adding your first student"} */}
                         </p>
                       </div>
                     </td>

@@ -98,6 +98,7 @@ export default function DashboardLayout({ children }) {
           </Dropdown>
           <Dropdown label="Admission" icon="📝" open={openMenus.admission} toggle={() => toggleMenu("admission")}>
             <MenuItem href="/dashboard/admission/stats" label="Dashboard" icon="📊" />
+            <MenuItem href="/dashboard/admission/manage-admission" label="Manage Admission" icon="📊" />
             <MenuItem href="/dashboard/admission/new" label="New Admission" icon="➕" />
           </Dropdown>
           <Dropdown label="Attendance" icon="🕒" open={openMenus.attendance} toggle={() => toggleMenu("attendance")}>

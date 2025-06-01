@@ -23,5 +23,6 @@ router.post(
 );
 
 router.get("/gender-distribution", verifyToken, studentController.getGenderDistribution);
+router.patch("/status/:id", verifyToken, studentController.updateStudentStatus);
 
 module.exports = router;

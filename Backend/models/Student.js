@@ -52,6 +52,11 @@ const studentApplicationSchema = new mongoose.Schema({
   medicalCertificate: { type: String },
   birthCertificate: { type: String },
   
+  status: {
+    type: String,
+    enum: ['pending', 'admitted', 'rejected'],
+    default: 'pending'
+  },
   orgUID: { type: String, unique: true },
   orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
 }, {
