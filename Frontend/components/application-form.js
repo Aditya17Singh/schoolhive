@@ -140,6 +140,7 @@ export default function ApplicationForm({ orgId }) {
       setSubmitting(true);
       setError("");
       setSuccess("");
+      const currentOrgId = user.id ? user.id : orgId;
 
       try {
         const {
@@ -159,6 +160,7 @@ export default function ApplicationForm({ orgId }) {
         await API.post("/students", payload, {
           params: {
             public_key: "letmein12345",
+            orgId: currentOrgId,
           },
         });
 

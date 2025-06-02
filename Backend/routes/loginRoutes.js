@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 
-const School = require("../models/Organization");
+const Organization = require("../models/Organization");
 const Admin = require("../models/Admin"); 
 
 const JWT_SECRET = process.env.JWT_SECRET || "yoursecretkey";
@@ -18,7 +18,7 @@ router.post("/login", async (req, res) => {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
-      const org = await School.findOne({ orgEmail: organizationEmail });
+      const org = await Organization.findOne({ orgEmail: organizationEmail });
 
       if (!org) return res.status(404).json({ message: "Organization not found" });
 

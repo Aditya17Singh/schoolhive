@@ -97,7 +97,7 @@ exports.getAdmissionSettings = async (req, res) => {
     res.status(200).json({
       admissionFee: org.admissionFee || 0,
       admissionOpen: org.admissionOpen || false,
-      year: new Date().getFullYear(), // Optional: Adjust as per academic year logic
+      year: new Date().getFullYear(),
     });
   } catch (err) {
     console.error("Error fetching admission settings:", err);

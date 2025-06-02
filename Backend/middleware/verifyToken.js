@@ -5,7 +5,6 @@ const ADMISSION_BYPASS_KEY = process.env.ADMISSION_BYPASS_KEY || "letmein12345";
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
   const publicKey = req.query.public_key;
-console.log(req.originalUrl, 'req');
 
   // ✅ Allow public access to specific routes with correct public key
  const isPublicRoute =

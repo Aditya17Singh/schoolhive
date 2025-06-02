@@ -154,12 +154,12 @@ export default function DashboardLayout({ children }) {
                   <ul className="text-sm">
                     <li>
                       <Link
-    href="/dashboard/organization"
-    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
-    onClick={() => setOpen(false)}
-  >
-    👤 Profile
-  </Link>
+                        href="/dashboard/organization"
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
+                        onClick={() => setOpen(false)}
+                      >
+                        👤 Profile
+                      </Link>
                     </li>
                     <li>
                       <button

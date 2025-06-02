@@ -4,7 +4,7 @@ const subjectSchema = new mongoose.Schema({
   name: { type: String, required: true },
   code: { type: String },
   teacher: [{ type: mongoose.Schema.Types.ObjectId, ref: "Teacher" }],
-  class: { type: mongoose.Schema.Types.ObjectId, ref: "Class" }, // ✅ add this
+  class: { type: mongoose.Schema.Types.ObjectId, ref: "Class" }, 
   orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
 }, { timestamps: true });
 

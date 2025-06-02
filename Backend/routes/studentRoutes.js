@@ -22,4 +22,8 @@ router.post(
   studentController.createStudent
 );
 
+router.get("/gender-distribution", verifyToken, studentController.getGenderDistribution);
+router.patch("/status/:id", verifyToken, studentController.updateStudentStatus);
+router.get("/admissions", verifyToken, studentController.getAllStudent);
+
 module.exports = router;

@@ -13,7 +13,6 @@ academicYearSchema.pre("save", function (next) {
   if (this.year) {
     const [startYear, endYear] = this.year.split("-");
 
-    // Assuming academic year starts in July and ends in June
     const startDate = new Date(`${startYear}-07-01`);  // July 1st of the start year
     const endDate = new Date(`${endYear}-06-30`);     // June 30th of the end year
 
