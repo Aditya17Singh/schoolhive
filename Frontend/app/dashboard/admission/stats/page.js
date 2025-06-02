@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import API from "@/lib/api";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import axios from "axios";
-import Link  from "next/link";
+import Link from "next/link";
+import { UserPlus } from "lucide-react";
 
 export default function AdmissionSettingsCard() {
   const [isAdmissionOpen, setIsAdmissionOpen] = useState(null);
@@ -14,6 +15,11 @@ export default function AdmissionSettingsCard() {
   const [error, setError] = useState("");
   const [activeAcademicYear, setActiveAcademicYear] = useState("");
   const [genderData, setGenderData] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [pending, setPending] = useState(0);
+  const [admitted, setAdmitted] = useState(0);
+  const [rejected, setRejected] = useState(0);
+
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -117,6 +123,25 @@ export default function AdmissionSettingsCard() {
     fetchGenderData();
   }, []);
 
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await API.get("/students/stats");
+        const stats = res.data;
+
+        setTotal(stats.total || 0);
+        setPending(stats.pending || 0);
+        setAdmitted(stats.admitted || 0);
+        setRejected(stats.rejected || 0);
+      } catch (err) {
+        console.error("Failed to fetch stats", err);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+
   const COLORS = {
     Male: "#3b82f6",
     Female: "#ec4899",
@@ -131,14 +156,27 @@ export default function AdmissionSettingsCard() {
             Manage Admission
           </button>
         </Link>
-      </div>  
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Total Registration */}
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Registration</p>
+              <h3 className="text-2xl font-bold text-blue-600">{total}</h3>
+            </div>
+            <div className="p-2 bg-blue-100 rounded-full">
+              <UserPlus className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
         {/* Pending */}
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Pending</p>
-              <h3 className="text-2xl font-bold text-yellow-600">1</h3>
+              <h3 className="text-2xl font-bold text-yellow-600">{pending}</h3>
             </div>
             <div className="p-2 bg-yellow-100 rounded-full">
               <svg
@@ -163,7 +201,7 @@ export default function AdmissionSettingsCard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Rejected</p>
-              <h3 className="text-2xl font-bold text-red-600">0</h3>
+              <h3 className="text-2xl font-bold text-red-600">{rejected}</h3>
             </div>
             <div className="p-2 bg-red-100 rounded-full">
               <svg
@@ -189,7 +227,7 @@ export default function AdmissionSettingsCard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Admitted</p>
-              <h3 className="text-2xl font-bold text-green-600">1</h3>
+              <h3 className="text-2xl font-bold text-green-600">{admitted}</h3>
             </div>
             <div className="p-2 bg-green-100 rounded-full">
               <svg
@@ -230,17 +268,16 @@ export default function AdmissionSettingsCard() {
                 disabled={loading}
                 onClick={handleToggleAdmission}
                 className={`w-full h-9 cursor-pointer text-sm font-medium rounded-md transition duration-200 px-4 py-1 text-white shadow disabled:opacity-50 disabled:pointer-events-none
-							${
-                !isAdmissionOpen
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-red-600 hover:bg-red-700"
-              }`}
+							${!isAdmissionOpen
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-red-600 hover:bg-red-700"
+                  }`}
               >
                 {loading
                   ? "Updating..."
                   : isAdmissionOpen
-                  ? "Close Admissions"
-                  : "Open Admissions"}
+                    ? "Close Admissions"
+                    : "Open Admissions"}
               </button>
             )}
           </div>

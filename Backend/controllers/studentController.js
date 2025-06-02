@@ -141,3 +141,40 @@ exports.getAllStudent = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.getStudentStats = async (req, res) => {
+  try {
+    const orgId = req.user.id;
+
+    if (!orgId) {
+      return res.status(400).json({ message: "orgId is required" });
+    }
+
+    const stats = await Student.aggregate([
+      { $match: { orgId: new mongoose.Types.ObjectId(orgId) } },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const result = {
+      total: 0,
+      pending: 0,
+      admitted: 0,
+      rejected: 0
+    };
+
+    stats.forEach(stat => {
+      result.total += stat.count;
+      result[stat._id] = stat.count;
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+    res.status(500).json({ message: "Server error", details: error.message });
+  }
+};
