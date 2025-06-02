@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import API from "@/lib/api";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import axios from "axios";
+import Link  from "next/link";
 
 export default function AdmissionSettingsCard() {
   const [isAdmissionOpen, setIsAdmissionOpen] = useState(null);
@@ -124,6 +125,13 @@ export default function AdmissionSettingsCard() {
 
   return (
     <div className="mt-4">
+      <div className="mb-4">
+        <Link href="/dashboard/admission/manage-admission">
+          <button className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm">
+            Manage Admission
+          </button>
+        </Link>
+      </div>  
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {/* Pending */}
         <div className="bg-white p-4 rounded-lg shadow-sm">

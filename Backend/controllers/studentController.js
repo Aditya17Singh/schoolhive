@@ -76,7 +76,6 @@ exports.getAllStudentsForSchool = async (req, res) => {
   }
 };
 
-
 exports.getGenderDistribution = async (req, res) => {
   try {
     const orgId = req.user.id;
@@ -127,5 +126,18 @@ exports.updateStudentStatus = async (req, res) => {
   } catch (error) {
     console.error("Update status error:", error);
     res.status(500).json({ error: "Server error", details: error.message });
+  }
+};
+
+exports.getAllStudent = async (req, res) => {
+  try {
+    const students = await Student.find({
+      status: { $in: ["pending", "admitted", "rejected"] },
+    }).sort({ createdAt: -1 });
+
+    res.json(students);
+  } catch (err) {
+    console.error("Error fetching admissions:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

@@ -98,7 +98,6 @@ export default function DashboardLayout({ children }) {
           </Dropdown>
           <Dropdown label="Admission" icon="📝" open={openMenus.admission} toggle={() => toggleMenu("admission")}>
             <MenuItem href="/dashboard/admission/stats" label="Dashboard" icon="📊" />
-            <MenuItem href="/dashboard/admission/manage-admission" label="Manage Admission" icon="📊" />
             <MenuItem href="/dashboard/admission/new" label="New Admission" icon="➕" />
           </Dropdown>
           <Dropdown label="Attendance" icon="🕒" open={openMenus.attendance} toggle={() => toggleMenu("attendance")}>
@@ -155,12 +154,12 @@ export default function DashboardLayout({ children }) {
                   <ul className="text-sm">
                     <li>
                       <Link
-    href="/dashboard/organization"
-    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
-    onClick={() => setOpen(false)}
-  >
-    👤 Profile
-  </Link>
+                        href="/dashboard/organization"
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
+                        onClick={() => setOpen(false)}
+                      >
+                        👤 Profile
+                      </Link>
                     </li>
                     <li>
                       <button
