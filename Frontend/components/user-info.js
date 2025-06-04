@@ -135,7 +135,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-6">
             <StatCard
               title="Admins"
-              value={stats.totalStudents}
+              value={stats.totalAdmins}
               color="text-blue-600"
               link="/dashboard/admins"
             />
@@ -147,9 +147,9 @@ export default function Dashboard() {
             />
             <StatCard
               title="Students"
-              value={stats.totalClasses}
+              value={stats.totalStudents}
               color="text-green-600"
-              link="/dashboard/classes"
+              link="/dashboard/students"
             />
             {/* <StatCard
               title="Fee Collection"
@@ -217,14 +217,6 @@ export default function Dashboard() {
           <div className="bg-white shadow-lg rounded-lg p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Latest Notices</h2>
-              {/* <button
-                onClick={() =>
-                  fetchStatsAndNotices(localStorage.getItem("token"))
-                }
-                className="bg-blue-500 text-white px-4 py-2 rounded-md"
-              >
-                Refresh Notices
-              </button> */}
             </div>
 
             {notices.length > 0 ? (
