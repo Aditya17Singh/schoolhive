@@ -97,22 +97,22 @@ export default function SubjectDashboard() {
   };
 
   const renderDropdown = () => (
-    <div className="relative w-[180px]">
+    <div className="relative w-48">
       <button
         type="button"
         aria-haspopup="listbox"
         aria-expanded={classDropdownOpen}
-        className="flex h-9 items-center justify-between rounded-md border border-[#fcfcfc] px-3 py-2 text-sm shadow-sm bg-gray-500/10 text-black w-full"
+        className="flex h-11 items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 w-full transition-colors duration-200"
         onClick={() => setClassDropdownOpen((open) => !open)}
       >
-        <span>{form.class || "Select Class"}</span>
+        <span className="truncate">{form.class || "All Classes"}</span>
         <svg
-          width="15"
-          height="15"
+          width="16"
+          height="16"
           viewBox="0 0 15 15"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 opacity-50"
+          className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${classDropdownOpen ? 'rotate-180' : ''}`}
           aria-hidden="true"
         >
           <path
@@ -124,217 +124,309 @@ export default function SubjectDashboard() {
         </svg>
       </button>
       {classDropdownOpen && (
-        <ul
-          role="listbox"
-          className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5"
-        >
+        <div className="absolute z-20 mt-2 w-full rounded-lg bg-white shadow-xl border border-gray-200 py-1 max-h-60 overflow-auto">
+          <div
+            className="cursor-pointer py-2 px-4 hover:bg-blue-50 text-sm text-gray-700 border-b border-gray-100"
+            onClick={() => handleClassSelect("")}
+          >
+            All Classes
+          </div>
           {loading.classes ? (
             [1, 2, 3].map((i) => (
-              <li key={i} className="py-2 px-3 animate-pulse text-gray-300">
-                Loading...
-              </li>
+              <div key={i} className="py-2 px-4 animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              </div>
             ))
           ) : classes.length === 0 ? (
-            <li className="py-2 px-3 text-gray-500">No classes found</li>
+            <div className="py-3 px-4 text-gray-500 text-sm">No classes found</div>
           ) : (
             classes.map((cls) => (
-              <li
+              <div
                 key={cls._id || cls.id || cls}
                 role="option"
                 aria-selected={form.class === cls.name}
-                className={`cursor-pointer py-2 px-3 hover:bg-indigo-600 hover:text-white ${
-                  form.class === cls.name ? "bg-indigo-600 text-white" : ""
+                className={`cursor-pointer py-2 px-4 text-sm hover:bg-blue-50 transition-colors duration-150 ${
+                  form.class === cls.name ? "bg-blue-100 text-blue-800 font-medium" : "text-gray-700"
                 }`}
                 onClick={() => handleClassSelect(cls.name || cls)}
               >
                 {cls.name || cls}
-              </li>
+              </div>
             ))
           )}
-        </ul>
+        </div>
       )}
     </div>
   );
 
   const renderLoadingRow = () => (
-    <tr className="border-b animate-pulse">
-      <td className="px-4 py-2">
-        <div className="h-4 bg-gray-200 rounded w-3/4" />
+    <tr className="border-b border-gray-100">
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
       </td>
-      <td className="px-4 py-2">
-        <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto" />
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" />
       </td>
-      <td className="px-4 py-2 text-center">
-        <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto" />
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
       </td>
-      <td className="px-4 py-2 text-center">
-        <div className="h-6 w-16 mx-auto bg-gray-200 rounded-full" />
+      <td className="px-6 py-4">
+        <div className="h-8 w-20 bg-gray-200 rounded-full animate-pulse" />
       </td>
     </tr>
   );
 
   return (
-    <div className="p-4 max-w-5xl mx-auto">
-      <div className="flex justify-between items-center pb-2 gap-4">
-        <input
-          type="text"
-          placeholder="Search subjects..."
-          className="flex-1 max-w-md h-9 rounded-md border px-3 py-1 text-sm shadow-sm border-slate-200"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        {renderDropdown()}
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Subject Dashboard</h1>
+          <p className="text-gray-600">Manage subjects and teacher assignments</p>
+        </div>
 
-      <div className="overflow-y-auto max-h-[450px] custom-scrollbar shadow-md p-2 rounded-md">
-        <table className="w-full text-sm caption-bottom">
-          <thead className="border-b">
-            <tr className="hover:bg-muted/50">
-              {[
-                "Subject Name",
-                "Class",
-                "Teachers",
-                "Assign or Remove Teachers",
-              ].map((header) => (
-                <th
-                  key={header}
-                  className="px-2 py-3 text-left font-medium text-muted-foreground"
-                >
-                  {header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading.subjects ? (
-              Array.from({ length: 3 }, (_, i) => (
-                <React.Fragment key={i}>{renderLoadingRow()}</React.Fragment>
-              ))
-            ) : filteredSubjects.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="text-center py-4 text-gray-500">
-                  No subjects found.
-                </td>
-              </tr>
-            ) : (
-              filteredSubjects.map(
-                ({ _id, subjectName, class: cls, teachers }) => (
-                  <tr
-                    key={_id}
-                    className="border-b bg-slate-50 hover:bg-slate-100"
-                  >
-                    <td className="px-2 py-2 capitalize text-left">
-                      {subjectName}
-                    </td>
-                    <td className="px-2 py-2 text-left">{cls}</td>
-                    <td className="px-2 py-2 text-left">
-                      {teachers.length ? (
-                        teachers.map((teacher, index) => (
-                          <span key={teacher._id}>
-                            {teacher.fName} {teacher.lName}
-                            {index < teachers.length - 1 ? ", " : ""}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-xs px-3 py-1 rounded-full bg-red-50 border border-red-200 text-red-600">
-                          No teachers assigned yet
-                        </span>
-                      )}
-                    </td>
+        {/* Search and Filter Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1 max-w-md">
+              <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+                Search Subjects
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  id="search"
+                  type="text"
+                  placeholder="Search by subject name..."
+                  className="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filter by Class
+              </label>
+              {renderDropdown()}
+            </div>
+          </div>
+        </div>
 
-                    <td className="px-2 py-2 text-left">
-                      <button
-                        onClick={() =>
-                          handleEditClick({
-                            _id,
-                            subjectName,
-                            class: cls,
-                            teachers,
-                          })
-                        }
-                        className="cursor-pointer flex items-center gap-1 px-2 py-1 border rounded-full text-slate-600 hover:bg-green-100 hover:text-green-500 hover:border-green-300"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+        {/* Main Content */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Subjects ({filteredSubjects.length})
+            </h2>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  {[
+                    "Subject Name",
+                    "Class",
+                    "Assigned Teachers",
+                    "Actions",
+                  ].map((header) => (
+                    <th
+                      key={header}
+                      className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loading.subjects ? (
+                  Array.from({ length: Math.min(Math.max(subjects.length || 5, 5), 8) }, (_, i) => (
+                    <React.Fragment key={i}>{renderLoadingRow()}</React.Fragment>
+                  ))
+                ) : filteredSubjects.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center">
+                        <svg className="h-12 w-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
-                        <span className="text-xs">Edit</span>
-                      </button>
+                        <p className="text-gray-500 text-lg font-medium">No subjects found</p>
+                        <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filters</p>
+                      </div>
                     </td>
                   </tr>
-                )
-              )
-            )}
-          </tbody>
-        </table>
-      </div>
-      <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/10 z-40" />
-          <Dialog.Content className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md bg-white rounded-lg p-6">
-            <Dialog.Title className="text-lg font-semibold mb-2">
-              Teacher Assignment
-            </Dialog.Title>
-            <Dialog.Description className="text-sm text-gray-500 mb-4">
-              Assign or remove teachers for this subject.
-            </Dialog.Description>
+                ) : (
+                  filteredSubjects.map(
+                    ({ _id, subjectName, class: cls, teachers }) => (
+                      <tr
+                        key={_id}
+                        className="hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-gray-900 capitalize">
+                            {subjectName}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {cls}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          {teachers.length ? (
+                            <div className="flex flex-wrap gap-1">
+                              {teachers.map((teacher, index) => (
+                                <span 
+                                  key={teacher._id}
+                                  className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800"
+                                >
+                                  {teacher.fName} {teacher.lName}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                              No teachers assigned
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() =>
+                              handleEditClick({
+                                _id,
+                                subjectName,
+                                class: cls,
+                                teachers,
+                              })
+                            }
+                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors duration-200"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+                            </svg>
+                            Manage Teachers
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  )
+                )}
+              </tbody>
+            </table>
+            </div>
+          </div>
+        </div>
 
-            <div className="mb-4 max-h-48 overflow-y-auto border rounded p-2 space-y-2">
-              {teachers1.length === 0 ? (
-                <p className="text-sm text-gray-500">No teachers available.</p>
-              ) : (
-                teachers1.map((teacher) => (
-                  <label
-                    key={teacher._id}
-                    className="flex items-center gap-2 text-sm cursor-pointer"
+        {/* Custom Dialog */}
+        {dialogOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm" 
+              onClick={() => setDialogOpen(false)}
+            />
+            
+            {/* Dialog Content */}
+            <div className="relative z-50 w-[90vw] max-w-lg bg-white rounded-xl shadow-2xl">
+              <div className="p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Teacher Assignment
+                  </h2>
+                  <button
+                    onClick={() => setDialogOpen(false)}
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors duration-200"
                   >
-                    <input
-                      type="checkbox"
-                      className="accent-indigo-600"
-                      checked={selectedTeachers.includes(String(teacher._id))}
-                      onChange={() => {
-                        if (selectedTeachers.includes(teacher._id)) {
-                          setSelectedTeachers(
-                            selectedTeachers.filter((id) => id !== teacher._id)
-                          );
-                        } else {
-                          setSelectedTeachers([
-                            ...selectedTeachers,
-                            teacher._id,
-                          ]);
-                        }
-                      }}
-                    />
-                    <span>
-                      {teacher.fName} {teacher.lastName}
-                    </span>
-                  </label>
-                ))
-              )}
-            </div>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <p className="text-sm text-gray-600 mb-6">
+                  {selectedSubject && (
+                    <>
+                      Manage teachers for <span className="font-medium text-gray-900">{selectedSubject.subjectName}</span> in <span className="font-medium text-gray-900">{selectedSubject.class}</span>
+                    </>
+                  )}
+                </p>
 
-            <div className="flex justify-end gap-2">
-              <Dialog.Close asChild>
-                <button className="px-3 py-1.5 text-sm rounded border border-gray-300 hover:bg-gray-100">
-                  Cancel
-                </button>
-              </Dialog.Close>
-              <button
-                onClick={handleTeacherAssignment}
-                className="px-4 py-1 rounded bg-green-600 text-white text-sm hover:bg-green-700"
-              >
-                Save
-              </button>
+                {/* Teachers List */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">Available Teachers</h3>
+                  <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-3">
+                    {teachers1.length === 0 ? (
+                      <p className="text-sm text-gray-500 py-4 text-center">No teachers available.</p>
+                    ) : (
+                      teachers1.map((teacher) => (
+                        <label
+                          key={teacher._id}
+                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                        >
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            checked={selectedTeachers.includes(String(teacher._id))}
+                            onChange={() => {
+                              if (selectedTeachers.includes(teacher._id)) {
+                                setSelectedTeachers(
+                                  selectedTeachers.filter((id) => id !== teacher._id)
+                                );
+                              } else {
+                                setSelectedTeachers([
+                                  ...selectedTeachers,
+                                  teacher._id,
+                                ]);
+                              }
+                            }}
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm font-medium text-gray-900">
+                              {teacher.fName} {teacher.lastName}
+                            </span>
+                          </div>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3">
+                  <button 
+                    onClick={() => setDialogOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleTeacherAssignment}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors duration-200"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
             </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
