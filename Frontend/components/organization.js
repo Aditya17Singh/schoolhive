@@ -7,16 +7,21 @@ import API from "@/lib/api";
 export default function SchoolProfileCard() {
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ studentCount: 0, teacherCount: 0 });
 
   useEffect(() => {
     const fetchOrganization = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
         const orgId = user?.id;
-        const res = await API.get(`/organization/${orgId}`);
-        const data = res.data;
 
-        setOrg(data.organization);
+        const [orgRes, statsRes] = await Promise.all([
+          API.get(`/organization/${orgId}`),
+          API.get(`/organization/${orgId}/stats`)
+        ]);
+
+        setOrg(orgRes.data.organization);
+        setStats(statsRes.data);
       } catch (err) {
         console.error("Fetch organization error:", err.message);
       } finally {
@@ -89,8 +94,8 @@ export default function SchoolProfileCard() {
                   Quick Stats
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
-                  <StatCard title="Total Students" value="1,200+" />
-                  <StatCard title="Faculty Members" value="80+" />
+                  <StatCard title="Total Students" value={stats.studentCount} />
+                  <StatCard title="Faculty Members" value={stats.teacherCount} />
                 </div>
               </div>
             </div>

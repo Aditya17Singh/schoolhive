@@ -36,7 +36,7 @@ const teacherSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-    orgID: {
+    orgId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Organization",
     required: true,

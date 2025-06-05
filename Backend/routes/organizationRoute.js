@@ -10,5 +10,6 @@ router.get("/:id", verifyToken, schoolController.getOrganizationById);
 
 router.get("/admission/settings", verifyToken, schoolController.getAdmissionSettings);
 router.put("/admission/settings", verifyToken, schoolController.updateAdmissionSettings);
+router.get("/:id/stats", verifyToken, schoolController.getOrganizationStats);
 
 module.exports = router;

@@ -35,7 +35,7 @@ const createTeacherProfile = async (req, res) => {
       maritalStatus,
     } = req.body;
 
-    const orgID = req.user.id;
+    const orgId = req.user.id;
 
     const newTeacher = await Teacher.create({
       fName,
@@ -53,7 +53,7 @@ const createTeacherProfile = async (req, res) => {
       religion,
       category,
       maritalStatus,
-      orgID,
+      orgId,
       residentialAddress: {
         line1: resLine1,
         line2: resLine2,
@@ -85,9 +85,9 @@ const assignClassToTeacher = async (req, res) => {
   try {
     const { teacherId } = req.params;
     const { assignedClass, assignedSection } = req.body;
-    const orgID = req.user.id;
+    const orgId = req.user.id;
 
-    const teacher = await Teacher.findOne({ _id: teacherId, orgID });
+    const teacher = await Teacher.findOne({ _id: teacherId, orgId });
 
     if (!teacher) {
       return res.status(404).json({ success: false, message: "Teacher not found or unauthorized" });
@@ -106,8 +106,8 @@ const assignClassToTeacher = async (req, res) => {
 
 const getAllTeachers = async (req, res) => {
   try {
-    const orgID = req.user.id;
-    const teachers = await Teacher.find({ orgID });
+    const orgId = req.user.id;
+    const teachers = await Teacher.find({ orgId });
 
     res.status(200).json({ success: true, data: teachers });
   } catch (error) {
@@ -118,9 +118,9 @@ const getAllTeachers = async (req, res) => {
 const getSubjectsByTeacher = async (req, res) => {
   try {
     const { teacherId } = req.params;
-    const orgID = req.user.id;
+    const orgId = req.user.id;
 
-    const teacher = await Teacher.findOne({ _id: teacherId, orgID });
+    const teacher = await Teacher.findOne({ _id: teacherId, orgId });
     if (!teacher) {
       return res.status(404).json({ success: false, message: "Teacher not found or unauthorized" });
     }

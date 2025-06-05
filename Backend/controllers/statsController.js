@@ -17,7 +17,7 @@ exports.getStats = async (req, res) => {
 
     const [totalStudents, totalTeachers, totalAdmins] = await Promise.all([
       Student.countDocuments({ orgId }),
-      Teacher.countDocuments({ orgID: orgId }),
+      Teacher.countDocuments({ orgId }),
       Admin.countDocuments({ orgId }),
     ]);
 

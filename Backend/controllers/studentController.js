@@ -131,7 +131,13 @@ exports.updateStudentStatus = async (req, res) => {
 
 exports.getAllStudent = async (req, res) => {
   try {
+    const orgId = req.user.id;
+    if (!orgId) {
+      return res.status(400).json({ message: "orgId is required" });
+    }
+
     const students = await Student.find({
+      orgId,
       status: { $in: ["pending", "admitted", "rejected"] },
     }).sort({ createdAt: -1 });
 
@@ -141,6 +147,7 @@ exports.getAllStudent = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 exports.getStudentStats = async (req, res) => {
   try {
