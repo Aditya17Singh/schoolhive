@@ -1,4 +1,6 @@
 const Organization = require("../models/Organization");
+const Student = require("../models/Student");
+const Teacher = require("../models/Teacher");
 
 exports.registerOrganization = async (req, res) => {
   try {
@@ -105,3 +107,19 @@ exports.getAdmissionSettings = async (req, res) => {
   }
 };
 
+exports.getOrganizationStats = async (req, res) => {
+  try {
+    const orgId = req.params.id;
+
+    const studentCount = await Student.countDocuments({  orgId });
+    const teacherCount = await Teacher.countDocuments({ orgId });
+
+    res.status(200).json({
+      studentCount,
+      teacherCount,
+    });
+  } catch (err) {
+    console.error("Error fetching stats:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
