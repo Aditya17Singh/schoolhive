@@ -16,7 +16,6 @@ const statsRoutes = require("./routes/statsRoutes");
 const organizationRoutes = require("./routes/organizationRoute");
 const loginRoutes = require("./routes/loginRoutes");  
 const lessonRoutes = require("./routes/lessonRoute");
-const employeeRoutes = require("./routes/employeeRoute");
 const scheduleRoute = require("./routes/scheduleRoute");
 
 const app = express();
@@ -31,7 +30,6 @@ app.use(express.json());
 app.use("/api/teachers", teacherRoutes);
 app.use("/api/academics" , academicRoutes);
 app.use("/api/lessons", lessonRoutes);
-app.use("/api/employees", employeeRoutes);
 app.use('/api/admins', adminRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/students", studentRoutes);
