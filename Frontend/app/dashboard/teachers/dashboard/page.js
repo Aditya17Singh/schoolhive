@@ -16,8 +16,6 @@ export default function TeacherDashboard() {
   const [teacherSubjects, setTeacherSubjects] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
 
-  const token = useMemo(() => localStorage.getItem("token"), []);
-
   useEffect(() => {
     const fetchTeachersAndSubjects = async () => {
       try {
@@ -179,7 +177,7 @@ export default function TeacherDashboard() {
                     colSpan={6}
                     className="text-center py-6 text-gray-500 text-sm"
                   >
-                    No teacher found
+                    No approved teachers found. Check pending requests?
                   </td>
                 </tr>
               ) : (

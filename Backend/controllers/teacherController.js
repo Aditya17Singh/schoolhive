@@ -72,6 +72,7 @@ const createTeacherProfile = async (req, res) => {
         state: permState,
         pinCode: permPinCode,
       },
+      status: "pending"
     });
 
     res.status(201).json({ success: true, data: newTeacher });
@@ -101,17 +102,6 @@ const assignClassToTeacher = async (req, res) => {
   } catch (error) {
     console.error("Error assigning class to teacher:", error);
     res.status(500).json({ success: false, message: "Failed to assign class" });
-  }
-};
-
-const getAllTeachers = async (req, res) => {
-  try {
-    const orgId = req.user.id;
-    const teachers = await Teacher.find({ orgId });
-
-    res.status(200).json({ success: true, data: teachers });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -150,9 +140,53 @@ const getSubjectsByTeacher = async (req, res) => {
   }
 };
 
+const getAllTeachers = async (req, res) => {
+  try {
+    const orgId = req.user.id;
+    const { status } = req.query;
+
+    const filter = { orgId };
+    if (status) {
+      filter.status = status;
+    }
+
+    const teachers = await Teacher.find(filter);
+    res.status(200).json({ success: true, data: teachers });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const updateTeacherStatus = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    const { status } = req.body;
+    const orgId = req.user.id;
+
+    if (!["pending", "approved", "rejected"].includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status value" });
+    }
+
+    const teacher = await Teacher.findOneAndUpdate(
+      { _id: teacherId, orgId },
+      { status },
+      { new: true }
+    );
+
+    if (!teacher) {
+      return res.status(404).json({ success: false, message: "Teacher not found or unauthorized" });
+    }
+
+    res.status(200).json({ success: true, data: teacher });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   createTeacherProfile,
   getAllTeachers,
   assignClassToTeacher,
   getSubjectsByTeacher,
+  updateTeacherStatus,
 };
