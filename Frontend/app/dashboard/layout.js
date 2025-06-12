@@ -305,8 +305,25 @@ export default function DashboardLayout({ children }) {
 
 function MenuItem({ href, label, icon }) {
   const pathname = usePathname();
-  const isActive =
-    href === "/dashboard" ? pathname === href : pathname?.startsWith(href);
+  
+  if (href === "/dashboard") {
+    const isActive = pathname === href;
+    return (
+      <li>
+        <Link
+          href={href}
+          className={`flex items-center gap-2 hover:text-blue-300 ${
+            isActive ? "text-blue-400 font-semibold" : ""
+          }`}
+        >
+          <span>{icon}</span>
+          <span>{label}</span>
+        </Link>
+      </li>
+    );
+  }
+  
+  const isActive = pathname === href;
 
   return (
     <li>
