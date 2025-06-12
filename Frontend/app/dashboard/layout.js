@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -20,6 +20,7 @@ export default function DashboardLayout({ children }) {
   const [open, setOpen] = useState(false);
 
   const router = useRouter();
+  const pathname = usePathname();
   const popoverRef = useRef(null);
   const sidebarWidth = 250;
 
@@ -42,7 +43,14 @@ export default function DashboardLayout({ children }) {
   }, [router]);
 
   const toggleMenu = useCallback((menu) => {
-    setOpenMenus((prev) => ({ ...prev, [menu]: !prev[menu] }));
+    setOpenMenus((prev) => {
+      const allClosed = Object.keys(prev).reduce((acc, key) => {
+        acc[key] = false;
+        return acc;
+      }, {});
+
+      return { ...allClosed, [menu]: !prev[menu] };
+    });
   }, []);
 
   useEffect(() => {
@@ -54,6 +62,37 @@ export default function DashboardLayout({ children }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const isAcademicsActive = [
+    "/dashboard/classes",
+    "/dashboard/subjects",
+    "/dashboard/exam",
+    "/dashboard/session",
+  ].some((path) => pathname.startsWith(path));
+
+  const isTeachersActive = [
+    "/dashboard/teachers",
+    "/dashboard/teachers/dashboard",
+    "/dashboard/teachers/manage-application",
+  ].some((path) => pathname.startsWith(path));
+
+  const isStudentsActive = [
+    "/dashboard/students",
+    "/dashboard/students/rollno",
+    "/dashboard/students/promote",
+  ].some((path) => pathname.startsWith(path));
+
+  const isAdmissionActive = ["/dashboard/admission"].some((path) =>
+    pathname.startsWith(path)
+  );
+
+  const isAttendanceActive = ["/dashboard/attendance"].some((path) =>
+    pathname.startsWith(path)
+  );
+
+  const isFeeActive = ["/dashboard/fee"].some((path) =>
+    pathname.startsWith(path)
+  );
 
   if (loading || !user) {
     return (
@@ -78,7 +117,13 @@ export default function DashboardLayout({ children }) {
         <h2 className="text-xl font-bold mb-6">School Hive</h2>
         <ul className="space-y-2 text-sm">
           <MenuItem href="/dashboard" icon="🏠" label="Home" />
-          <Dropdown label="Academics" icon="🎓" open={openMenus.academics} toggle={() => toggleMenu("academics")}>
+          <Dropdown
+            label="Academics"
+            icon="🎓"
+            open={openMenus.academics}
+            toggle={() => toggleMenu("academics")}
+            active={isAcademicsActive}
+          >
             <MenuItem href="/dashboard/classes" label="Classes" icon="📘" />
             <MenuItem href="/dashboard/subjects" label="Subjects" icon="📚" />
             <MenuItem href="/dashboard/exam" label="Exam" icon="📝" />
@@ -86,34 +131,110 @@ export default function DashboardLayout({ children }) {
           </Dropdown>
           <MenuItem href="/dashboard/notices" label="Notices" icon="📢" />
           <MenuItem href="/dashboard/calendar" label="Calendar" icon="🗓️" />
-          <Dropdown label="Teachers" icon="👨‍🏫" open={openMenus.teachers} toggle={() => toggleMenu("teachers")}>
-            <MenuItem href="/dashboard/teachers/dashboard" label="Dashboard" icon="📊" />
-            <MenuItem href="/dashboard/teachers/manage-application" label="Manage Applications" icon="📄" />
-            <MenuItem href="/dashboard/teachers" label="New Teacher" icon="➕" />
+          <Dropdown
+            label="Teachers"
+            icon="👨‍🏫"
+            open={openMenus.teachers}
+            toggle={() => toggleMenu("teachers")}
+            active={isTeachersActive}
+          >
+            <MenuItem
+              href="/dashboard/teachers/dashboard"
+              label="Dashboard"
+              icon="📊"
+            />
+            <MenuItem
+              href="/dashboard/teachers/manage-application"
+              label="Manage Applications"
+              icon="📄"
+            />
+            <MenuItem
+              href="/dashboard/teachers"
+              label="New Teacher"
+              icon="➕"
+            />
           </Dropdown>
-          <Dropdown label="Students" icon="👩‍🎓" open={openMenus.students} toggle={() => toggleMenu("students")}>
+
+          <Dropdown
+            label="Students"
+            icon="👩‍🎓"
+            open={openMenus.students}
+            toggle={() => toggleMenu("students")}
+            active={isStudentsActive}
+          >
             <MenuItem href="/dashboard/students" label="Dashboard" icon="📊" />
-            <MenuItem href="/dashboard/students/rollno" label="Manage Roll No" icon="🔢" />
-            <MenuItem href="/dashboard/students/promote" label="Promote Student" icon="📈" />
+            <MenuItem
+              href="/dashboard/students/rollno"
+              label="Manage Roll No"
+              icon="🔢"
+            />
+            <MenuItem
+              href="/dashboard/students/promote"
+              label="Promote Student"
+              icon="📈"
+            />
           </Dropdown>
-          <Dropdown label="Admission" icon="📝" open={openMenus.admission} toggle={() => toggleMenu("admission")}>
-            <MenuItem href="/dashboard/admission/stats" label="Dashboard" icon="📊" />
-            <MenuItem href="/dashboard/admission/new" label="New Admission" icon="➕" />
+
+          <Dropdown
+            label="Admission"
+            icon="📝"
+            open={openMenus.admission}
+            toggle={() => toggleMenu("admission")}
+            active={isAdmissionActive}
+          >
+            <MenuItem
+              href="/dashboard/admission/stats"
+              label="Dashboard"
+              icon="📊"
+            />
+            <MenuItem
+              href="/dashboard/admission/new"
+              label="New Admission"
+              icon="➕"
+            />
           </Dropdown>
-          <Dropdown label="Attendance" icon="🕒" open={openMenus.attendance} toggle={() => toggleMenu("attendance")}>
-            <MenuItem href="/dashboard/attendance" label="Dashboard" icon="📊" />
+
+          <Dropdown
+            label="Attendance"
+            icon="🕒"
+            open={openMenus.attendance}
+            toggle={() => toggleMenu("attendance")}
+            active={isAttendanceActive}
+          >
+            <MenuItem
+              href="/dashboard/attendance"
+              label="Dashboard"
+              icon="📊"
+            />
           </Dropdown>
-          <Dropdown label="Fee" icon="💰" open={openMenus.fee} toggle={() => toggleMenu("fee")}>
+
+          <Dropdown
+            label="Fee"
+            icon="💰"
+            open={openMenus.fee}
+            toggle={() => toggleMenu("fee")}
+            active={isFeeActive}
+          >
             <MenuItem href="/dashboard/fee" label="Dashboard" icon="📊" />
-            <MenuItem href="/dashboard/fee/structures" label="Structures" icon="🏗️" />
-            <MenuItem href="/dashboard/fee/payments" label="Payments" icon="💳" />
+            <MenuItem
+              href="/dashboard/fee/structures"
+              label="Structures"
+              icon="🏗️"
+            />
+            <MenuItem
+              href="/dashboard/fee/payments"
+              label="Payments"
+              icon="💳"
+            />
           </Dropdown>
           <MenuItem href="/dashboard/results" label="Result" icon="📈" />
-          <div className="mt-10">
-            Others
-          </div>
+          <div className="mt-10">Others</div>
           <MenuItem href="/dashboard/news" label="What's New" icon="📰" />
-          <MenuItem href="/dashboard/organization" label="Organization" icon="🏢" />
+          <MenuItem
+            href="/dashboard/organization"
+            label="Organization"
+            icon="🏢"
+          />
           <MenuItem href="/dashboard/admins" label="Admins" icon="🧑‍💼" />
           <MenuItem href="/dashboard/support" label="Support" icon="🛠️" />
           <MenuItem href="/dashboard/settings" label="Settings" icon="⚙️" />
@@ -183,9 +304,18 @@ export default function DashboardLayout({ children }) {
 }
 
 function MenuItem({ href, label, icon }) {
+  const pathname = usePathname();
+  const isActive =
+    href === "/dashboard" ? pathname === href : pathname?.startsWith(href);
+
   return (
     <li>
-      <Link href={href} className="flex items-center gap-2 hover:text-blue-300">
+      <Link
+        href={href}
+        className={`flex items-center gap-2 hover:text-blue-300 ${
+          isActive ? "text-blue-400 font-semibold" : ""
+        }`}
+      >
         <span>{icon}</span>
         <span>{label}</span>
       </Link>
@@ -193,16 +323,21 @@ function MenuItem({ href, label, icon }) {
   );
 }
 
-function Dropdown({ label, icon, open, toggle, children }) {
+function Dropdown({ label, icon, open, toggle, active, children }) {
   return (
     <li>
       <button
         onClick={toggle}
-        className="flex items-center gap-2 w-full hover:text-blue-300 cursor-pointer"
+        className={`flex items-center gap-2 w-full hover:text-blue-300 ${
+          active ? "text-blue-400 font-semibold" : ""
+        }`}
       >
         <span>{icon}</span>
         <span>{label}</span>
-        <span className="ml-auto transition-transform" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
+        <span
+          className="ml-auto transition-transform"
+          style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+        >
           <ChevronDownIcon />
         </span>
       </button>
@@ -216,7 +351,8 @@ function SearchIcon() {
     <svg
       className="lucide lucide-search h-5 w-5 text-gray-400"
       xmlns="http://www.w3.org/2000/svg"
-      width="24" height="24"
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -235,7 +371,8 @@ function ChevronDownIcon() {
     <svg
       className="lucide lucide-chevron-down h-5 w-5"
       xmlns="http://www.w3.org/2000/svg"
-      width="20" height="20"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
