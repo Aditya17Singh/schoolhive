@@ -4,10 +4,13 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function DashboardLayout({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const [openMenus, setOpenMenus] = useState({
     academics: false,
     teachers: false,
@@ -94,6 +97,14 @@ export default function DashboardLayout({ children }) {
     pathname.startsWith(path)
   );
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -110,7 +121,7 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div style={{ paddingLeft: `${sidebarWidth}px` }}>
-      <aside
+      {/* <aside
         className="fixed top-0 left-0 bg-blue-900 text-white p-4 overflow-y-auto"
         style={{ width: `${sidebarWidth}px`, height: "100vh" }}
       >
@@ -239,6 +250,180 @@ export default function DashboardLayout({ children }) {
           <MenuItem href="/dashboard/support" label="Support" icon="🛠️" />
           <MenuItem href="/dashboard/settings" label="Settings" icon="⚙️" />
         </ul>
+      </aside> */}
+      <button
+        onClick={toggleMobileMenu}
+        className="fixed top-4 left-4 z-50 lg:hidden bg-blue-900 text-white p-2 rounded-lg shadow-lg hover:bg-blue-800 transition-colors"
+        aria-label="Toggle menu"
+      >
+        {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+      </button>
+
+      
+
+      <aside
+        className={`
+          fixed top-0 left-0 bg-blue-900 text-white overflow-y-auto z-40 transition-transform duration-300 ease-in-out
+          lg:translate-x-0 lg:static lg:z-auto
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+        style={{
+          width: `${sidebarWidth}px`,
+          height: "100vh"
+        }}
+      >
+        <div className="p-4">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold">School Hive</h2>
+            <button
+              onClick={closeMobileMenu}
+              className="lg:hidden text-white hover:text-gray-300"
+              aria-label="Close menu"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Navigation Menu */}
+          <nav>
+            <ul className="space-y-2 text-sm">
+              <MenuItem href="/dashboard" icon="🏠" label="Home" />
+
+              <Dropdown
+                label="Academics"
+                icon="🎓"
+                open={openMenus.academics}
+                toggle={() => toggleMenu("academics")}
+                active={isAcademicsActive}
+              >
+                <MenuItem href="/dashboard/classes" label="Classes" icon="📘" />
+                <MenuItem href="/dashboard/subjects" label="Subjects" icon="📚" />
+                <MenuItem href="/dashboard/exam" label="Exam" icon="📝" />
+                <MenuItem href="/dashboard/session" label="Session" icon="📝" />
+              </Dropdown>
+
+              <MenuItem href="/dashboard/notices" label="Notices" icon="📢" />
+              <MenuItem href="/dashboard/calendar" label="Calendar" icon="🗓️" />
+
+              <Dropdown
+                label="Teachers"
+                icon="👨‍🏫"
+                open={openMenus.teachers}
+                toggle={() => toggleMenu("teachers")}
+                active={isTeachersActive}
+              >
+                <MenuItem
+                  href="/dashboard/teachers/dashboard"
+                  label="Dashboard"
+                  icon="📊"
+                />
+                <MenuItem
+                  href="/dashboard/teachers/manage-application"
+                  label="Manage Applications"
+                  icon="📄"
+                />
+                <MenuItem
+                  href="/dashboard/teachers"
+                  label="New Teacher"
+                  icon="➕"
+                />
+              </Dropdown>
+
+              <Dropdown
+                label="Students"
+                icon="👩‍🎓"
+                open={openMenus.students}
+                toggle={() => toggleMenu("students")}
+                active={isStudentsActive}
+              >
+                <MenuItem href="/dashboard/students" label="Dashboard" icon="📊" />
+                <MenuItem
+                  href="/dashboard/students/rollno"
+                  label="Manage Roll No"
+                  icon="🔢"
+                />
+                <MenuItem
+                  href="/dashboard/students/promote"
+                  label="Promote Student"
+                  icon="📈"
+                />
+              </Dropdown>
+
+              <Dropdown
+                label="Admission"
+                icon="📝"
+                open={openMenus.admission}
+                toggle={() => toggleMenu("admission")}
+                active={isAdmissionActive}
+              >
+                <MenuItem
+                  href="/dashboard/admission/stats"
+                  label="Dashboard"
+                  icon="📊"
+                />
+                <MenuItem
+                  href="/dashboard/admission/new"
+                  label="New Admission"
+                  icon="➕"
+                />
+              </Dropdown>
+
+              <Dropdown
+                label="Attendance"
+                icon="🕒"
+                open={openMenus.attendance}
+                toggle={() => toggleMenu("attendance")}
+                active={isAttendanceActive}
+              >
+                <MenuItem
+                  href="/dashboard/attendance"
+                  label="Dashboard"
+                  icon="📊"
+                />
+              </Dropdown>
+
+              <Dropdown
+                label="Fee"
+                icon="💰"
+                open={openMenus.fee}
+                toggle={() => toggleMenu("fee")}
+                active={isFeeActive}
+              >
+                <MenuItem href="/dashboard/fee" label="Dashboard" icon="📊" />
+                <MenuItem
+                  href="/dashboard/fee/structures"
+                  label="Structures"
+                  icon="🏗️"
+                />
+                <MenuItem
+                  href="/dashboard/fee/payments"
+                  label="Payments"
+                  icon="💳"
+                />
+              </Dropdown>
+
+              <MenuItem href="/dashboard/results" label="Result" icon="📈" />
+
+              {/* Others Section */}
+              <li className="mt-8 mb-4">
+                <div className="text-xs uppercase tracking-wider text-blue-300 font-semibold px-3">
+                  Others
+                </div>
+              </li>
+
+              <MenuItem href="/dashboard/news" label="What's New" icon="📰" />
+              <MenuItem
+                href="/dashboard/organization"
+                label="Organization"
+                icon="🏢"
+              />
+              <MenuItem href="/dashboard/admins" label="Admins" icon="🧑‍💼" />
+              <MenuItem href="/dashboard/support" label="Support" icon="🛠️" />
+              <MenuItem href="/dashboard/settings" label="Settings" icon="⚙️" />
+            </ul>
+          </nav>
+        </div>
       </aside>
 
       <div className="flex flex-col">
