@@ -19,7 +19,7 @@ export default function TeacherDashboard() {
   useEffect(() => {
     const fetchTeachersAndSubjects = async () => {
       try {
-        const { data: teacherData } = await API.get("/teachers");
+        const { data: teacherData } = await API.get("/teachers?status=approved");
         if (!teacherData.success)
           return console.error("Failed to fetch teachers");
 
