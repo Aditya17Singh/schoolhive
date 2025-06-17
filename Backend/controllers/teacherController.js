@@ -89,9 +89,22 @@ const assignClassToTeacher = async (req, res) => {
     const orgId = req.user.id;
 
     const teacher = await Teacher.findOne({ _id: teacherId, orgId });
-
     if (!teacher) {
       return res.status(404).json({ success: false, message: "Teacher not found or unauthorized" });
+    }
+
+    const existingAssignment = await Teacher.findOne({
+      _id: { $ne: teacherId },
+      assignedClass,
+      assignedSection,
+      orgId,
+    });
+
+    if (existingAssignment) {
+      return res.status(400).json({
+        success: false,
+        message: `Class ${assignedClass} - ${assignedSection} is already assigned to another teacher.`,
+      });
     }
 
     teacher.assignedClass = assignedClass;

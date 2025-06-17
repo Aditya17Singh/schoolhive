@@ -19,7 +19,9 @@ export default function TeacherDashboard() {
   useEffect(() => {
     const fetchTeachersAndSubjects = async () => {
       try {
-        const { data: teacherData } = await API.get("/teachers?status=approved");
+        const { data: teacherData } = await API.get(
+          "/teachers?status=approved"
+        );
         if (!teacherData.success)
           return console.error("Failed to fetch teachers");
 
@@ -60,21 +62,25 @@ export default function TeacherDashboard() {
 
       const { _id } = selectedTeacher;
 
-      const { data } = await API.put(`/teachers/assign/${_id}`, {
+      const response = await API.put(`/teachers/assign/${_id}`, {
         assignedClass: selectedClass,
         assignedSection: selectedSection,
       });
+
+      const data = response.data;
 
       if (data.success) {
         alert("Class assigned successfully!");
         setTeachers((prev) => prev.map((t) => (t._id === _id ? data.data : t)));
         setDialogOpen(false);
       } else {
-        alert("Failed to assign class");
+        alert(data.message || "Failed to assign class.");
       }
     } catch (error) {
       console.error("Error assigning class:", error);
-      alert("Something went wrong!");
+
+      const message = error.response?.data?.message || "Something went wrong!";
+      alert(message);
     }
   };
 
