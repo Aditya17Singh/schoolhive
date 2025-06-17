@@ -129,10 +129,10 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="p-6 flex gap-2">
-        <div className="flex-[0_1_65%]">
+      <div className="p-4 flex flex-col md:flex-row gap-4">
+        <div className="w-full md:flex-[0_1_65%]">
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <StatCard
               title="Admins"
               value={stats.totalAdmins}
@@ -151,70 +151,34 @@ export default function Dashboard() {
               color="text-green-600"
               link="/dashboard/students"
             />
-            {/* <StatCard
-              title="Fee Collection"
-              value={`₹${stats.feeCollection}`}
-              color="text-red-600" /> */}
           </div>
 
           <AttendanceChart data={attendanceData} />
-
         </div>
-        <div className="flex-[0_1_35%]">
-          {/* Notices */}
-          <div className="rounded-xl bg-white text-gray-900 shadow-md hover:shadow-lg transition-shadow duration-300 mb-6">
-            <div className="flex flex-col space-y-1.5 p-6 bg-gray-100">
+
+        <div className="w-full md:flex-[0_1_35%] space-y-4">
+          {/* Quick Actions */}
+          <div className="rounded-xl bg-white text-gray-900 shadow-md hover:shadow-lg transition-shadow duration-300">
+            <div className="flex flex-col space-y-1.5 p-4 bg-gray-100">
               <h3 className="font-semibold leading-none tracking-tight text-lg">
                 Quick Actions
               </h3>
             </div>
             <div className="p-4">
-              <div className="grid grid-cols-2 gap-3">
-                {/* Each Quick Action */}
-                <QuickAction
-                  href="/dashboard/attendance/dashboard"
-                  icon="clock"
-                  label="Attendance"
-                />
-                <QuickAction
-                  href="/dashboard/admission/stats"
-                  icon="users"
-                  label="Admission"
-                />
-                <QuickAction
-                  href="/dashboard/fee/dashboard"
-                  icon="badge-indian-rupee"
-                  label="Fees"
-                />
-                <QuickAction
-                  href="/dashboard/result/dashboard"
-                  icon="chart-no-axes-combined"
-                  label="Result"
-                />
-                <QuickAction
-                  href="/dashboard/classes"
-                  icon="users"
-                  label="Classes"
-                />
-                <QuickAction
-                  href="/dashboard/subjects"
-                  icon="book-open"
-                  label="Subjects"
-                />
-                <QuickAction
-                  href="/dashboard/students"
-                  icon="graduation-cap"
-                  label="Students"
-                />
-                <QuickAction
-                  href="/dashboard/teachers/dashboard"
-                  icon="user"
-                  label="Teachers"
-                />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <QuickAction href="/dashboard/attendance/dashboard" icon="clock" label="Attendance" />
+                <QuickAction href="/dashboard/admission/stats" icon="users" label="Admission" />
+                <QuickAction href="/dashboard/fee/dashboard" icon="badge-indian-rupee" label="Fees" />
+                <QuickAction href="/dashboard/result/dashboard" icon="chart-no-axes-combined" label="Result" />
+                <QuickAction href="/dashboard/classes" icon="users" label="Classes" />
+                <QuickAction href="/dashboard/subjects" icon="book-open" label="Subjects" />
+                <QuickAction href="/dashboard/students" icon="graduation-cap" label="Students" />
+                <QuickAction href="/dashboard/teachers/dashboard" icon="user" label="Teachers" />
               </div>
             </div>
           </div>
-          <div className="bg-white shadow-lg rounded-lg p-6">
+
+          <div className="bg-white shadow-lg rounded-lg p-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Latest Notices</h2>
             </div>
@@ -224,7 +188,7 @@ export default function Dashboard() {
                 {notices.map((notice) => (
                   <li
                     key={notice._id}
-                    className="border-b pb-2 flex justify-between items-center"
+                    className="border-b pb-2 flex flex-col sm:flex-row sm:justify-between sm:items-center"
                   >
                     {editingNotice?._id === notice._id ? (
                       <div className="w-full">
@@ -265,7 +229,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                     ) : (
-                      <div className="w-full">
+                      <div className="w-full mb-2 sm:mb-0">
                         <h3 className="text-lg font-medium">{notice.title}</h3>
                         <p className="text-gray-700">{notice.description}</p>
                         <p className="text-sm text-gray-500">
@@ -274,24 +238,22 @@ export default function Dashboard() {
                       </div>
                     )}
 
-                    <div className="flex space-x-2">
-                      {user?.role === "admin" && (
-                        <>
-                          <button
-                            onClick={() => handleEdit(notice)}
-                            className="bg-yellow-500 text-white px-3 py-1 rounded"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(notice._id)}
-                            className="bg-red-500 text-white px-3 py-1 rounded"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </div>
+                    {user?.role === "admin" && (
+                      <div className="flex space-x-2 mt-2 sm:mt-0">
+                        <button
+                          onClick={() => handleEdit(notice)}
+                          className="bg-yellow-500 text-white px-3 py-1 rounded"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(notice._id)}
+                          className="bg-red-500 text-white px-3 py-1 rounded"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>

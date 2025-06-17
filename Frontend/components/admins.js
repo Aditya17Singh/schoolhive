@@ -93,9 +93,8 @@ export default function Admins() {
       setAdmins(
         data.map((admin, index) => ({
           id: `${schoolPrefix}${String(index + 1).padStart(6, "0")}`,
-          name: `${admin.firstName} ${admin.middleName || ""} ${
-            admin.lastName
-          }`.trim(),
+          name: `${admin.firstName} ${admin.middleName || ""} ${admin.lastName
+            }`.trim(),
           email: admin.email,
           phone: admin.phone,
           permissions: admin.permissions || [],
@@ -198,37 +197,35 @@ export default function Admins() {
   };
 
   return (
-    <div className="mx-auto p-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-        <div className="flex gap-2 flex-grow max-w-full">
+    <div className="mx-auto">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start">
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search Admin..."
-            className="flex-grow h-10 rounded-md border border-gray-400 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-10 rounded-md border border-gray-400 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto flex-grow"
           />
 
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="flex items-center cursor-pointer gap-1 whitespace-nowrap rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex items-center justify-center gap-1 whitespace-nowrap rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
           >
             + New Admin
           </button>
         </div>
 
-        {/* Delete Selected */}
-        <div>
+        <div className="w-full sm:w-auto">
           <button
             type="button"
             disabled={!isDeleteEnabled}
             onClick={handleDelete}
-            className={`flex items-center gap-1 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium shadow-sm transition ${
-              isDeleteEnabled
+            className={`w-full sm:w-auto flex items-center justify-center gap-1 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium shadow-sm transition ${isDeleteEnabled
                 ? "bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
                 : "bg-red-300 text-red-700 cursor-not-allowed"
-            }`}
+              }`}
           >
             Delete Selected
           </button>
@@ -237,7 +234,7 @@ export default function Admins() {
 
       {/* Admins Table */}
       <div className="mt-6 overflow-x-auto rounded-md border border-gray-300">
-        <table className="w-full text-sm">
+        <table className="min-w-full text-sm">
           <thead className="bg-gray-100 text-gray-600">
             <tr>
               <th className="w-10 p-2 text-left">
@@ -249,12 +246,12 @@ export default function Admins() {
                   className="h-4 w-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500"
                 />
               </th>
-              <th className="p-2 text-left font-medium">Organization UID</th>
-              <th className="p-2 text-left font-medium">Admin Name</th>
-              <th className="p-2 text-left font-medium">Email Address</th>
-              <th className="p-2 text-left font-medium">Phone Number</th>
-              <th className="p-2 text-left font-medium">Permissions</th>
-              <th className="p-2 text-left font-medium">Actions</th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">Organization UID</th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">Admin Name</th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">Email Address</th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">Phone Number</th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">Permissions</th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">Actions</th>
             </tr>
           </thead>
 
@@ -263,21 +260,11 @@ export default function Admins() {
               <>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse border-b">
-                    <td className="p-2">
-                      <div className="h-4 w-10 rounded bg-gray-300 mx-auto" />
-                    </td>
-                    <td className="p-2">
-                      <div className="h-4 w-10 bg-gray-300 rounded" />
-                    </td>
-                    <td className="p-2">
-                      <div className="h-4 w-10 bg-gray-300 rounded" />
-                    </td>
-                    <td className="p-2">
-                      <div className="h-4 w-10 bg-gray-300 rounded" />
-                    </td>
-                    <td className="p-2">
-                      <div className="h-4 w-10 bg-gray-300 rounded" />
-                    </td>
+                    {[...Array(5)].map((_, idx) => (
+                      <td key={idx} className="p-2">
+                        <div className="h-4 w-10 bg-gray-300 rounded mx-auto" />
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </>
@@ -302,10 +289,10 @@ export default function Admins() {
                       className="h-4 w-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500"
                     />
                   </td>
-                  <td className="p-2">{admin.id}</td>
-                  <td className="p-2">{admin.name}</td>
-                  <td className="p-2">{admin.email}</td>
-                  <td className="p-2">{admin.phone}</td>
+                  <td className="p-2 whitespace-nowrap">{admin.id}</td>
+                  <td className="p-2 whitespace-nowrap">{admin.name}</td>
+                  <td className="p-2 whitespace-nowrap">{admin.email}</td>
+                  <td className="p-2 whitespace-nowrap">{admin.phone}</td>
                   <td className="p-2 relative">
                     <Popover.Root>
                       <Popover.Trigger asChild>
@@ -341,9 +328,7 @@ export default function Admins() {
                               <input
                                 type="checkbox"
                                 checked={admin.permissions.includes(perm)}
-                                onChange={() =>
-                                  togglePermission(admin.id, perm)
-                                }
+                                onChange={() => togglePermission(admin.id, perm)}
                                 className="accent-blue-600"
                               />
                               <span>{perm}</span>
@@ -366,8 +351,7 @@ export default function Admins() {
                       </span>
                     )}
                   </td>
-
-                  <td className="p-2">
+                  <td className="p-2 whitespace-nowrap">
                     <button
                       onClick={() =>
                         alert(`Deleting admin ${admin.name} (id: ${admin.id})`)
@@ -383,7 +367,6 @@ export default function Admins() {
           </tbody>
         </table>
       </div>
-
       {/* New Admin Dialog */}
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>

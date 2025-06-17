@@ -28,6 +28,12 @@ export default function DashboardLayout({ children }) {
   const sidebarWidth = 250;
 
   useEffect(() => {
+    if (isMobileMenuOpen) {
+      closeMobileMenu();
+    }
+  }, [pathname]);
+
+  useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
 
@@ -120,158 +126,36 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div style={{ paddingLeft: `${sidebarWidth}px` }}>
-      {/* <aside
-        className="fixed top-0 left-0 bg-blue-900 text-white p-4 overflow-y-auto"
-        style={{ width: `${sidebarWidth}px`, height: "100vh" }}
-      >
-        <h2 className="text-xl font-bold mb-6">School Hive</h2>
-        <ul className="space-y-2 text-sm">
-          <MenuItem href="/dashboard" icon="🏠" label="Home" />
-          <Dropdown
-            label="Academics"
-            icon="🎓"
-            open={openMenus.academics}
-            toggle={() => toggleMenu("academics")}
-            active={isAcademicsActive}
-          >
-            <MenuItem href="/dashboard/classes" label="Classes" icon="📘" />
-            <MenuItem href="/dashboard/subjects" label="Subjects" icon="📚" />
-            <MenuItem href="/dashboard/exam" label="Exam" icon="📝" />
-            <MenuItem href="/dashboard/session" label="Session" icon="📝" />
-          </Dropdown>
-          <MenuItem href="/dashboard/notices" label="Notices" icon="📢" />
-          <MenuItem href="/dashboard/calendar" label="Calendar" icon="🗓️" />
-          <Dropdown
-            label="Teachers"
-            icon="👨‍🏫"
-            open={openMenus.teachers}
-            toggle={() => toggleMenu("teachers")}
-            active={isTeachersActive}
-          >
-            <MenuItem
-              href="/dashboard/teachers/dashboard"
-              label="Dashboard"
-              icon="📊"
-            />
-            <MenuItem
-              href="/dashboard/teachers/manage-application"
-              label="Manage Applications"
-              icon="📄"
-            />
-            <MenuItem
-              href="/dashboard/teachers"
-              label="New Teacher"
-              icon="➕"
-            />
-          </Dropdown>
-
-          <Dropdown
-            label="Students"
-            icon="👩‍🎓"
-            open={openMenus.students}
-            toggle={() => toggleMenu("students")}
-            active={isStudentsActive}
-          >
-            <MenuItem href="/dashboard/students" label="Dashboard" icon="📊" />
-            <MenuItem
-              href="/dashboard/students/rollno"
-              label="Manage Roll No"
-              icon="🔢"
-            />
-            <MenuItem
-              href="/dashboard/students/promote"
-              label="Promote Student"
-              icon="📈"
-            />
-          </Dropdown>
-
-          <Dropdown
-            label="Admission"
-            icon="📝"
-            open={openMenus.admission}
-            toggle={() => toggleMenu("admission")}
-            active={isAdmissionActive}
-          >
-            <MenuItem
-              href="/dashboard/admission/stats"
-              label="Dashboard"
-              icon="📊"
-            />
-            <MenuItem
-              href="/dashboard/admission/new"
-              label="New Admission"
-              icon="➕"
-            />
-          </Dropdown>
-
-          <Dropdown
-            label="Attendance"
-            icon="🕒"
-            open={openMenus.attendance}
-            toggle={() => toggleMenu("attendance")}
-            active={isAttendanceActive}
-          >
-            <MenuItem
-              href="/dashboard/attendance"
-              label="Dashboard"
-              icon="📊"
-            />
-          </Dropdown>
-
-          <Dropdown
-            label="Fee"
-            icon="💰"
-            open={openMenus.fee}
-            toggle={() => toggleMenu("fee")}
-            active={isFeeActive}
-          >
-            <MenuItem href="/dashboard/fee" label="Dashboard" icon="📊" />
-            <MenuItem
-              href="/dashboard/fee/structures"
-              label="Structures"
-              icon="🏗️"
-            />
-            <MenuItem
-              href="/dashboard/fee/payments"
-              label="Payments"
-              icon="💳"
-            />
-          </Dropdown>
-          <MenuItem href="/dashboard/results" label="Result" icon="📈" />
-          <div className="mt-10">Others</div>
-          <MenuItem href="/dashboard/news" label="What's New" icon="📰" />
-          <MenuItem
-            href="/dashboard/organization"
-            label="Organization"
-            icon="🏢"
-          />
-          <MenuItem href="/dashboard/admins" label="Admins" icon="🧑‍💼" />
-          <MenuItem href="/dashboard/support" label="Support" icon="🛠️" />
-          <MenuItem href="/dashboard/settings" label="Settings" icon="⚙️" />
-        </ul>
-      </aside> */}
+    <div className="lg:pl-[250px] pt-16 lg:pt-0">
       <button
         onClick={toggleMobileMenu}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-blue-900 text-white p-2 rounded-lg shadow-lg hover:bg-blue-800 transition-colors"
+        className={`fixed top-4 left-4 z-50 lg:hidden bg-blue-900 text-white p-2 rounded-lg shadow-lg hover:bg-blue-800 transition-colors ${isMobileMenuOpen ? 'hidden' : ''}`}
         aria-label="Toggle menu"
       >
         {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
 
-      
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 bg-opacity-50 z-30 transition-opacity duration-300 ease-in-out lg:hidden"
+          onClick={closeMobileMenu}
+        ></div>
+      )}
 
       <aside
         className={`
-          fixed top-0 left-0 bg-blue-900 text-white overflow-y-auto z-40 transition-transform duration-300 ease-in-out
-          lg:translate-x-0 lg:static lg:z-auto
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
+    fixed top-0 left-0 bg-blue-900 text-white overflow-y-auto z-40
+    transform transition-transform duration-400 ease-in-out
+    ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
+    lg:translate-x-0
+  `}
         style={{
           width: `${sidebarWidth}px`,
-          height: "100vh"
+          height: "100%"
         }}
       >
+
+
         <div className="p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -427,62 +311,87 @@ export default function DashboardLayout({ children }) {
       </aside>
 
       <div className="flex flex-col">
-        <header
-          style={{ left: `${sidebarWidth}px` }}
-          className="fixed top-0 right-0 z-20 bg-[#F5F7F8] shadow-sm h-20 px-4 flex items-center justify-between"
-        >
-          <div className="relative">
-            <div className="flex gap-2 items-center px-4 border-2 border-gray-200 bg-gray-50 rounded-full w-[300px]">
-              <SearchIcon />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="flex-1 h-9 bg-transparent outline-none text-sm"
-              />
-            </div>
-          </div>
+        {/* Header */}
+        <header className="fixed top-0 right-0 left-0 lg:left-[250px] z-20 bg-[#F5F7F8] shadow-sm">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between gap-4">
 
-          <div className="flex gap-4 items-center" ref={popoverRef}>
-            <div
-              onClick={() => setOpen((prev) => !prev)}
-              className="w-max relative flex items-center px-2 py-1 hover:bg-gray-50 border border-gray-200 rounded-lg shadow-sm hover:shadow cursor-pointer gap-3 group"
-            >
-              <h2 className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                {user?.name}
-              </h2>
-              <img
-                src="https://serp-bucket-123538789.s3.amazonaws.com/uploads/6822f0fd8a0c9dee94e269f5/6822f0fd8a0c9dee94e269f5-1747120381920-market-sentiment-option1.png"
-                alt="DAV Public"
-                className="h-8 w-8 rounded-full object-cover border border-gray-200"
-              />
-              {open && (
-                <div className="absolute top-full right-0 mt-2 left-0 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                  <ul className="text-sm">
-                    <li>
-                      <Link
-                        href="/dashboard/organization"
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
-                        onClick={() => setOpen(false)}
-                      >
-                        👤 Profile
-                      </Link>
-                    </li>
-                    <li>
-                      <button
-                        className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
-                        onClick={handleSignOut}
-                      >
-                        🚪 Logout
-                      </button>
-                    </li>
-                  </ul>
+              {/* Search Bar - Hidden on mobile, visible on desktop */}
+              <div className="hidden lg:block flex-1 max-w-md">
+                <div className="flex gap-2 items-center px-4 border-2 border-gray-200 bg-gray-50 rounded-full">
+                  <SearchIcon />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="flex-1 h-9 bg-transparent outline-none text-sm"
+                  />
                 </div>
-              )}
+              </div>
+
+              {/* Spacer for mobile - pushes user menu to right */}
+              <div className="flex-1 lg:hidden"></div>
+
+              {/* User Menu */}
+              <div className="flex-shrink-0" ref={popoverRef}>
+                <div
+                  onClick={() => setOpen((prev) => !prev)}
+                  className="relative flex items-center px-2 py-1 hover:bg-gray-50 border border-gray-200 rounded-lg shadow-sm hover:shadow cursor-pointer gap-3 group min-w-0"
+                >
+                  <h2 className="text-sm font-medium text-gray-700 group-hover:text-gray-900 truncate max-w-[120px] sm:max-w-none">
+                    {user?.name}
+                  </h2>
+                  <img
+                    src="https://serp-bucket-123538789.s3.amazonaws.com/uploads/6822f0fd8a0c9dee94e269f5/6822f0fd8a0c9dee94e269f5-1747120381920-market-sentiment-option1.png"
+                    alt="User Avatar"
+                    className="h-8 w-8 rounded-full object-cover border border-gray-200 flex-shrink-0"
+                  />
+
+                  {/* Dropdown Menu */}
+                  {open && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                      <ul className="text-sm">
+                        <li>
+                          <Link
+                            href="/dashboard/organization"
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
+                            onClick={() => setOpen(false)}
+                          >
+                            👤 Profile
+                          </Link>
+                        </li>
+                        <li>
+                          <button
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
+                            onClick={handleSignOut}
+                          >
+                            🚪 Logout
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Search Bar - Below main header on mobile */}
+            <div className="lg:hidden mt-3">
+              <div className="flex gap-2 items-center px-4 border-2 border-gray-200 bg-gray-50 rounded-full">
+                <SearchIcon />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="flex-1 h-9 bg-transparent outline-none text-sm"
+                />
+              </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 pt-20 px-4 bg-white">{children}</main>
+        {/* Main Content */}
+        <main className="flex-1 pt-20 lg:pt-16 px-4 bg-white min-h-screen">
+          {children}
+        </main>
       </div>
     </div>
   );
@@ -490,16 +399,15 @@ export default function DashboardLayout({ children }) {
 
 function MenuItem({ href, label, icon }) {
   const pathname = usePathname();
-  
+
   if (href === "/dashboard") {
     const isActive = pathname === href;
     return (
       <li>
         <Link
           href={href}
-          className={`flex items-center gap-2 hover:text-blue-300 ${
-            isActive ? "text-blue-400 font-semibold" : ""
-          }`}
+          className={`flex items-center gap-2 hover:text-blue-300 ${isActive ? "text-blue-400 font-semibold" : ""
+            }`}
         >
           <span>{icon}</span>
           <span>{label}</span>
@@ -507,16 +415,15 @@ function MenuItem({ href, label, icon }) {
       </li>
     );
   }
-  
+
   const isActive = pathname === href;
 
   return (
     <li>
       <Link
         href={href}
-        className={`flex items-center gap-2 hover:text-blue-300 ${
-          isActive ? "text-blue-400 font-semibold" : ""
-        }`}
+        className={`flex items-center gap-2 hover:text-blue-300 ${isActive ? "text-blue-400 font-semibold" : ""
+          }`}
       >
         <span>{icon}</span>
         <span>{label}</span>
@@ -530,9 +437,8 @@ function Dropdown({ label, icon, open, toggle, active, children }) {
     <li>
       <button
         onClick={toggle}
-        className={`flex items-center gap-2 w-full hover:text-blue-300 ${
-          active ? "text-blue-400 font-semibold" : ""
-        }`}
+        className={`flex items-center gap-2 w-full hover:text-blue-300 ${active ? "text-blue-400 font-semibold" : ""
+          }`}
       >
         <span>{icon}</span>
         <span>{label}</span>

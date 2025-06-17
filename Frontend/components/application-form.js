@@ -242,11 +242,11 @@ export default function ApplicationForm({ orgId }) {
 
   return (
     <div
-      className={`min-h-screen mt-4 relative rounded-lg bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4 ${
-        !orgId ? "flex gap-8" : ""
-      }`}
+  className={`min-h-screen mt-4 relative rounded-lg bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4 ${
+  !orgId ? "grid gap-8 lg:grid-cols-[1fr_30%] items-start overflow-x-hidden" : ""
+}`}
     >
-      <div className="max-w-6xl mx-auto">
+      <div>
         {/* Header */}
         <div className="mb-4">
           <div className="flex items-center space-x-3">
@@ -1097,31 +1097,29 @@ export default function ApplicationForm({ orgId }) {
       </div>
 
       {!orgId && (
-        <div className="rounded-xl bg-card shadow w-96">
+        <div className="rounded-xl bg-card shadow mx-auto lg:mx-0 w-full max-w-xl">
           <div className="flex flex-col space-y-1.5 p-6">
             <h3 className="font-semibold leading-none tracking-tight">
               Add Student Automatically
             </h3>
             <p className="text-sm text-muted-foreground">
-              Share this link with student to fill out the form. After
-              submission, you'll receive a notification to review and approve
-              their addition to the organization.
+              Share this link with student to fill out the form. After submission, you'll receive a
+              notification to review and approve their addition to the organization.
             </p>
           </div>
           <div className="p-6 pt-0">
             <div className="relative border rounded-lg">
-              <div className="flex items-center gap-1 bg-muted/50 rounded-xl p-2 transition-all duration-300">
+              <div className="flex flex-col md:flex-col lg:flex-row items-stretch gap-2 bg-muted/50 rounded-xl p-2 transition-all duration-300">
                 <input
                   readOnly
-                  className="bg-transparent flex-1 text-sm outline-none font-mono text-muted-foreground truncate"
+                  className="bg-transparent w-full text-sm outline-none font-mono text-muted-foreground truncate"
                   type="text"
                   value={shareLink}
                 />
                 <button
                   onClick={handleCopy}
-                  className="inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-secondary/80 bg-secondary text-secondary-foreground shadow-sm h-8 px-3 text-xs transition-all duration-300 rounded-lg shrink-0"
+                  className="w-full lg:w-auto inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-secondary/80 bg-secondary text-secondary-foreground shadow-sm h-10 px-4 text-sm transition-all duration-300 rounded-lg shrink-0"
                 >
-                  {/* <Copy className="w-4 h-4" /> */}
                   <span>{copied ? "Copied!" : "Copy"}</span>
                 </button>
               </div>
