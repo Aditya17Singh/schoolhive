@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import API from "../lib/api";
 
 export default function TeacherRegistrationForm() {
   const [loading, setLoading] = useState(false);
@@ -14,29 +15,13 @@ export default function TeacherRegistrationForm() {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found.");
-
-      const res = await fetch("http://localhost:5000/api/teachers", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-
-      if (res.ok) {
-        alert("Teacher registered successfully!");
-        form.reset();
-      } else {
-        alert("Failed: " + result.message);
-      }
+      const res = await API.post("/teachers", data);
+      alert("Teacher registered successfully!");
+      form.reset();
     } catch (error) {
       console.error("Error:", error);
-      alert("Something went wrong.");
+      const message = error.response?.data?.message || "Something went wrong.";
+      alert("Failed: " + message);
     } finally {
       setLoading(false);
     }
