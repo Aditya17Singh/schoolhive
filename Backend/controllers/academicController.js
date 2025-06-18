@@ -56,7 +56,7 @@ exports.getActiveAcademicYear = async (req, res) => {
 // Update Admission Settings (open/close & fee)
 exports.updateAdmissionSettings = async (req, res) => {
   try {
-    const { admissionOpen, admissionFee } = req.body;
+    const { admissionOpen, admissionFee, isTeacherApplicationOpen } = req.body;
     const orgId = req.user.id;
 
     const activeYear = await AcademicYear.findOne({ orgId, isActive: true });
@@ -66,6 +66,8 @@ exports.updateAdmissionSettings = async (req, res) => {
 
     if (typeof admissionOpen !== "undefined") activeYear.admissionOpen = admissionOpen;
     if (typeof admissionFee !== "undefined") activeYear.admissionFee = admissionFee;
+    if (typeof isTeacherApplicationOpen !== "undefined")
+      activeYear.isTeacherApplicationOpen = isTeacherApplicationOpen;
 
     await activeYear.save();
 
@@ -73,8 +75,29 @@ exports.updateAdmissionSettings = async (req, res) => {
       message: "Admission settings updated successfully.",
       admissionOpen: activeYear.admissionOpen,
       admissionFee: activeYear.admissionFee,
+      isTeacherApplicationOpen: activeYear.isTeacherApplicationOpen,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getAdmissionSettings = async (req, res) => {
+  try {
+    const orgId = req.user.id;
+    const activeYear = await AcademicYear.findOne({ orgId, isActive: true });
+
+    if (!activeYear) {
+      return res.status(404).json({ message: "Active academic year not found." });
+    }
+
+    res.json({
+      admissionOpen: activeYear.admissionOpen,
+      admissionFee: activeYear.admissionFee,
+      isTeacherApplicationOpen: activeYear.isTeacherApplicationOpen,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+

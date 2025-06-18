@@ -7,6 +7,7 @@ const academicYearSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: false },
   orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
   admissionOpen: { type: Boolean, default: false },
+  isTeacherApplicationOpen: { type: Boolean , default: false },
 }, { timestamps: true });
 
 academicYearSchema.pre("save", function (next) {
