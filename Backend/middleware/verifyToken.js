@@ -13,7 +13,8 @@ const verifyToken = (req, res, next) => {
     req.originalUrl.startsWith("/api/organization/admission/settings") ||
     req.originalUrl.startsWith("/api/classes") ||
     req.originalUrl.startsWith("/api/students") ||
-    req.originalUrl.startsWith("/api/academics/active")
+    req.originalUrl.startsWith("/api/academics/active") ||
+    req.originalUrl.startsWith("/api/teachers")
   );
 
 if (isPublicRoute) {
