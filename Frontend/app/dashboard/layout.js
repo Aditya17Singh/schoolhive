@@ -182,6 +182,7 @@ export default function DashboardLayout({ children }) {
                 active={isAcademicsActive}
               >
                 <MenuItem href="/dashboard/classes" label="Classes" icon="📘" />
+                <MenuItem href="/dashboard/class-timetable" label="ClassTimetable" icon="📝" />
                 <MenuItem href="/dashboard/subjects" label="Subjects" icon="📚" />
                 <MenuItem href="/dashboard/exam" label="Exam" icon="📝" />
                 <MenuItem href="/dashboard/session" label="Session" icon="📝" />

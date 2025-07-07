@@ -16,7 +16,7 @@ export default function SubjectDashboard() {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [selectedTeachers, setSelectedTeachers] = useState([]);
   const [originalTeachers, setOriginalTeachers] = useState([]);
-
+// console.log(subjects, 'subjects');
   const fetchData = useCallback(async (endpoint, setter, key) => {
     try {
       setLoading((prev) => ({ ...prev, [key]: true }));

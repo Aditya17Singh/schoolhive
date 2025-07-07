@@ -17,6 +17,7 @@ const organizationRoutes = require("./routes/organizationRoute");
 const loginRoutes = require("./routes/loginRoutes");  
 const lessonRoutes = require("./routes/lessonRoute");
 const scheduleRoute = require("./routes/scheduleRoute");
+const timetableRoute = require("./routes/timetableRoute");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/organization", organizationRoutes);
 app.use("/api/schedule", scheduleRoute);
 app.use("/api", loginRoutes);  
+app.use("/api/timetable", timetableRoute);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)

@@ -120,8 +120,9 @@ exports.addSubjectToClass = async (req, res) => {
 
     const populatedClass = await Class.findById(classId).populate({
       path: "subjects",
-      select: "name code employee",
+      select: "name code", 
     });
+
 
     res.json({ message: "Subjects updated for class", classData: populatedClass });
   } catch (error) {
