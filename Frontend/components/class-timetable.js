@@ -33,23 +33,22 @@ const Timetable = () => {
     { number: 8, time: "01:15 PM - 01:55 PM" },
   ];
 
- useEffect(() => {
-  const fetchAllSubjects = async () => {
-    try {
-      const res = await API.get("/subjects");
-      const flatSubjects = Array.isArray(res.data.data)
-        ? res.data.data.flat()
-        : res.data.data; // in case it's already flat
+  useEffect(() => {
+    const fetchAllSubjects = async () => {
+      try {
+        const res = await API.get("/subjects");
+        const flatSubjects = Array.isArray(res.data.data)
+          ? res.data.data.flat()
+          : res.data.data;
 
-      setAllSubjects(flatSubjects);
-    } catch (error) {
-      console.error("Error fetching subjects:", error);
-    }
-  };
+        setAllSubjects(flatSubjects);
+      } catch (error) {
+        console.error("Error fetching subjects:", error);
+      }
+    };
 
-  fetchAllSubjects();
-}, []);
-
+    fetchAllSubjects();
+  }, []);
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -61,17 +60,7 @@ const Timetable = () => {
       }
     };
 
-    const fetchTeachers = async () => {
-      try {
-        const res = await API.get("/teachers");
-        setTeachers(res.data);
-      } catch (error) {
-        console.error("Error fetching teachers:", error);
-      }
-    };
-
     fetchClasses();
-    fetchTeachers();
   }, []);
 
   const handleClassChange = (e) => {
@@ -87,8 +76,6 @@ const Timetable = () => {
       );
 
       setSubjects(filteredSubjects);
-
-      // setSubjects(classSubjects);
     } else {
       setSections([]);
       setSubjects([]);
@@ -98,69 +85,101 @@ const Timetable = () => {
   const handleSearch = async () => {
     if (!classId || !section)
       return alert("Please select both class and section.");
+
     try {
       const res = await API.get("/timetable", {
         params: { classId, section },
       });
-      setTimetable(res.data);
+
+      const updatedTimetable = days.map((day) => {
+        const existingDay = res.data.find((d) => d.day === day) || {
+          day,
+          entries: [],
+        };
+
+        const filledEntries = periods.map((p) => {
+          return (
+            existingDay.entries.find((e) => e.period === p.number) || {
+              period: p.number,
+              subjectId: "",
+              teacherId: "",
+            }
+          );
+        });
+
+        return {
+          ...existingDay,
+          entries: filledEntries,
+        };
+      });
+
+      setTimetable(updatedTimetable);
     } catch (error) {
       console.error("Error fetching timetable:", error);
     }
   };
 
-const handleChange = (day, periodNumber, field, value) => {
-  setTimetable((prev) =>
-    prev.map((t) => {
-      if (t.day !== day) return t;
+  const handleChange = (day, periodNumber, field, value) => {
+    setTimetable((prev) =>
+      prev.map((t) => {
+        if (t.day !== day) return t;
 
-      const updatedEntries = t.entries.map((entry) => {
-        if (entry.period !== periodNumber) return entry;
+        const updatedEntries = t.entries.map((entry) => {
+          if (entry.period !== periodNumber) return entry;
 
-        // When subject changes, reset teacherId
-        if (field === "subjectId") {
+          // When subject changes, reset teacherId
+          if (field === "subjectId") {
+            return {
+              ...entry,
+              subjectId: value,
+              teacherId: "",
+            };
+          }
+
           return {
             ...entry,
-            subjectId: value,
-            teacherId: "", // reset teacher
+            [field]: value,
           };
-        }
+        });
 
         return {
-          ...entry,
-          [field]: value,
+          ...t,
+          entries: updatedEntries,
         };
-      });
+      })
+    );
+  };
 
-      return {
-        ...t,
-        entries: updatedEntries,
-      };
-    })
-  );
+const handleSave = async () => {
+  try {
+    for (const entry of timetable) {
+      const cleanedEntries = entry.entries.map((e) => ({
+        period: e.period,
+        subjectId:
+          typeof e.subjectId === "object"
+            ? e.subjectId._id
+            : e.subjectId?.trim?.() || null,
+        teacherId:
+          typeof e.teacherId === "object"
+            ? e.teacherId._id
+            : e.teacherId?.trim?.() || null,
+      }));
+
+      await API.post("/timetable", {
+        classId,
+        section,
+        day: entry.day,
+        entries: cleanedEntries,
+      });
+    }
+
+    alert("Timetable saved successfully.");
+  } catch (err) {
+    console.error("Error saving timetable:", err);
+    alert("Failed to save timetable.");
+  }
 };
 
-
-  const handleSave = async () => {
-    try {
-      for (const entry of timetable) {
-        await API.post("/timetable", {
-          classId,
-          section,
-          day: entry.day,
-          entries: entry.entries.map((e) => ({
-            period: e.period,
-            subjectId: e.subjectId?._id || e.subjectId || null,
-            teacherId: e.teacherId?._id || e.teacherId || null,
-          })),
-        });
-      }
-      alert("Timetable saved successfully.");
-    } catch (err) {
-      console.error("Error saving timetable:", err);
-      alert("Failed to save timetable.");
-    }
-  };
-  
 
   return (
     <div className="p-6">
@@ -226,19 +245,23 @@ const handleChange = (day, periodNumber, field, value) => {
                       (e) => e.period === period.number
                     );
 
+                    const rawSubjectId = entry?.subjectId;
                     const subjectId =
-                      entry?.subjectId?._id || entry?.subjectId || "";
-                    const teachersForSubject = subjectId
-                      ? subjectTeachers[String(subjectId)] || []
-                      : [];
+                      rawSubjectId && typeof rawSubjectId === "object"
+                        ? rawSubjectId._id
+                        : rawSubjectId || "";
 
+                    const subjectObj = subjects.find(
+                      (s) => s._id === subjectId
+                    );
+                    const teachersForSubject = subjectObj?.teachers || [];
                     return (
                       <td key={day} className="border p-2 text-xs">
                         <div>
                           {/* Subject Dropdown */}
                           <select
                             className="w-full border mb-1 p-1 text-xs"
-                            value={subjectId}
+                            value={subjectId || ""}
                             onChange={(e) => {
                               const newSubjectId = e.target.value;
                               handleChange(
@@ -249,6 +272,7 @@ const handleChange = (day, periodNumber, field, value) => {
                               );
                             }}
                           >
+                            <option value="">--Subject--</option>
                             {subjects.map((s) => (
                               <option key={s._id} value={s._id}>
                                 {s.subjectName}
@@ -256,7 +280,6 @@ const handleChange = (day, periodNumber, field, value) => {
                             ))}
                           </select>
 
-                          {/* Teacher Dropdown (only shown if a subject is selected) */}
                           <select
                             className="w-full border p-1 text-xs"
                             value={
