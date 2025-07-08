@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { useRouter } from "next/navigation";
+import CanvasBackground from "./canvas-background"
 
 export default function LoginForm() {
   const [role, setRole] = useState("admin");
@@ -80,7 +81,8 @@ export default function LoginForm() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+        <CanvasBackground />
+      <div className="z-10 w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
         <h2 className="text-center text-2xl font-bold text-gray-800">
           Sign In
         </h2>
