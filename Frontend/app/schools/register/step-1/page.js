@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerOrganization } from "../action";
 import RegistrationLayout from "../registration-layout";
+import API from "@/lib/api";
 
 const inputClass =
 	"w-full border px-4 py-2 rounded-md focus:outline-none focus:ring focus:border-blue-300";
@@ -13,6 +14,9 @@ export default function Step1Page() {
 	const [status, setStatus] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [logoPreview, setLogoPreview] = useState(null);
+	const [otpSent, setOtpSent] = useState(false);
+	const [otp, setOtp] = useState("");
+	const [otpVerified, setOtpVerified] = useState(false);
 
 	const router = useRouter();
 
@@ -78,7 +82,89 @@ export default function Step1Page() {
 				<Section title="Organization Details" subtitle="Basic info about your organization">
 					<div className="grid p-4 grid-cols-1 md:grid-cols-2 gap-4">
 						<InputField label="Organization Name" name="name" value={formData.name || ""} onChange={handleChange} />
-						<InputField label="Organization Email" name="contactEmail" type="email" value={formData.contactEmail || ""} onChange={handleChange} />
+						<div>
+							<label className="text-sm font-medium">Organization Email <span className="text-red-500">*</span></label>
+
+							<div className="flex flex-wrap gap-2 items-center">
+								<input
+									type="email"
+									name="contactEmail"
+									value={formData.contactEmail || ""}
+									onChange={handleChange}
+									placeholder="Enter organization email"
+									className="border px-3 py-2 rounded w-64"
+									required
+								/>
+
+								{!otpVerified && (
+									<button
+										type="button"
+										onClick={async () => {
+											if (!formData.contactEmail) return alert("Please enter a valid email");
+											try {
+												const { data } = await API.post("/otp/send-otp", {
+													email: formData.contactEmail,
+												});
+												if (data.success) {
+													setOtpSent(true);
+													alert(data.message);
+												} else {
+													alert("Failed to send OTP");
+												}
+											} catch (err) {
+												console.error(err);
+												alert("Error sending OTP");
+											}
+										}}
+										className="text-sm bg-blue-600 text-white px-4 py-2 rounded"
+									>
+										Send OTP
+									</button>
+								)}
+
+								{otpVerified && (
+									<span className="text-green-600 font-semibold text-sm px-2 py-1 bg-green-100 rounded">
+										✅ Email Verified
+									</span>
+								)}
+							</div>
+
+							{otpSent && !otpVerified && (
+								<div className="flex gap-2 items-center mt-1">
+									<input
+										type="text"
+										placeholder="Enter OTP"
+										value={otp}
+										onChange={(e) => setOtp(e.target.value)}
+										className="border p-2 rounded w-40"
+									/>
+									<button
+										type="button"
+										onClick={async () => {
+											try {
+												const { data } = await API.post("/otp/verify-otp", {
+													email: formData.contactEmail,
+													otp,
+												});
+
+												if (data.success) {
+													setOtpVerified(true);
+													alert("✅ Email verified!");
+												} else {
+													alert(data.message || "Invalid OTP");
+												}
+											} catch (err) {
+												console.error(err);
+												alert("Error verifying OTP");
+											}
+										}}
+										className="text-sm bg-green-600 text-white px-3 py-2 rounded"
+									>
+										Verify OTP
+									</button>
+								</div>
+							)}
+						</div>
 						<InputField label="Phone Number" name="contactPhone" value={formData.contactPhone || ""} onChange={handleChange} />
 						<InputField label="Password" name="password" type="password" value={formData.password || ""} onChange={handleChange} />
 						<InputField label="Organization Prefix" name="prefix" value={formData.prefix || ""} onChange={handleChange} />
@@ -124,8 +210,9 @@ export default function Step1Page() {
 					</p>
 					<button
 						type="submit"
-						disabled={isSubmitting}
-						className="inline-flex items-center px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+						className={`inline-flex items-center px-6 py-2 text-white rounded-md 
+  ${isSubmitting || !otpVerified ? 'bg-gray-400 cursor-not-allowed' : 'bg-black hover:bg-gray-800'}
+`}
 					>
 						{isSubmitting ? "Processing..." : "Continue"}
 						<svg
