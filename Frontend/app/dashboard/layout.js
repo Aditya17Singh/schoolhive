@@ -144,7 +144,7 @@ export default function DashboardLayout({ children }) {
 
       <aside
         className={`
-    fixed top-0 left-0 bg-blue-900 text-white overflow-y-auto z-40
+    fixed top-0 left-0 bg-[#000724] text-white overflow-y-auto z-40
     transform transition-transform duration-400 ease-in-out
     ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
     lg:translate-x-0
@@ -313,7 +313,7 @@ export default function DashboardLayout({ children }) {
 
       <div className="flex flex-col">
         {/* Header */}
-        <header className="fixed top-0 right-0 left-0 lg:left-[250px] z-20 bg-[#F5F7F8] shadow-sm">
+        <header className="fixed top-0 right-0 left-0 lg:left-[250px] z-20 bg-[#000724] shadow-sm">
           <div className="px-4 py-3">
             <div className="flex items-center justify-between gap-4">
 
@@ -336,9 +336,9 @@ export default function DashboardLayout({ children }) {
               <div className="flex-shrink-0" ref={popoverRef}>
                 <div
                   onClick={() => setOpen((prev) => !prev)}
-                  className="relative flex items-center px-2 py-1 hover:bg-gray-50 border border-gray-200 rounded-lg shadow-sm hover:shadow cursor-pointer gap-3 group min-w-0"
+                  className="relative flex items-center px-2 py-1 hover:bg-gray-50 rounded-lg shadow-sm hover:shadow cursor-pointer gap-3 group min-w-0"
                 >
-                  <h2 className="text-sm font-medium text-gray-700 group-hover:text-gray-900 truncate max-w-[120px] sm:max-w-none">
+                  <h2 className="text-sm font-medium text-white group-hover:text-gray-900 truncate max-w-[120px] sm:max-w-none">
                     {user?.name}
                   </h2>
                   <img
