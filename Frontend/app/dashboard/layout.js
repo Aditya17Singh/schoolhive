@@ -144,7 +144,7 @@ export default function DashboardLayout({ children }) {
 
       <aside
         className={`
-    fixed top-0 left-0 bg-[#000724] text-white overflow-y-auto z-40
+    fixed top-0 left-0 bg-[#000724] text-white overflow-y-auto z-40 custom-scrollbar
     transform transition-transform duration-400 ease-in-out
     ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
     lg:translate-x-0
