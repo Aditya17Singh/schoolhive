@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }) {
   const handleSignOut = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.replace("/");
+    router.replace("/login");
   }, [router]);
 
   const toggleMenu = useCallback((menu) => {
@@ -316,7 +316,56 @@ export default function DashboardLayout({ children }) {
         <header className="fixed top-0 right-0 left-0 lg:left-[250px] z-20 bg-[#000724] shadow-sm">
           <div className="px-4 py-3">
             <div className="flex items-center justify-between gap-4">
-
+ <div>
+      <Link href="/dashboard/ai">
+        <button
+          type="button"
+          aria-label="Go to SAAR dashboard. Available SAAR Credits: 100"
+          title="Available SAAR Credits: 100"
+          className="
+            group
+            flex items-center gap-3 px-4 py-2 rounded-full border border-blue-200
+            bg-white shadow-md hover:shadow-lg
+            transition-all duration-150
+            hover:bg-blue-50
+            focus:outline-none focus:ring-2 focus:ring-blue-400
+            cursor-pointer
+          "
+        >
+          <span className="text-base font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">
+            AI
+          </span>
+          <div
+            className="
+              flex items-center gap-1
+              bg-gradient-to-r from-blue-500 to-indigo-500
+              rounded-full px-3 py-1
+              text-white text-sm font-semibold
+              shadow
+              border border-blue-600
+              transition-all
+              group-hover:scale-105
+            "
+          >
+            <span className="text-sm font-bold">100</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="lucide lucide-flame h-4 w-4 text-white ml-1"
+            >
+              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+            </svg>
+          </div>
+        </button>
+      </Link>
+    </div>
               {/* Search Bar - Hidden on mobile, visible on desktop */}
               <div className="hidden lg:block flex-1 max-w-md">
                 <div className="flex gap-2 items-center px-4 border-2 border-gray-200 bg-gray-50 rounded-full">
