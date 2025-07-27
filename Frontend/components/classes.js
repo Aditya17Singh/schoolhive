@@ -244,7 +244,7 @@ export default function ClassList() {
           type="text"
           value={search}
           onChange={handleClassSearch}
-          className="w-full border px-3 py-2 pl-10 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+          className="w-[34%] border px-3 py-2 pl-10 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
           placeholder="Search ClassName..."
         />
         <svg

@@ -4,7 +4,35 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
+
+import {
+  Menu,
+  X,
+  Home,
+  GraduationCap,
+  BookOpen,
+  ClipboardList,
+  Bell,
+  CalendarDays,
+  Users,
+  UserPlus,
+  FileText,
+  LineChart,
+  DollarSign,
+  LayoutDashboard,
+  Building,
+  Newspaper,
+  Settings,
+  LifeBuoy,
+  BadgeCheck,
+  Hash,
+  ArrowUp,
+  Plus,
+  Clock,
+  CreditCard,
+  UserCog,
+  Blocks,
+} from "lucide-react";
 
 export default function DashboardLayout({ children }) {
   const [user, setUser] = useState(null);
@@ -129,10 +157,16 @@ export default function DashboardLayout({ children }) {
     <div className="lg:pl-[250px] pt-16 lg:pt-0">
       <button
         onClick={toggleMobileMenu}
-        className={`fixed top-4 left-4 z-50 lg:hidden bg-blue-900 text-white p-2 rounded-lg shadow-lg hover:bg-blue-800 transition-colors ${isMobileMenuOpen ? 'hidden' : ''}`}
+        className={`fixed top-4 left-4 z-50 lg:hidden bg-blue-900 text-white p-2 rounded-lg shadow-lg transition-colors ${
+          isMobileMenuOpen ? "hidden" : ""
+        }`}
         aria-label="Toggle menu"
       >
-        {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        {isMobileMenuOpen ? (
+          <X className="w-6 h-6" />
+        ) : (
+          <Menu className="w-6 h-6" />
+        )}
       </button>
 
       {isMobileMenuOpen && (
@@ -144,18 +178,16 @@ export default function DashboardLayout({ children }) {
 
       <aside
         className={`
-    fixed top-0 left-0 bg-[#000724] text-white overflow-y-auto z-40 custom-scrollbar
+    fixed top-0 left-0 bg-[#F5F7F8] text-black overflow-y-auto z-40 custom-scrollbar
     transform transition-transform duration-400 ease-in-out
-    ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
+    ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} 
     lg:translate-x-0
   `}
         style={{
           width: `${sidebarWidth}px`,
-          height: "100%"
+          height: "100%",
         }}
       >
-
-
         <div className="p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -171,29 +203,61 @@ export default function DashboardLayout({ children }) {
 
           {/* Navigation Menu */}
           <nav>
-            <ul className="space-y-2 text-sm">
-              <MenuItem href="/dashboard" icon="🏠" label="Home" />
+            <ul className="space-y-2 text-[15px] font-medium text-gray-600">
+              <MenuItem
+                href="/dashboard"
+                icon={<Home className="w-4 h-4" />}
+                label="Home"
+              />
 
               <Dropdown
                 label="Academics"
-                icon="🎓"
+                icon={<GraduationCap className="w-4 h-4" />}
                 open={openMenus.academics}
                 toggle={() => toggleMenu("academics")}
                 active={isAcademicsActive}
               >
-                <MenuItem href="/dashboard/classes" label="Classes" icon="📘" />
-                <MenuItem href="/dashboard/class-timetable" label="ClassTimetable" icon="📝" />
-                <MenuItem href="/dashboard/subjects" label="Subjects" icon="📚" />
-                <MenuItem href="/dashboard/exam" label="Exam" icon="📝" />
-                <MenuItem href="/dashboard/session" label="Session" icon="📝" />
+                <MenuItem
+                  href="/dashboard/classes"
+                  label="Classes"
+                  icon={<BookOpen className="w-4 h-4" />}
+                />
+                <MenuItem
+                  href="/dashboard/class-timetable"
+                  label="Class Timetable"
+                  icon={<ClipboardList className="w-4 h-4" />}
+                />
+                <MenuItem
+                  href="/dashboard/subjects"
+                  label="Subjects"
+                  icon={<BookOpen className="w-4 h-4" />}
+                />
+                <MenuItem
+                  href="/dashboard/exam"
+                  label="Exam"
+                  icon={<ClipboardList className="w-4 h-4" />}
+                />
+                <MenuItem
+                  href="/dashboard/session"
+                  label="Session"
+                  icon={<ClipboardList className="w-4 h-4" />}
+                />
               </Dropdown>
 
-              <MenuItem href="/dashboard/notices" label="Notices" icon="📢" />
-              <MenuItem href="/dashboard/calendar" label="Calendar" icon="🗓️" />
+              <MenuItem
+                href="/dashboard/notices"
+                label="Notices"
+                icon={<Bell className="w-4 h-4" />}
+              />
+              <MenuItem
+                href="/dashboard/calendar"
+                label="Calendar"
+                icon={<CalendarDays className="w-4 h-4" />}
+              />
 
               <Dropdown
                 label="Teachers"
-                icon="👨‍🏫"
+                icon={<Users className="w-4 h-4" />}
                 open={openMenus.teachers}
                 toggle={() => toggleMenu("teachers")}
                 active={isTeachersActive}
@@ -201,43 +265,47 @@ export default function DashboardLayout({ children }) {
                 <MenuItem
                   href="/dashboard/teachers/dashboard"
                   label="Dashboard"
-                  icon="📊"
+                  icon={<LayoutDashboard className="w-4 h-4" />}
                 />
                 <MenuItem
                   href="/dashboard/teachers/manage-application"
                   label="Manage Applications"
-                  icon="📄"
+                  icon={<FileText className="w-4 h-4" />}
                 />
                 <MenuItem
                   href="/dashboard/teachers"
                   label="New Teacher"
-                  icon="➕"
+                  icon={<UserPlus className="w-4 h-4" />}
                 />
               </Dropdown>
 
               <Dropdown
                 label="Students"
-                icon="👩‍🎓"
+                icon={<Users className="w-4 h-4" />}
                 open={openMenus.students}
                 toggle={() => toggleMenu("students")}
                 active={isStudentsActive}
               >
-                <MenuItem href="/dashboard/students" label="Dashboard" icon="📊" />
+                <MenuItem
+                  href="/dashboard/students"
+                  label="Dashboard"
+                  icon={<LayoutDashboard className="w-4 h-4" />}
+                />
                 <MenuItem
                   href="/dashboard/students/rollno"
                   label="Manage Roll No"
-                  icon="🔢"
+                  icon={<Hash className="w-4 h-4" />}
                 />
                 <MenuItem
                   href="/dashboard/students/promote"
                   label="Promote Student"
-                  icon="📈"
+                  icon={<ArrowUp className="w-4 h-4" />}
                 />
               </Dropdown>
 
               <Dropdown
                 label="Admission"
-                icon="📝"
+                icon={<FileText className="w-4 h-4" />}
                 open={openMenus.admission}
                 toggle={() => toggleMenu("admission")}
                 active={isAdmissionActive}
@@ -245,18 +313,18 @@ export default function DashboardLayout({ children }) {
                 <MenuItem
                   href="/dashboard/admission/stats"
                   label="Dashboard"
-                  icon="📊"
+                  icon={<LayoutDashboard className="w-4 h-4" />}
                 />
                 <MenuItem
                   href="/dashboard/admission/new"
                   label="New Admission"
-                  icon="➕"
+                  icon={<Plus className="w-4 h-4" />}
                 />
               </Dropdown>
 
               <Dropdown
                 label="Attendance"
-                icon="🕒"
+                icon={<Clock className="w-4 h-4" />}
                 open={openMenus.attendance}
                 toggle={() => toggleMenu("attendance")}
                 active={isAttendanceActive}
@@ -264,48 +332,72 @@ export default function DashboardLayout({ children }) {
                 <MenuItem
                   href="/dashboard/attendance"
                   label="Dashboard"
-                  icon="📊"
+                  icon={<LayoutDashboard className="w-4 h-4" />}
                 />
               </Dropdown>
 
               <Dropdown
                 label="Fee"
-                icon="💰"
+                icon={<DollarSign className="w-4 h-4" />}
                 open={openMenus.fee}
                 toggle={() => toggleMenu("fee")}
                 active={isFeeActive}
               >
-                <MenuItem href="/dashboard/fee" label="Dashboard" icon="📊" />
+                <MenuItem
+                  href="/dashboard/fee"
+                  label="Dashboard"
+                  icon={<LayoutDashboard className="w-4 h-4" />}
+                />
                 <MenuItem
                   href="/dashboard/fee/structures"
                   label="Structures"
-                  icon="🏗️"
+                  icon={<Blocks className="w-4 h-4" />}
                 />
                 <MenuItem
                   href="/dashboard/fee/payments"
                   label="Payments"
-                  icon="💳"
+                  icon={<CreditCard className="w-4 h-4" />}
                 />
               </Dropdown>
 
-              <MenuItem href="/dashboard/results" label="Result" icon="📈" />
+              <MenuItem
+                href="/dashboard/results"
+                label="Result"
+                icon={<LineChart className="w-4 h-4" />}
+              />
 
               {/* Others Section */}
               <li className="mt-8 mb-4">
-                <div className="text-xs uppercase tracking-wider text-blue-300 font-semibold px-3">
+                <div className="text-xs uppercase tracking-wider font-semibold px-3">
                   Others
                 </div>
               </li>
 
-              <MenuItem href="/dashboard/news" label="What's New" icon="📰" />
+              <MenuItem
+                href="/dashboard/news"
+                label="What's New"
+                icon={<Newspaper className="w-4 h-4" />}
+              />
               <MenuItem
                 href="/dashboard/organization"
                 label="Organization"
-                icon="🏢"
+                icon={<Building className="w-4 h-4" />}
               />
-              <MenuItem href="/dashboard/admins" label="Admins" icon="🧑‍💼" />
-              <MenuItem href="/dashboard/support" label="Support" icon="🛠️" />
-              <MenuItem href="/dashboard/settings" label="Settings" icon="⚙️" />
+              <MenuItem
+                href="/dashboard/admins"
+                label="Admins"
+                icon={<UserCog className="w-4 h-4" />}
+              />
+              <MenuItem
+                href="/dashboard/support"
+                label="Support"
+                icon={<LifeBuoy className="w-4 h-4" />}
+              />
+              <MenuItem
+                href="/dashboard/settings"
+                label="Settings"
+                icon={<Settings className="w-4 h-4" />}
+              />
             </ul>
           </nav>
         </div>
@@ -313,16 +405,16 @@ export default function DashboardLayout({ children }) {
 
       <div className="flex flex-col">
         {/* Header */}
-        <header className="fixed top-0 right-0 left-0 lg:left-[250px] z-20 bg-[#000724] shadow-sm">
+        <header className="fixed top-0 right-0 left-0 lg:left-[250px] z-20 bg-white shadow-sm">
           <div className="px-4 py-3">
             <div className="flex items-center justify-between gap-4">
- <div>
-      <Link href="/dashboard/ai">
-        <button
-          type="button"
-          aria-label="Go to SAAR dashboard. Available SAAR Credits: 100"
-          title="Available SAAR Credits: 100"
-          className="
+              <div>
+                <Link href="/dashboard/ai">
+                  <button
+                    type="button"
+                    aria-label="Go to AI dashboard. Available AI Credits: 100"
+                    title="Available AI Credits: 100"
+                    className="
             group
             flex items-center gap-3 px-4 py-2 rounded-full border border-blue-200
             bg-white shadow-md hover:shadow-lg
@@ -331,12 +423,12 @@ export default function DashboardLayout({ children }) {
             focus:outline-none focus:ring-2 focus:ring-blue-400
             cursor-pointer
           "
-        >
-          <span className="text-base font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">
-            AI
-          </span>
-          <div
-            className="
+                  >
+                    <span className="text-base font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">
+                      AI
+                    </span>
+                    <div
+                      className="
               flex items-center gap-1
               bg-gradient-to-r from-blue-500 to-indigo-500
               rounded-full px-3 py-1
@@ -346,26 +438,26 @@ export default function DashboardLayout({ children }) {
               transition-all
               group-hover:scale-105
             "
-          >
-            <span className="text-sm font-bold">100</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-flame h-4 w-4 text-white ml-1"
-            >
-              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
-            </svg>
-          </div>
-        </button>
-      </Link>
-    </div>
+                    >
+                      <span className="text-sm font-bold">100</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-flame h-4 w-4 text-white ml-1"
+                      >
+                        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                      </svg>
+                    </div>
+                  </button>
+                </Link>
+              </div>
               {/* Search Bar - Hidden on mobile, visible on desktop */}
               <div className="hidden lg:block flex-1 max-w-md">
                 <div className="flex gap-2 items-center px-4 border-2 border-gray-200 bg-gray-50 rounded-full">
@@ -387,7 +479,7 @@ export default function DashboardLayout({ children }) {
                   onClick={() => setOpen((prev) => !prev)}
                   className="relative flex items-center px-2 py-1 hover:bg-gray-50 rounded-lg shadow-sm hover:shadow cursor-pointer gap-3 group min-w-0"
                 >
-                  <h2 className="text-sm font-medium text-white group-hover:text-gray-900 truncate max-w-[120px] sm:max-w-none">
+                  <h2 className="text-sm font-medium text-black group-hover:text-gray-900 truncate max-w-[120px] sm:max-w-none">
                     {user?.name}
                   </h2>
                   <img
@@ -439,7 +531,7 @@ export default function DashboardLayout({ children }) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 pt-20 lg:pt-16 px-4 bg-white min-h-screen">
+        <main className="flex-1 pt-20 lg:pt-16 bg-white min-h-screen">
           {children}
         </main>
       </div>
@@ -456,8 +548,9 @@ function MenuItem({ href, label, icon }) {
       <li>
         <Link
           href={href}
-          className={`flex items-center gap-2 hover:text-blue-300 ${isActive ? "text-blue-400 font-semibold" : ""
-            }`}
+          className={`flex items-center gap-2 ${
+            isActive ? "text-blue-400 font-semibold" : ""
+          }`}
         >
           <span>{icon}</span>
           <span>{label}</span>
@@ -472,8 +565,9 @@ function MenuItem({ href, label, icon }) {
     <li>
       <Link
         href={href}
-        className={`flex items-center gap-2 hover:text-blue-300 ${isActive ? "text-blue-400 font-semibold" : ""
-          }`}
+        className={`flex items-center gap-2 ${
+          isActive ? "text-blue-400 font-semibold" : ""
+        }`}
       >
         <span>{icon}</span>
         <span>{label}</span>
@@ -487,8 +581,9 @@ function Dropdown({ label, icon, open, toggle, active, children }) {
     <li>
       <button
         onClick={toggle}
-        className={`flex items-center gap-2 w-full hover:text-blue-300 ${active ? "text-blue-400 font-semibold" : ""
-          }`}
+        className={`flex items-center gap-2 w-full ${
+          active ? "text-blue-400 font-semibold" : ""
+        }`}
       >
         <span>{icon}</span>
         <span>{label}</span>

@@ -149,7 +149,7 @@ export default function AdmissionSettingsCard() {
   };
 
   return (
-    <div className="mt-4">
+    <div className="mt-4 pl-4">
       <div className="mb-4">
         <Link href="/dashboard/admission/manage-admission">
           <button className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm">

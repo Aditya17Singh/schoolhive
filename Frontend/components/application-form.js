@@ -242,7 +242,7 @@ export default function ApplicationForm({ orgId }) {
 
   return (
     <div
-      className={`min-h-screen mt-4 relative rounded-lg bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4 ${!orgId ? "grid gap-8 lg:grid-cols-[1fr_30%] items-start overflow-x-hidden" : ""
+      className={`min-h-screen mt-4 relative rounded-lg py-8 px-4 ${!orgId ? "grid gap-8 lg:grid-cols-[1fr_30%] items-start overflow-x-hidden" : ""
         }`}
     >
       <div>
