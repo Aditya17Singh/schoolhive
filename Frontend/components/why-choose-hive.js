@@ -29,7 +29,7 @@ const WhyChooseHive = () => {
               What makes us different
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-800">
-              Why Choose Indigle ERP?
+              Why Choose SchoolHive ERP?
             </h2>
           </div>
 

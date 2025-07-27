@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { useRouter } from "next/navigation";
-import CanvasBackground from "./canvas-background"
+import CanvasBackground from "./canvas-background";
+import { Mail, Lock, Phone, Building2, Loader2 } from "lucide-react";
 
 export default function LoginForm() {
-  const [role, setRole] = useState("admin");
+  const [role, setRole] = useState("organization");
   const [orgUid, setOrgUid] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -81,17 +82,20 @@ export default function LoginForm() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
-        <CanvasBackground />
-      <div className="z-10 w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
-        <h2 className="text-center text-2xl font-bold text-gray-800">
+      {/* <CanvasBackground /> */}
+      <div className="z-10 w-full max-w-md rounded-xl bg-white p-8 shadow-xl border border-gray-100">
+        <h2 className="text-center text-3xl font-bold text-gray-800 tracking-tight">
           Sign In
         </h2>
         {error && (
-          <p className="mt-2 text-center text-sm text-red-500">{error}</p>
+          <p className="mt-3 text-center text-sm text-red-500 font-medium">
+            {error}
+          </p>
         )}
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          {/* Role Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Role
             </label>
             <select
@@ -103,21 +107,22 @@ export default function LoginForm() {
                 setOrgUid("");
                 setPassword("");
               }}
-              className="mt-1 w-full rounded-md border border-gray-300 p-2"
+              className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
             >
-              <option value="admin">Admin</option>
-              <option value="teacher">Teacher</option>
               <option value="organization">Organization</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
 
           {/* Admin: Email or Organization UID */}
           {role === "admin" && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Email or Organization UID
-                </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email or Organization UID
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   value={email || orgUid}
@@ -126,19 +131,20 @@ export default function LoginForm() {
                     setOrgUid(e.target.value);
                   }}
                   placeholder="Enter email or org UID"
-                  className="mt-1 w-full rounded-md border border-gray-300 p-2"
+                  className="w-full rounded-md border border-gray-300 pl-9 pr-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                 />
               </div>
-            </>
+            </div>
           )}
 
           {/* Teacher: Phone or Organization UID */}
           {role === "teacher" && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Phone Number or Organization UID
-                </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number or Organization UID
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   value={phone || orgUid}
@@ -147,52 +153,66 @@ export default function LoginForm() {
                     setOrgUid(e.target.value);
                   }}
                   placeholder="Enter phone or org UID"
-                  className="mt-1 w-full rounded-md border border-gray-300 p-2"
+                  className="w-full rounded-md border border-gray-300 pl-9 pr-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                 />
               </div>
-            </>
+            </div>
           )}
 
           {/* Organization: Email only */}
           {role === "organization" && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Organization Email
-                </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Organization Email
+              </label>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="example@org.com"
-                  className="mt-1 w-full rounded-md border border-gray-300 p-2"
+                  className="w-full rounded-md border border-gray-300 pl-9 pr-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
                 />
               </div>
-            </>
+            </div>
           )}
 
-          {/* Password for all roles */}
+          {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="mt-1 w-full rounded-md border border-gray-300 p-2"
-            />
+            <div className="relative">
+              <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full rounded-md border border-gray-300 pl-9 pr-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:outline-none"
+              />
+            </div>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full rounded-md py-2 text-white font-semibold transition ${
-              loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+            className={`w-full rounded-md py-2 text-white font-semibold shadow-md transition-all flex items-center justify-center gap-2 ${
+              loading
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
-            {loading ? "Login..." : "Login"}
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Logging in...
+              </>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
       </div>
