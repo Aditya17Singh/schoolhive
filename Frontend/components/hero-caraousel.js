@@ -5,9 +5,9 @@ import { useState, useEffect } from "react";
 const slides = [
   {
     title: "Tailored for Schools and Academy",
-    subtitle: "Welcome to Indigle",
+    subtitle: "Welcome to SchoolHive",
     description:
-      "Indigle ERP is designed with Indian education standards and workflows in mind. Easily handle CBSE, ICSE, State board reports and statutory compliance—no customization headaches.",
+      "SchoolHive ERP is designed with Indian education standards and workflows in mind. Easily handle CBSE, ICSE, State board reports and statutory compliance—no customization headaches.",
     image: "/school/indigle-portal-women.png",
   },
   {
