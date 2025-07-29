@@ -148,7 +148,6 @@ exports.getAllStudent = async (req, res) => {
   }
 };
 
-
 exports.getStudentStats = async (req, res) => {
   try {
     const orgId = req.user.id;
@@ -183,5 +182,25 @@ exports.getStudentStats = async (req, res) => {
   } catch (error) {
     console.error("Error fetching stats:", error);
     res.status(500).json({ message: "Server error", details: error.message });
+  }
+};
+
+exports.promoteStudents = async (req, res) => {
+  try {
+    const { studentIds, newClassId, newSection } = req.body;
+
+    if (!studentIds || !newClassId || !newSection) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const updated = await Student.updateMany(
+      { _id: { $in: studentIds } },
+      { $set: { class: newClassId, section: newSection } }
+    );
+
+    res.status(200).json({ message: "Students promoted", updated });
+  } catch (error) {
+    console.error("Promote error:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 };

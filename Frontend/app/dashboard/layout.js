@@ -33,7 +33,7 @@ import {
   UserCog,
   Blocks,
   User,
-  LogOut
+  LogOut,
 } from "lucide-react";
 
 export default function DashboardLayout({ children }) {
@@ -299,7 +299,7 @@ export default function DashboardLayout({ children }) {
                   icon={<Hash className="w-4 h-4" />}
                 />
                 <MenuItem
-                  href="/dashboard/students/promote"
+                  href="/dashboard/promote-students"
                   label="Promote Student"
                   icon={<ArrowUp className="w-4 h-4" />}
                 />
@@ -493,25 +493,25 @@ export default function DashboardLayout({ children }) {
                   {/* Dropdown Menu */}
                   {open && (
                     <div className="absolute top-full right-0 mt-2 left-0 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                     <ul className="text-sm">
-  <li>
-    <Link
-      href="/dashboard/organization"
-      className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
-      onClick={() => setOpen(false)}
-    >
-      <User className="h-4 w-4" /> Profile
-    </Link>
-  </li>
-  <li>
-    <button
-      className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
-      onClick={handleSignOut}
-    >
-      <LogOut className="h-4 w-4" /> Logout
-    </button>
-  </li>
-</ul>
+                      <ul className="text-sm">
+                        <li>
+                          <Link
+                            href="/dashboard/organization"
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
+                            onClick={() => setOpen(false)}
+                          >
+                            <User className="h-4 w-4" /> Profile
+                          </Link>
+                        </li>
+                        <li>
+                          <button
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
+                            onClick={handleSignOut}
+                          >
+                            <LogOut className="h-4 w-4" /> Logout
+                          </button>
+                        </li>
+                      </ul>
                     </div>
                   )}
                 </div>
