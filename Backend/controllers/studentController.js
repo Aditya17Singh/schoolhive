@@ -2,53 +2,127 @@ const Student = require("../models/Student");
 const Organization = require("../models/Organization");
 const Class = require("../models/Class");
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 exports.createStudent = async (req, res) => {
   try {
     if (!req.body) {
       return res.status(400).json({ error: "No form data received" });
     }
-
-    const orgId = req.user.id; 
+    const orgId = req.user.id;
 
     const org = await Organization.findById(orgId);
     if (!org) return res.status(404).json({ error: "Organization not found" });
 
-    const orgName = org.orgName.replace(/\s+/g, '').toUpperCase(); 
+    const orgName = org.orgName.replace(/\s+/g, "").toUpperCase();
     const {
-      classId, fName, mName, lName, dob, gender, religion, nationality, category,
-      admissionClass, contactNumber, email, permanentAddress, residentialAddress,
-      sameAsPermanent, fatherName, fatherPhone, fatherEmail,
-      motherName, motherPhone, motherEmail,
-      guardianName, guardianPhone, session, aadhaarNumber, abcId
+      classId,
+      fName,
+      mName,
+      lName,
+      dob,
+      gender,
+      religion,
+      nationality,
+      category,
+      admissionClass,
+      contactNumber,
+      email,
+      permanentAddress,
+      residentialAddress,
+      sameAsPermanent,
+      fatherName,
+      fatherPhone,
+      fatherEmail,
+      motherName,
+      motherPhone,
+      motherEmail,
+      guardianName,
+      guardianPhone,
+      session,
+      aadhaarNumber,
+      abcId,
     } = req.body;
 
-     const startYear = session.split('-')[0]; 
+    const startYear = session.split("-")[0];
     // Count previous students for this org & session
     const count = await Student.countDocuments({ orgId, session });
-    const nextNumber = (count + 1).toString().padStart(5, '0'); 
+    const nextNumber = (count + 1).toString().padStart(5, "0");
 
-    const orgUID = `${orgName}${startYear}${nextNumber}`; 
+    const orgUID = `${orgName}${startYear}${nextNumber}`;
+
+    const classDoc = await Class.findOne({ name: admissionClass, orgId });
+    if (!classDoc) {
+      return res.status(404).json({ error: "Class not found" });
+    }
+
+    let selectedSection = null;
+    const maxSectionCapacity = 30;
+
+    for (const sec of classDoc.sections) {
+      const count = await Student.countDocuments({
+        orgId,
+        admissionClass,
+        section: sec,
+        session,
+        status: { $in: ["pending", "admitted"] },
+      });
+
+      if (count < maxSectionCapacity) {
+        selectedSection = sec;
+        break;
+      }
+    }
+
+    if (!selectedSection) {
+      return res
+        .status(400)
+        .json({ error: "All sections for this class are full." });
+    }
 
     const studentData = {
-      fName, mName, lName, dob, gender, religion, nationality, category,
-      admissionClass, contactNumber, email, permanentAddress, residentialAddress,
-      sameAsPermanent, fatherName, fatherPhone, fatherEmail,
-      motherName, motherPhone, motherEmail, guardianName, guardianPhone,
-      session, aadhaarNumber, abcId,
+      fName,
+      mName,
+      lName,
+      dob,
+      gender,
+      religion,
+      nationality,
+      category,
+      admissionClass,
+      contactNumber,
+      email,
+      permanentAddress,
+      residentialAddress,
+      sameAsPermanent,
+      fatherName,
+      fatherPhone,
+      fatherEmail,
+      motherName,
+      motherPhone,
+      motherEmail,
+      guardianName,
+      guardianPhone,
+      session,
+      aadhaarNumber,
+      abcId,
       orgUID,
       class: classId,
+      section: selectedSection,
       orgId,
-      status: 'pending' 
+      status: "pending",
     };
 
     if (req.files) {
       if (req.files.avatar) studentData.avatar = req.files.avatar[0].path;
-      if (req.files.aadharCard) studentData.aadharCard = req.files.aadharCard[0].path;
-      if (req.files.previousSchoolTC) studentData.previousSchoolTC = req.files.previousSchoolTC[0].path;
-      if (req.files.medicalCertificate) studentData.medicalCertificate = req.files.medicalCertificate[0].path;
-      if (req.files.birthCertificate) studentData.birthCertificate = req.files.birthCertificate[0].path;
+      if (req.files.aadharCard)
+        studentData.aadharCard = req.files.aadharCard[0].path;
+      if (req.files.previousSchoolTC)
+        studentData.previousSchoolTC = req.files.previousSchoolTC[0].path;
+      if (req.files.medicalCertificate)
+        studentData.medicalCertificate = req.files.medicalCertificate[0].path;
+      if (req.files.birthCertificate)
+        studentData.birthCertificate = req.files.birthCertificate[0].path;
     }
 
     const newStudent = new Student(studentData);
@@ -57,7 +131,9 @@ exports.createStudent = async (req, res) => {
     res.status(201).json(newStudent);
   } catch (err) {
     console.error(err);
-    res.status(400).json({ error: "Error creating student", details: err.message });
+    res
+      .status(400)
+      .json({ error: "Error creating student", details: err.message });
   }
 };
 
@@ -69,7 +145,9 @@ exports.getAllStudentsForSchool = async (req, res) => {
     }
 
     // Only fetch admitted students
-    const students = await Student.find({ orgId, status: 'admitted' }).sort({ createdAt: -1 });
+    const students = await Student.find({ orgId, status: "admitted" }).sort({
+      createdAt: -1,
+    });
 
     res.status(200).json(students);
   } catch (error) {
@@ -91,16 +169,16 @@ exports.getGenderDistribution = async (req, res) => {
       {
         $group: {
           _id: "$gender",
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
       {
         $project: {
           _id: 0,
           gender: "$_id",
-          count: 1
-        }
-      }
+          count: 1,
+        },
+      },
     ]);
 
     res.status(200).json({ genderDistribution });
@@ -115,11 +193,15 @@ exports.updateStudentStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['pending', 'admitted', 'rejected'].includes(status)) {
+    if (!["pending", "admitted", "rejected"].includes(status)) {
       return res.status(400).json({ error: "Invalid status value" });
     }
 
-    const updated = await Student.findByIdAndUpdate(id, { status }, { new: true });
+    const updated = await Student.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
     if (!updated) {
       return res.status(404).json({ error: "Student not found" });
     }
@@ -163,19 +245,19 @@ exports.getStudentStats = async (req, res) => {
       {
         $group: {
           _id: "$status",
-          count: { $sum: 1 }
-        }
-      }
+          count: { $sum: 1 },
+        },
+      },
     ]);
 
     const result = {
       total: 0,
       pending: 0,
       admitted: 0,
-      rejected: 0
+      rejected: 0,
     };
 
-    stats.forEach(stat => {
+    stats.forEach((stat) => {
       result.total += stat.count;
       result[stat._id] = stat.count;
     });
@@ -219,11 +301,10 @@ exports.getStudentsByClassAndSection = async (req, res) => {
     // fetch class name based on classId (because admissionClass is a string)
     const classDoc = await Class.findById(classId);
     if (!classDoc) return res.status(404).json({ error: "Class not found" });
-console.log(classDoc , 'classDoc')
     const students = await Student.find({
       orgId,
-      admissionClass: classDoc.name, // ✅ fix here
-      section,                        // ❓ only if section exists in schema
+      admissionClass: classDoc.name, 
+      section,
       status: "admitted",
     }).sort({ createdAt: -1 });
 
@@ -234,5 +315,3 @@ console.log(classDoc , 'classDoc')
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
-
-

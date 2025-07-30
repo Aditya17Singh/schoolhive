@@ -208,10 +208,10 @@ export default function LoginForm() {
             {loading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                Logging in...
+                Signing In...
               </>
             ) : (
-              "Login"
+              "SignIn"
             )}
           </button>
         </form>
