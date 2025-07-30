@@ -10,6 +10,7 @@ const studentApplicationSchema = new mongoose.Schema({
   nationality: { type: String, required: true },
   category: { type: String, required: true },
   admissionClass: { type: String, required: true },
+  section: { type: String, required: true },
   contactNumber: { type: String, required: true, match: /^[0-9]{10}$/ },
   email: { type: String, required: true },
   permanentAddress: {

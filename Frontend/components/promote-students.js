@@ -33,7 +33,7 @@ export default function PromoteStudents() {
     if (!selectedClass) return alert("Class not found");
 
     try {
-      const res = await API.get("/students", {
+      const res = await API.get("/students/search", {
         params: {
           classId: selectedClass._id,
           section: currentSection,
