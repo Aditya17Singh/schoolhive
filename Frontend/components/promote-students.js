@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import API from "@/lib/api";
 
 export default function PromoteStudents() {
@@ -8,31 +8,45 @@ export default function PromoteStudents() {
   const [students, setStudents] = useState([]);
   const [futureClass, setFutureClass] = useState("");
   const [futureSection, setFutureSection] = useState("");
-
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [loading, setLoading] = useState(false);
-
   const [currentClass, setCurrentClass] = useState("");
   const [currentSection, setCurrentSection] = useState("");
+  const [lastSearch, setLastSearch] = useState({ classId: "", section: "" });
 
-  //   // Load all classes
   useEffect(() => {
-    const fetchClasses = async () => {
-      try {
-        const res = await API.get("/classes");
-        setClasses(res.data);
-      } catch (err) {
-        console.error("Failed to load classes:", err);
-      }
-    };
-
-    fetchClasses();
+    API.get("/classes")
+      .then((res) => setClasses(res.data.sort((a, b) => a.order - b.order)))
+      .catch((err) => console.error("Failed to load classes:", err));
   }, []);
 
-  // Fetch students for selected class/section
+  const currentClassObj = useMemo(
+    () => classes.find((c) => c.name === currentClass),
+    [classes, currentClass]
+  );
+  const futureClassObj = useMemo(
+    () => classes.find((c) => c.name === futureClass),
+    [classes, futureClass]
+  );
+  const availableCurrentSections = currentClassObj?.sections || [];
+  const availableFutureSections = futureClassObj?.sections || [];
+
+  const allSelected =
+    students.length > 0 && selectedStudents.length === students.length;
+  const someSelected =
+    selectedStudents.length > 0 && selectedStudents.length < students.length;
+
   const handleSearch = async () => {
     const selectedClass = classes.find((c) => c.name === currentClass);
     if (!selectedClass) return alert("Class not found");
+
+    if (
+      lastSearch.classId === selectedClass._id &&
+      lastSearch.section === currentSection
+    ) {
+      console.log("Same search input — skipping fetch");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -45,6 +59,7 @@ export default function PromoteStudents() {
 
       setStudents(res.data);
       setSelectedStudents([]);
+      setLastSearch({ classId: selectedClass._id, section: currentSection });
     } catch (err) {
       console.error("Failed to fetch students:", err);
       alert("Could not load students.");
@@ -53,32 +68,46 @@ export default function PromoteStudents() {
     }
   };
 
-  // Handle select all students
-  const handleSelectAll = (checked) => {
-    if (checked) {
-      setSelectedStudents(students.map((student) => student._id));
-    } else {
-      setSelectedStudents([]);
-    }
-  };
+  const handleSelectAll = (checked) =>
+    setSelectedStudents(checked ? students.map((s) => s._id) : []);
 
-  // Handle individual student selection
-  const handleStudentSelect = (studentId, checked) => {
-    if (checked) {
-      setSelectedStudents((prev) => [...prev, studentId]);
-    } else {
-      setSelectedStudents((prev) => prev.filter((id) => id !== studentId));
-    }
-  };
+  const handleStudentSelect = (id, checked) =>
+    setSelectedStudents((prev) =>
+      checked ? [...prev, id] : prev.filter((sid) => sid !== id)
+    );
 
   const handlePromote = async () => {
-    const targetClass = classes.find((c) => c.name === futureClass);
-    if (!targetClass) return alert("Future class not found");
+    if (!futureClassObj) return alert("Future class not found");
+    if (!selectedStudents.length) return alert("No students selected.");
+
+    const alreadyInTarget = students.filter(
+      (s) =>
+        selectedStudents.includes(s._id) &&
+        s.admissionClass === futureClass &&
+        s.section === futureSection
+    );
+
+    if (alreadyInTarget.length === selectedStudents.length) {
+      return alert(
+        "All selected students are already in the target class and section."
+      );
+    }
+
+    if (
+      !window.confirm(
+        `${alreadyInTarget.length} student(s) are already in that class/section. Proceed with the rest?`
+      )
+    )
+      return;
+
+    const idsToPromote = selectedStudents.filter(
+      (id) => !alreadyInTarget.some((s) => s._id === id)
+    );
 
     try {
       await API.put("/students/promote", {
-        studentIds: selectedStudents,
-        newClassId: targetClass._id,
+        studentIds: idsToPromote,
+        newClassId: futureClassObj._id,
         newSection: futureSection,
       });
 
@@ -90,17 +119,6 @@ export default function PromoteStudents() {
       alert("Promotion failed.");
     }
   };
-
-  const currentClassObj = classes.find((c) => c.name === currentClass);
-  const availableCurrentSections = currentClassObj?.sections || [];
-
-  const futureClassObj = classes.find((c) => c.name === futureClass);
-  const availableFutureSections = futureClassObj?.sections || [];
-
-  const allSelected =
-    students.length > 0 && selectedStudents.length === students.length;
-  const someSelected =
-    selectedStudents.length > 0 && selectedStudents.length < students.length;
 
   return (
     <div className="flex flex-col gap-4 w-full mt-8 pl-4 pr-4">
@@ -180,139 +198,25 @@ export default function PromoteStudents() {
         )}
 
         {loading ? (
-          <div className="text-center text-gray-500 border border-dashed border-gray-300 p-6 rounded-xl">
-            <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
-            Loading students...
-          </div>
+          <Loader message="Loading students..." />
         ) : students.length === 0 ? (
-          <div className="text-center text-gray-500 border border-dashed border-gray-300 p-6 rounded-xl">
-            {currentClass && currentSection
-              ? `No students found in Class ${currentClass} - Section ${currentSection}.`
-              : "Select a class and section to view students."}
-          </div>
+          <Message
+            text={
+              currentClass && currentSection
+                ? `No students found in Class ${currentClass} - Section ${currentSection}.`
+                : "Select a class and section to view students."
+            }
+          />
         ) : (
-          <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="w-12 p-4 text-left">
-                      <input
-                        type="checkbox"
-                        checked={allSelected}
-                        ref={(input) => {
-                          if (input) input.indeterminate = someSelected;
-                        }}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="rounded"
-                      />
-                    </th>
-                    <th className="p-4 text-left font-semibold text-gray-900">
-                      Avatar
-                    </th>
-                    <th className="p-4 text-left font-semibold text-gray-900">
-                      Student Name
-                    </th>
-                    <th className="p-4 text-left font-semibold text-gray-900">
-                      Student ID
-                    </th>
-                    <th className="p-4 text-left font-semibold text-gray-900">
-                      Class
-                    </th>
-                    <th className="p-4 text-left font-semibold text-gray-900">
-                      Section
-                    </th>
-                    <th className="p-4 text-left font-semibold text-gray-900">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.map((student, index) => (
-                    <tr
-                      key={student._id}
-                      className={`border-b hover:bg-gray-50 ${
-                        selectedStudents.includes(student._id)
-                          ? "bg-blue-50"
-                          : ""
-                      }`}
-                    >
-                      <td className="p-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedStudents.includes(student._id)}
-                          onChange={(e) =>
-                            handleStudentSelect(student._id, e.target.checked)
-                          }
-                          className="rounded"
-                        />
-                      </td>
-                      <td className="p-4">
-                        <img
-                          src={student.avatar}
-                          alt="Student Avatar"
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                      </td>
-                      <td className="p-4 font-medium text-gray-900">
-                        {student.fName} {student.lName}
-                      </td>
-                      <td className="p-4 font-mono text-sm text-gray-700">
-                        {student._id.slice(-6)}
-                      </td>
-                      <td className="p-4 font-semibold text-blue-600">
-                        {student.admissionClass}
-                      </td>
-                      <td className="p-4 font-semibold text-green-600">
-                        {student.section}
-                      </td>
-                      <td className="p-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            student.status === "Active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {student.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <StudentTable
+            students={students}
+            selectedStudents={selectedStudents}
+            handleStudentSelect={handleStudentSelect}
+          />
         )}
 
-        {/* Summary */}
         {students.length > 0 && (
-          <div className="mt-4 flex justify-between items-center text-sm text-gray-600 bg-gray-50 p-4 rounded-xl">
-            <span>
-              Total Students:{" "}
-              <span className="font-semibold text-gray-900">
-                {students.length}
-              </span>
-            </span>
-            <span>
-              Selected:{" "}
-              <span className="font-semibold text-blue-600">
-                {selectedStudents.length}
-              </span>
-            </span>
-            <span>
-              Active:{" "}
-              <span className="font-semibold text-green-600">
-                {students.filter((s) => s.status === "Active").length}
-              </span>
-            </span>
-            <span>
-              Inactive:{" "}
-              <span className="font-semibold text-red-600">
-                {students.filter((s) => s.status === "Inactive").length}
-              </span>
-            </span>
-          </div>
+          <Summary students={students} selectedStudents={selectedStudents} />
         )}
       </div>
     </div>
@@ -333,5 +237,136 @@ function DropdownButton({ label, value, setValue, options = [] }) {
         </option>
       ))}
     </select>
+  );
+}
+
+function Loader({ message }) {
+  return (
+    <div className="text-center text-gray-500 border border-dashed border-gray-300 p-6 rounded-xl">
+      <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+      {message}
+    </div>
+  );
+}
+
+function Message({ text }) {
+  return (
+    <div className="text-center text-gray-500 border border-dashed border-gray-300 p-6 rounded-xl">
+      {text}
+    </div>
+  );
+}
+
+function StudentTable({ students, selectedStudents, handleStudentSelect }) {
+  return (
+    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="w-12 p-4 text-left" />
+              <th className="p-4 text-left font-semibold text-gray-900">
+                Avatar
+              </th>
+              <th className="p-4 text-left font-semibold text-gray-900">
+                Student Name
+              </th>
+              <th className="p-4 text-left font-semibold text-gray-900">
+                Student ID
+              </th>
+              <th className="p-4 text-left font-semibold text-gray-900">
+                Class
+              </th>
+              <th className="p-4 text-left font-semibold text-gray-900">
+                Section
+              </th>
+              <th className="p-4 text-left font-semibold text-gray-900">
+                Status
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((s) => (
+              <tr
+                key={s._id}
+                className={`border-b hover:bg-gray-50 ${
+                  selectedStudents.includes(s._id) ? "bg-blue-50" : ""
+                }`}
+              >
+                <td className="p-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedStudents.includes(s._id)}
+                    onChange={(e) =>
+                      handleStudentSelect(s._id, e.target.checked)
+                    }
+                    className="rounded"
+                  />
+                </td>
+                <td className="p-4">
+                  <img
+                    src={s.avatar}
+                    alt="Student Avatar"
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                </td>
+                <td className="p-4 font-medium text-gray-900">
+                  {s.fName} {s.lName}
+                </td>
+                <td className="p-4 font-mono text-sm text-gray-700">
+                  {s._id.slice(-6)}
+                </td>
+                <td className="p-4 font-semibold text-blue-600">
+                  {s.admissionClass}
+                </td>
+                <td className="p-4 font-semibold text-green-600">
+                  {s.section}
+                </td>
+                <td className="p-4">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      s.status === "Active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {s.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function Summary({ students, selectedStudents }) {
+  return (
+    <div className="mt-4 flex justify-between items-center text-sm text-gray-600 bg-gray-50 p-4 rounded-xl">
+      <span>
+        Total Students:{" "}
+        <span className="font-semibold text-gray-900">{students.length}</span>
+      </span>
+      <span>
+        Selected:{" "}
+        <span className="font-semibold text-blue-600">
+          {selectedStudents.length}
+        </span>
+      </span>
+      <span>
+        Active:{" "}
+        <span className="font-semibold text-green-600">
+          {students.filter((s) => s.status === "Active").length}
+        </span>
+      </span>
+      <span>
+        Inactive:{" "}
+        <span className="font-semibold text-red-600">
+          {students.filter((s) => s.status === "Inactive").length}
+        </span>
+      </span>
+    </div>
   );
 }
