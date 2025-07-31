@@ -277,12 +277,44 @@ exports.promoteStudents = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const updated = await Student.updateMany(
-      { _id: { $in: studentIds } },
-      { $set: { class: newClassId, section: newSection } }
+    const classDoc = await Class.findById(newClassId);
+    if (!classDoc) {
+      return res.status(404).json({ error: "Target class not found" });
+    }
+
+    // Get current data for all selected students
+    const students = await Student.find({ _id: { $in: studentIds } });
+
+    // Filter out students already in the same class and section
+    const studentsToPromote = students.filter(
+      (student) =>
+        student.admissionClass !== classDoc.name ||
+        student.section !== newSection
     );
 
-    res.status(200).json({ message: "Students promoted", updated });
+    if (studentsToPromote.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "No students need promotion. All are already in this class and section." });
+    }
+
+    const idsToPromote = studentsToPromote.map((s) => s._id);
+
+    const updated = await Student.updateMany(
+      { _id: { $in: idsToPromote } },
+      {
+        $set: {
+          admissionClass: classDoc.name,
+          section: newSection,
+          class: newClassId,
+        },
+      }
+    );
+
+    res.status(200).json({
+      message: `Promoted ${updated.modifiedCount} student(s)`,
+      skipped: studentIds.length - idsToPromote.length,
+    });
   } catch (error) {
     console.error("Promote error:", error);
     res.status(500).json({ error: "Server error", details: error.message });
