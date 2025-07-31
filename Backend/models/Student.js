@@ -13,6 +13,7 @@ const studentApplicationSchema = new mongoose.Schema({
   section: { type: String },
   contactNumber: { type: String, required: true, match: /^[0-9]{10}$/ },
   email: { type: String, required: true },
+  rollNumber: { type: Number },
   permanentAddress: {
     line1: { type: String, required: true },
     line2: { type: String },
