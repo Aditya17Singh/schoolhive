@@ -74,6 +74,15 @@ exports.createStudent = async (req, res) => {
       }
     }
 
+    const rollCount = await Student.countDocuments({
+      orgId,
+      admissionClass,
+      section: selectedSection,
+      session,
+      status: { $in: ["pending", "admitted"] },
+    });
+    const rollNumber = rollCount + 1;
+
     if (!selectedSection) {
       return res
         .status(400)
@@ -107,6 +116,7 @@ exports.createStudent = async (req, res) => {
       aadhaarNumber,
       abcId,
       orgUID,
+      rollNumber,
       class: classId,
       section: selectedSection,
       orgId,

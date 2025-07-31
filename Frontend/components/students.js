@@ -3,156 +3,105 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import API from "@/lib/api";
+import { Search, Plus, Eye, Trash2, Filter } from "lucide-react";
 
 export default function Students() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [classes, setClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState("");
 
   useEffect(() => {
-    async function fetchStudents() {
+    async function fetchInitialData() {
       try {
-        const response = await API.get("/students");
-        setStudents(response.data);
+        const [studentsRes, classesRes] = await Promise.all([
+          API.get("/students"),
+          API.get("/classes"),
+        ]);
+        setStudents(studentsRes.data);
+        setClasses(classesRes.data.sort((a, b) => a.order - b.order));
       } catch (error) {
-        console.error("Failed to fetch students:", error);
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchStudents();
+    fetchInitialData();
   }, []);
+
+  const filteredStudents = students.filter((student) => {
+    const fullName = `${student?.fName || ""} ${student?.mName || ""} ${
+      student?.lName || ""
+    }`.toLowerCase();
+    const orgUID = student?.orgUID?.toLowerCase() || "";
+    const admissionClass = student?.admissionClass?.toLowerCase() || "";
+    const term = searchTerm.toLowerCase();
+
+    const matchesSearch =
+      fullName.includes(term) ||
+      orgUID.includes(term) ||
+      admissionClass.includes(term);
+
+    const matchesClass =
+      selectedClass === "" || admissionClass === selectedClass.toLowerCase();
+
+    return matchesSearch && matchesClass;
+  });
 
   const skeletonRows = Array(5).fill(null);
 
   return (
-    // <div className="relative w-full overflow-auto mt-4">
-    //   <table className="w-full text-sm caption-bottom">
-    //     <thead>
-    //       <tr className="border-b bg-gray-50">
-    //         <th className="py-4 px-2 text-left font-semibold text-gray-600">
-    //           Organization UID
-    //         </th>
-    //         <th className="py-4 px-2 text-left font-semibold text-gray-600">
-    //           Name
-    //         </th>
-    //         <th className="py-4 px-2 text-left font-semibold text-gray-600">
-    //           Class
-    //         </th>
-    //         <th className="py-4 px-2 text-left font-semibold text-gray-600">
-    //           Phone Number
-    //         </th>
-    //         <th className="py-4 px-2 text-left font-semibold text-gray-600">
-    //           Actions
-    //         </th>
-    //       </tr>
-    //     </thead>
-
-    //     <tbody>
-    //       {loading
-    //         ? skeletonRows.map((_, idx) => (
-    //             <tr key={idx} className="border-b animate-pulse bg-white">
-    //               {[...Array(5)].map((_, i) => (
-    //                 <td key={i} className="px-2 py-4">
-    //                   <div className="h-4 w-24 bg-gray-200 rounded" />
-    //                 </td>
-    //               ))}
-    //             </tr>
-    //           ))
-    //         : students.map((student) => (
-    //             <tr
-    //               key={student._id}
-    //               className="border-b bg-white transition-colors hover:bg-gray-100"
-    //             >
-    //               <td className="px-2 py-3 text-gray-700 font-medium">
-    //                 {student.orgUID}
-    //               </td>
-    //               <td className="px-2 py-3 text-gray-900 font-medium">
-    //                 {`${student.fName} ${student.mName} ${student.lName}`}
-    //               </td>
-    //               <td className="px-2 py-3 uppercase">
-    //                 {student.admissionClass}
-    //               </td>
-    //               <td className="px-2 py-3 lowercase">
-    //                 {student.contactNumber}
-    //               </td>
-    //               <td className="px-2 py-3">
-    //                 <div className="flex gap-3 items-center">
-    //                   <Link href={`/dashboard/students/${student._id}`}>
-    //                     <button className="h-8 w-8 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 flex items-center justify-center transition">
-    //                       <svg
-    //                         xmlns="http://www.w3.org/2000/svg"
-    //                         className="h-4 w-4 text-blue-600"
-    //                         fill="none"
-    //                         viewBox="0 0 24 24"
-    //                         stroke="currentColor"
-    //                       >
-    //                         <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
-    //                         <circle cx="12" cy="12" r="3" />
-    //                       </svg>
-    //                     </button>
-    //                   </Link>
-    //                   <button className="h-8 w-8 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 flex items-center justify-center transition">
-    //                     <svg
-    //                       xmlns="http://www.w3.org/2000/svg"
-    //                       className="h-4 w-4 text-red-600"
-    //                       fill="none"
-    //                       viewBox="0 0 24 24"
-    //                       stroke="currentColor"
-    //                     >
-    //                       <path d="M3 6h18" />
-    //                       <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-    //                       <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    //                       <line x1="10" x2="10" y1="11" y2="17" />
-    //                       <line x1="14" x2="14" y1="11" y2="17" />
-    //                     </svg>
-    //                   </button>
-    //                 </div>
-    //               </td>
-    //             </tr>
-    //           ))}
-    //     </tbody>
-    //   </table>
-    // </div>
-
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                {/* <Users className="h-6 w-6 text-blue-600" /> */}
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Students</h1>
-                <p className="text-gray-600">Manage your student records</p>
-              </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
+            <div className="relative flex-1">
+              <Search
+                className="absolute left-3 top-2.5 text-gray-400"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="Search by name, ID, or class"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
+              />
             </div>
-            <Link href="/dashboard/admission/new">
-              <button className="inline-flex cursor-pointer items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                {/* <Plus className="h-4 w-4" /> */}
+
+            <div className="relative w-full md:w-48">
+              <Filter
+                className="absolute left-3 top-2.5 text-gray-400"
+                size={18}
+              />
+              <select
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                className="w-full appearance-none pl-10 custom-scrollbar pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
+              >
+                <option value="">All Classes</option>
+                {classes.map((cls, idx) => (
+                  <option key={idx} value={cls.name}>
+                    {cls.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <Link
+              href="/dashboard/admission/new"
+              className="self-start md:self-auto"
+            >
+              <button className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                <Plus size={16} />
                 Add Student
               </button>
             </Link>
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="relative">
-            {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" /> */}
-            <input
-              type="text"
-              placeholder="Search students by name, ID, or class..."
-              //   value={searchTerm}
-              //   onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            />
-          </div>
-        </div>
-
-        {/* Table Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -204,29 +153,24 @@ export default function Students() {
                   <tr>
                     <td colSpan="5" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
-                        {/* <Users className="h-12 w-12 text-gray-300 mb-4" /> */}
                         <p className="text-gray-500 text-lg font-medium">
                           No students found
                         </p>
                         <p className="text-gray-400 text-sm">
-                          {/* {searchTerm
-                            ? "Try adjusting your search criteria"
-                            : "Get started by adding your first student"} */}
                         </p>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  students.map((student, index) => (
+                  filteredStudents?.map((student, index) => (
                     <tr
-                      key={student._id}
+                      key={student.orgUID}
                       className="hover:bg-gray-50 transition-colors duration-150"
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                             <span className="text-xs font-medium text-blue-600">
-                              {/* {student.orgUID.slice(-2)} */}
                               {index + 1}
                             </span>
                           </div>
@@ -253,19 +197,20 @@ export default function Students() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleView(student._id)}
-                            className="inline-flex items-center justify-center p-1 text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-150"
+                            onClick={() => handleView(student.orgUID)}
+                            className="inline-flex cursor-pointer items-center gap-1 px-2 py-1 text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-150 text-sm"
                             title="View student details"
                           >
-                            {/* <Eye className="h-4 w-4" /> */}
+                            <Eye size={16} />
                             View
                           </button>
+
                           <button
-                            onClick={() => handleDelete(student._id)}
-                            className="inline-flex items-center justify-center p-1 text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors duration-150"
+                            onClick={() => handleDelete(student.orgUID)}
+                            className="inline-flex cursor-pointer items-center gap-1 px-2 py-1 text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors duration-150 text-sm"
                             title="Delete student"
                           >
-                            {/* <Trash2 className="h-4 w-4" /> */}
+                            <Trash2 size={16} />
                             Delete
                           </button>
                         </div>
