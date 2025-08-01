@@ -11,6 +11,7 @@ export default function Students() {
   const [searchTerm, setSearchTerm] = useState("");
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
+  const [classDropdownOpen, setClassDropdownOpen] = useState(false);
 
   useEffect(() => {
     async function fetchInitialData() {
@@ -32,9 +33,8 @@ export default function Students() {
   }, []);
 
   const filteredStudents = students.filter((student) => {
-    const fullName = `${student?.fName || ""} ${student?.mName || ""} ${
-      student?.lName || ""
-    }`.toLowerCase();
+    const fullName = `${student?.fName || ""} ${student?.mName || ""} ${student?.lName || ""
+      }`.toLowerCase();
     const orgUID = student?.orgUID?.toLowerCase() || "";
     const admissionClass = student?.admissionClass?.toLowerCase() || "";
     const term = searchTerm.toLowerCase();
@@ -49,6 +49,74 @@ export default function Students() {
 
     return matchesSearch && matchesClass;
   });
+
+  const handleClassSelect = (clsName) => {
+    setSelectedClass(clsName);
+    setClassDropdownOpen(false);
+  };
+
+  const renderDropdown = () => (
+    <div className="relative w-48">
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={classDropdownOpen}
+        className="flex h-11 items-center justify-between rounded-lg border border-gray-200 px-4 py-2 text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 w-full transition-colors duration-200"
+        onClick={() => setClassDropdownOpen((open) => !open)}
+      >
+        <span className="truncate">
+          {selectedClass ? selectedClass : "All Classes"}
+        </span>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 15 15"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${classDropdownOpen ? 'rotate-180' : ''}`}
+          aria-hidden="true"
+        >
+          <path
+            d="M4.93179 5.43179C4.75605 5.60753 4.75605 5.89245 4.93179 6.06819C5.10753 6.24392 5.39245 6.24392 5.56819 6.06819L7.49999 4.13638L9.43179 6.06819C9.60753 6.24392 9.89245 6.24392 10.0682 6.06819C10.2439 5.89245 10.2439 5.60753 10.0682 5.43179L7.81819 3.18179C7.73379 3.0974 7.61933 3.04999 7.49999 3.04999C7.38064 3.04999 7.26618 3.0974 7.18179 3.18179L4.93179 5.43179ZM10.0682 9.56819C10.2439 9.39245 10.2439 9.10753 10.0682 8.93179C9.89245 8.75606 9.60753 8.75606 9.43179 8.93179L7.49999 10.8636L5.56819 8.93179C5.39245 8.75606 5.10753 8.75606 4.93179 8.93179C4.75605 9.10753 4.75605 9.39245 4.93179 9.56819L7.18179 11.8182C7.35753 11.9939 7.64245 11.9939 7.81819 11.8182L10.0682 9.56819Z"
+            fill="currentColor"
+            fillRule="evenodd"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+      {classDropdownOpen && (
+        <div className="absolute z-20 mt-2 w-full rounded-lg bg-white shadow-xl border border-gray-200 py-1 max-h-60 overflow-auto">
+          <div
+            className="cursor-pointer py-2 px-4 hover:bg-blue-50 text-sm text-gray-700 border-b border-gray-100"
+            onClick={() => handleClassSelect("")}
+          >
+            All Classes
+          </div>
+          {loading.classes ? (
+            [1, 2, 3].map((i) => (
+              <div key={i} className="py-2 px-4 animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            ))
+          ) : classes.length === 0 ? (
+            <div className="py-3 px-4 text-gray-500 text-sm">No classes found</div>
+          ) : (
+            classes.map((cls) => (
+              <div
+                key={cls._id || cls.id || cls}
+                role="option"
+                className={`cursor-pointer py-2 px-4 text-sm hover:bg-blue-50 transition-colors duration-150 ${selectedClass === cls.name ? "bg-blue-100 text-blue-800 font-medium" : "text-gray-700"}
+                  }`}
+                onClick={() => handleClassSelect(cls.name || cls)}
+              >
+                {cls.name || cls}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   const skeletonRows = Array(5).fill(null);
 
@@ -71,23 +139,8 @@ export default function Students() {
               />
             </div>
 
-            <div className="relative w-full md:w-48">
-              <Filter
-                className="absolute left-3 top-2.5 text-gray-400"
-                size={18}
-              />
-              <select
-                value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
-                className="w-full appearance-none pl-10 custom-scrollbar pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
-              >
-                <option value="">All Classes</option>
-                {classes.map((cls, idx) => (
-                  <option key={idx} value={cls.name}>
-                    {cls.name}
-                  </option>
-                ))}
-              </select>
+            <div className="w-full sm:w-auto">
+              {renderDropdown()}
             </div>
 
             <Link
