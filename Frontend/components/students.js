@@ -139,9 +139,7 @@ export default function Students() {
               />
             </div>
 
-            <div className="w-full sm:w-auto">
-              {renderDropdown()}
-            </div>
+            <div className="w-full sm:w-auto">{renderDropdown()}</div>
 
             <Link
               href="/dashboard/admission/new"
@@ -209,8 +207,7 @@ export default function Students() {
                         <p className="text-gray-500 text-lg font-medium">
                           No students found
                         </p>
-                        <p className="text-gray-400 text-sm">
-                        </p>
+                        <p className="text-gray-400 text-sm"></p>
                       </div>
                     </td>
                   </tr>
@@ -249,14 +246,14 @@ export default function Students() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleView(student.orgUID)}
+                          <Link
+                            href={`/dashboard/students/${student.orgUID}`}
                             className="inline-flex cursor-pointer items-center gap-1 px-2 py-1 text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-150 text-sm"
                             title="View student details"
                           >
                             <Eye size={16} />
                             View
-                          </button>
+                          </Link>
 
                           <button
                             onClick={() => handleDelete(student.orgUID)}
