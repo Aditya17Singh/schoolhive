@@ -374,3 +374,46 @@ exports.getStudentByOrgUID = async (req, res) => {
     res.status(500).json({ error: "Server error", details: error.message });
   }
 };
+
+exports.updateStudent = async (req, res) => {
+  try {
+    const studentId = req.params.id;
+    const orgId = req.user.id; 
+
+    const student = await Student.findOne({ _id: studentId, orgId });
+
+    if (!student) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    const updatableFields = [
+      "fName", "mName", "lName", "dob", "gender", "religion", "nationality",
+      "category", "admissionClass", "contactNumber", "email",
+      "permanentAddress", "residentialAddress", "sameAsPermanent",
+      "fatherName", "fatherPhone", "fatherEmail",
+      "motherName", "motherPhone", "motherEmail",
+      "guardianName", "guardianPhone", "aadhaarNumber", "abcId",
+    ];
+
+    updatableFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        student[field] = req.body[field];
+      }
+    });
+
+    if (req.files) {
+      if (req.files.avatar) student.avatar = req.files.avatar[0].path;
+      if (req.files.aadharCard) student.aadharCard = req.files.aadharCard[0].path;
+      if (req.files.previousSchoolTC) student.previousSchoolTC = req.files.previousSchoolTC[0].path;
+      if (req.files.medicalCertificate) student.medicalCertificate = req.files.medicalCertificate[0].path;
+      if (req.files.birthCertificate) student.birthCertificate = req.files.birthCertificate[0].path;
+    }
+
+    await student.save();
+
+    res.status(200).json({ message: "Student updated successfully", student });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error updating student", details: err.message });
+  }
+};
