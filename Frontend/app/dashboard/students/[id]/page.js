@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import API from "@/lib/api";
+import Link from "next/link";
+
 import {
   User,
   Phone,
@@ -14,6 +16,7 @@ import {
   Edit3,
   Save,
   X,
+  ChevronRight,
 } from "lucide-react";
 
 // MAIN COMPONENT
@@ -57,23 +60,17 @@ export default function StudentDetailsPage() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     try {
-      const res = await API.put(`/students/${student._id}`, formData);
-      const updatedClass = classes.find((cls) => cls._id === formData.classId);
+      const payload = { ...formData };
+      const response = await API.put(`/students/${student._id}`, payload);
 
-      setStudent({
-        ...res.data,
-        class: updatedClass || res.data.class,
-      });
-
-      setEditMode(false);
+      if (response.status === 200) {
+        setEditMode(false);
+        setFormData(response.data.student);
+      }
     } catch (error) {
-      console.error(
-        "Error updating student:",
-        error.response?.data || error.message
-      );
+      console.error(error);
     }
   };
 
@@ -113,12 +110,18 @@ export default function StudentDetailsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="">
-          {/* <div className="flex items-center text-sm text-gray-500 mb-2">
-            <span>Students</span>
+          <div className="flex items-center text-sm text-gray-500 mb-2">
+            <Link
+              href="/dashboard/students"
+              className="hover:underline hover:text-gray-700 cursor-pointer"
+            >
+              Student
+            </Link>
             <ChevronRight className="w-4 h-4 mx-2" />
-            <span className="text-gray-900 font-medium">{student.fName} {student.lName}</span>
-          </div> */}
-          {/* <h1 className="text-3xl font-bold text-gray-900">Student Details</h1> */}
+            <span className="text-gray-900 font-medium">
+              {student.fName} {student.lName}
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

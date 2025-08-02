@@ -29,5 +29,6 @@ router.get("/stats", verifyToken, studentController.getStudentStats);
 router.put("/promote", verifyToken, studentController.promoteStudents);
 router.get("/search", verifyToken, studentController.getStudentsByClassAndSection);
 router.get("/:orgUID", verifyToken, studentController.getStudentByOrgUID);
+router.put("/:id", verifyToken, studentController.updateStudent);
 
 module.exports = router;

@@ -236,7 +236,7 @@ export default function Students() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          {student.admissionClass}
+                        {`${student.admissionClass}-${student.section}`}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
