@@ -417,3 +417,22 @@ exports.updateStudent = async (req, res) => {
     res.status(500).json({ error: "Error updating student", details: err.message });
   }
 };
+
+exports.deleteStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const student = await Student.findById(id);
+
+    if (!student) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    await Student.findByIdAndDelete(id);
+    res.status(200).json({ message: "Student deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ error: "Error deleting student", details: err.message });
+  }
+};

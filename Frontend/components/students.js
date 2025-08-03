@@ -33,8 +33,9 @@ export default function Students() {
   }, []);
 
   const filteredStudents = students.filter((student) => {
-    const fullName = `${student?.fName || ""} ${student?.mName || ""} ${student?.lName || ""
-      }`.toLowerCase();
+    const fullName = `${student?.fName || ""} ${student?.mName || ""} ${
+      student?.lName || ""
+    }`.toLowerCase();
     const orgUID = student?.orgUID?.toLowerCase() || "";
     const admissionClass = student?.admissionClass?.toLowerCase() || "";
     const term = searchTerm.toLowerCase();
@@ -73,7 +74,9 @@ export default function Students() {
           viewBox="0 0 15 15"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${classDropdownOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
+            classDropdownOpen ? "rotate-180" : ""
+          }`}
           aria-hidden="true"
         >
           <path
@@ -99,13 +102,19 @@ export default function Students() {
               </div>
             ))
           ) : classes.length === 0 ? (
-            <div className="py-3 px-4 text-gray-500 text-sm">No classes found</div>
+            <div className="py-3 px-4 text-gray-500 text-sm">
+              No classes found
+            </div>
           ) : (
             classes.map((cls) => (
               <div
                 key={cls._id || cls.id || cls}
                 role="option"
-                className={`cursor-pointer py-2 px-4 text-sm hover:bg-blue-50 transition-colors duration-150 ${selectedClass === cls.name ? "bg-blue-100 text-blue-800 font-medium" : "text-gray-700"}
+                className={`cursor-pointer py-2 px-4 text-sm hover:bg-blue-50 transition-colors duration-150 ${
+                  selectedClass === cls.name
+                    ? "bg-blue-100 text-blue-800 font-medium"
+                    : "text-gray-700"
+                }
                   }`}
                 onClick={() => handleClassSelect(cls.name || cls)}
               >
@@ -117,6 +126,22 @@ export default function Students() {
       )}
     </div>
   );
+
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this student?"
+    );
+    if (!confirmed) return;
+
+    try {
+      await API.delete(`/students/${id}`);
+      setStudents((prev) => prev.filter((s) => s._id !== id));
+      alert("Student deleted successfully");
+    } catch (err) {
+      console.error("Failed to delete student", err);
+      alert("Failed to delete student");
+    }
+  };
 
   const skeletonRows = Array(5).fill(null);
 
@@ -212,7 +237,7 @@ export default function Students() {
                     </td>
                   </tr>
                 ) : (
-                  filteredStudents?.map((student, index) => (
+                  filteredStudents?.map((student, index) => (        
                     <tr
                       key={student.orgUID}
                       className="hover:bg-gray-50 transition-colors duration-150"
@@ -236,7 +261,7 @@ export default function Students() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {`${student.admissionClass}-${student.section}`}
+                          {`${student.admissionClass}-${student.section}`}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -256,7 +281,7 @@ export default function Students() {
                           </Link>
 
                           <button
-                            onClick={() => handleDelete(student.orgUID)}
+                            onClick={() => handleDelete(student._id)}
                             className="inline-flex cursor-pointer items-center gap-1 px-2 py-1 text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors duration-150 text-sm"
                             title="Delete student"
                           >
