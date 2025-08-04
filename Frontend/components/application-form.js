@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import API from "@/lib/api";
+import axios from "axios";
 
 export default function ApplicationForm({ orgId }) {
   const [classes, setClasses] = useState([]);
@@ -80,6 +81,7 @@ export default function ApplicationForm({ orgId }) {
   );
 
   const [form, setForm] = useState(initialState);
+  console.log(form, 'form');
 
   const handleChange = useCallback((e) => {
     const { id, value, type, checked, files } = e.target;
@@ -87,26 +89,36 @@ export default function ApplicationForm({ orgId }) {
     setForm((prev) => {
       if (type === "checkbox") {
         if (id === "sameAsPermanent") {
+          const residentialAddress = checked
+            ? { ...prev.permanentAddress }
+            : {
+              line1: "",
+              line2: "",
+              city: "",
+              district: "",
+              state: "",
+              pincode: "",
+            };
+
           return {
             ...prev,
             sameAsPermanent: checked,
-            residentialAddress: checked
-              ? { ...prev.permanentAddress }
-              : {
-                  line1: "",
-                  line2: "",
-                  city: "",
-                  district: "",
-                  state: "",
-                  pincode: "",
-                },
+            residentialAddress,
           };
         }
         return { ...prev, [id]: checked };
       }
 
       if (type === "file") {
-        return { ...prev, [id]: files[0] };
+        const file = files[0];
+        if (!file) return prev;
+
+        const previewUrl = URL.createObjectURL(file);
+        return {
+          ...prev,
+          [id]: file,
+          [`${id}Preview`]: previewUrl,
+        };
       }
 
       if (
@@ -114,20 +126,24 @@ export default function ApplicationForm({ orgId }) {
         id.startsWith("residentialAddress.")
       ) {
         const [section, field] = id.split(".");
-        return {
-          ...prev,
-          [section]: {
-            ...prev[section],
-            [field]: value,
-          },
-          ...(section === "permanentAddress" &&
-            prev.sameAsPermanent && {
-              residentialAddress: {
-                ...prev.permanentAddress,
-                [field]: value,
-              },
-            }),
+        const updatedSection = {
+          ...prev[section],
+          [field]: value,
         };
+
+        let updated = {
+          ...prev,
+          [section]: updatedSection,
+        };
+
+        // Mirror updates to residentialAddress if sameAsPermanent is true
+        if (section === "permanentAddress" && prev.sameAsPermanent) {
+          updated.residentialAddress = {
+            ...updatedSection,
+          };
+        }
+
+        return updated;
       }
 
       return { ...prev, [id]: value };
@@ -140,37 +156,66 @@ export default function ApplicationForm({ orgId }) {
       setSubmitting(true);
       setError("");
       setSuccess("");
+
       const currentOrgId = user.id ? user.id : orgId;
 
       try {
-        const {
-          avatar,
-          aadharCard,
-          previousSchoolTC,
-          medicalCertificate,
-          birthCertificate,
-          ...formData
-        } = form;
+        const formDataToSend = new FormData();
 
-        const payload = {
-          ...formData,
-          orgId: user.id ? user.id : orgId,
-        };
+        // Append all form fields except files
+        Object.entries(form).forEach(([key, value]) => {
+          if (
+            [
+              "avatar",
+              "aadharCard",
+              "previousSchoolTC",
+              "medicalCertificate",
+              "birthCertificate",
+            ].includes(key)
+          ) {
+            // skip files for now
+            return;
+          }
 
-        await API.post("/students", payload, {
-          params: {
-            public_key: "letmein12345",
-            orgId: currentOrgId,
-          },
+          if (typeof value === "object" && value !== null) {
+            Object.entries(value).forEach(([subKey, subVal]) => {
+              formDataToSend.append(`${key}.${subKey}`, subVal);
+            });
+          } else {
+            formDataToSend.append(key, value);
+          }
         });
+
+        // Append files
+        if (form.avatar) formDataToSend.append("avatar", form.avatar);
+        if (form.aadharCard)
+          formDataToSend.append("aadharCard", form.aadharCard);
+        if (form.previousSchoolTC)
+          formDataToSend.append("previousSchoolTC", form.previousSchoolTC);
+        if (form.medicalCertificate)
+          formDataToSend.append("medicalCertificate", form.medicalCertificate);
+        if (form.birthCertificate)
+          formDataToSend.append("birthCertificate", form.birthCertificate);
+
+        // Send as multipart/form-data
+        await axios.post(
+          `http://localhost:5000/api/students?orgId=${currentOrgId}&public_key=letmein12345`,
+          formDataToSend,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
 
         setForm(initialState);
         setSuccess("Application submitted successfully.");
       } catch (err) {
         setError(
           err.response?.data?.message ||
-            err.message ||
-            "Failed to create student"
+          err.message ||
+          "Failed to create student"
         );
       } finally {
         setSubmitting(false);
@@ -178,6 +223,7 @@ export default function ApplicationForm({ orgId }) {
     },
     [form, user.id, orgId, initialState]
   );
+
 
   const fetchClasses = useCallback(async () => {
     const currentOrgId = user.id ? user.id : orgId;
@@ -905,19 +951,14 @@ export default function ApplicationForm({ orgId }) {
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                 <div className="bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-4">
                   <div className="flex items-center space-x-2">
-                    <h2 className="text-xl font-semibold text-white">
-                      Document Upload
-                    </h2>
+                    <h2 className="text-xl font-semibold text-white">Document Upload</h2>
                   </div>
                 </div>
 
                 <div className="p-6 space-y-6">
                   {/* Avatar */}
                   <div className="space-y-2">
-                    <label
-                      htmlFor="avatar"
-                      className="block text-sm font-medium text-gray-700"
-                    >
+                    <label htmlFor="avatar" className="block text-sm font-medium text-gray-700">
                       Upload Student Photo
                     </label>
                     <div className="flex items-center justify-center w-full">
@@ -927,14 +968,9 @@ export default function ApplicationForm({ orgId }) {
                       >
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <p className="mb-2 text-sm text-gray-500">
-                            <span className="font-semibold">
-                              Click to upload
-                            </span>{" "}
-                            student photo
+                            <span className="font-semibold">Click to upload</span> student photo
                           </p>
-                          <p className="text-xs text-gray-400">
-                            PNG, JPG or JPEG (MAX. 5MB)
-                          </p>
+                          <p className="text-xs text-gray-400">PNG, JPG or JPEG (MAX. 5MB)</p>
                         </div>
                         <input
                           id="avatar"
@@ -945,16 +981,22 @@ export default function ApplicationForm({ orgId }) {
                         />
                       </label>
                     </div>
+                    {form.avatarPreview && (
+                      <div className="mt-2 flex justify-center">
+                        <img
+                          src={form.avatarPreview}
+                          alt="Avatar Preview"
+                          className="h-24 w-24 object-cover rounded-full border"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Document Grid */}
                   <div className="grid md:grid-cols-2 gap-6">
-                    {/* Aadhar Card */}
+                    {/* Aadhaar Card */}
                     <div className="space-y-2">
-                      <label
-                        htmlFor="aadharCard"
-                        className="block text-sm font-medium text-gray-700"
-                      >
+                      <label htmlFor="aadharCard" className="block text-sm font-medium text-gray-700">
                         Aadhaar Card
                       </label>
                       <div className="flex items-center justify-center w-full">
@@ -963,9 +1005,7 @@ export default function ApplicationForm({ orgId }) {
                           className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                         >
                           <div className="flex flex-col items-center justify-center pt-3 pb-3">
-                            <p className="text-xs text-gray-500">
-                              Upload Aadhaar Card
-                            </p>
+                            <p className="text-xs text-gray-500">Upload Aadhaar Card</p>
                           </div>
                           <input
                             id="aadharCard"
@@ -976,14 +1016,24 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
+                      {form.aadharCardPreview && (
+                        <div className="mt-2">
+                          {form.aadharCard?.type === "application/pdf" ? (
+                            <iframe src={form.aadharCardPreview} className="w-full h-48 border rounded" />
+                          ) : (
+                            <img
+                              src={form.aadharCardPreview}
+                              alt="Aadhaar Preview"
+                              className="h-24 w-auto object-contain border rounded"
+                            />
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Previous School TC */}
                     <div className="space-y-2">
-                      <label
-                        htmlFor="previousSchoolTC"
-                        className="block text-sm font-medium text-gray-700"
-                      >
+                      <label htmlFor="previousSchoolTC" className="block text-sm font-medium text-gray-700">
                         Previous School TC
                       </label>
                       <div className="flex items-center justify-center w-full">
@@ -1003,14 +1053,24 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
+                      {form.previousSchoolTCPreview && (
+                        <div className="mt-2">
+                          {form.previousSchoolTC?.type === "application/pdf" ? (
+                            <iframe src={form.previousSchoolTCPreview} className="w-full h-48 border rounded" />
+                          ) : (
+                            <img
+                              src={form.previousSchoolTCPreview}
+                              alt="TC Preview"
+                              className="h-24 w-auto object-contain border rounded"
+                            />
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Medical Certificate */}
                     <div className="space-y-2">
-                      <label
-                        htmlFor="medicalCertificate"
-                        className="block text-sm font-medium text-gray-700"
-                      >
+                      <label htmlFor="medicalCertificate" className="block text-sm font-medium text-gray-700">
                         Medical Certificate
                       </label>
                       <div className="flex items-center justify-center w-full">
@@ -1019,9 +1079,7 @@ export default function ApplicationForm({ orgId }) {
                           className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                         >
                           <div className="flex flex-col items-center justify-center pt-3 pb-3">
-                            <p className="text-xs text-gray-500">
-                              Upload Medical Cert.
-                            </p>
+                            <p className="text-xs text-gray-500">Upload Medical Cert.</p>
                           </div>
                           <input
                             id="medicalCertificate"
@@ -1032,13 +1090,24 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
+                      {form.medicalCertificatePreview && (
+                        <div className="mt-2">
+                          {form.medicalCertificate?.type === "application/pdf" ? (
+                            <iframe src={form.medicalCertificatePreview} className="w-full h-48 border rounded" />
+                          ) : (
+                            <img
+                              src={form.medicalCertificatePreview}
+                              alt="Medical Cert Preview"
+                              className="h-24 w-auto object-contain border rounded"
+                            />
+                          )}
+                        </div>
+                      )}
                     </div>
 
+                    {/* Birth Certificate */}
                     <div className="space-y-2">
-                      <label
-                        htmlFor="birthCertificate"
-                        className="block text-sm font-medium text-gray-700"
-                      >
+                      <label htmlFor="birthCertificate" className="block text-sm font-medium text-gray-700">
                         Birth Certificate
                       </label>
                       <div className="flex items-center justify-center w-full">
@@ -1047,9 +1116,7 @@ export default function ApplicationForm({ orgId }) {
                           className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                         >
                           <div className="flex flex-col items-center justify-center pt-3 pb-3">
-                            <p className="text-xs text-gray-500">
-                              Upload Birth Cert.
-                            </p>
+                            <p className="text-xs text-gray-500">Upload Birth Cert.</p>
                           </div>
                           <input
                             id="birthCertificate"
@@ -1060,6 +1127,19 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
+                      {form.birthCertificatePreview && (
+                        <div className="mt-2">
+                          {form.birthCertificate?.type === "application/pdf" ? (
+                            <iframe src={form.birthCertificatePreview} className="w-full h-48 border rounded" />
+                          ) : (
+                            <img
+                              src={form.birthCertificatePreview}
+                              alt="Birth Cert Preview"
+                              className="h-24 w-auto object-contain border rounded"
+                            />
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -15,6 +15,27 @@ exports.createStudent = async (req, res) => {
     if (!org) return res.status(404).json({ error: "Organization not found" });
 
     const orgName = org.orgName.replace(/\s+/g, "").toUpperCase();
+
+    // Helper to unflatten dotted keys
+    const unflatten = (data) => {
+      const result = {};
+      Object.entries(data).forEach(([key, value]) => {
+  const keys = key.split(".");
+  keys.reduce((acc, part, index) => {
+    if (index === keys.length - 1) {
+      acc[part] = value;
+      return;
+    }
+    if (!acc[part]) acc[part] = {};
+    return acc[part];
+  }, result);
+});
+
+      return result;
+    };
+
+   const body = unflatten(req.body);
+
     const {
       classId,
       fName,
@@ -42,7 +63,7 @@ exports.createStudent = async (req, res) => {
       session,
       aadhaarNumber,
       abcId,
-    } = req.body;
+    } = body;
 
     const startYear = session.split("-")[0];
     // Count previous students for this org & session
@@ -124,15 +145,14 @@ exports.createStudent = async (req, res) => {
     };
 
     if (req.files) {
-      if (req.files.avatar) studentData.avatar = req.files.avatar[0].path;
-      if (req.files.aadharCard)
-        studentData.aadharCard = req.files.aadharCard[0].path;
-      if (req.files.previousSchoolTC)
-        studentData.previousSchoolTC = req.files.previousSchoolTC[0].path;
-      if (req.files.medicalCertificate)
-        studentData.medicalCertificate = req.files.medicalCertificate[0].path;
-      if (req.files.birthCertificate)
-        studentData.birthCertificate = req.files.birthCertificate[0].path;
+      const extractFilePath = (field) =>
+        req.files[field] && req.files[field][0] ? req.files[field][0].path : null;
+
+      studentData.avatar = extractFilePath("avatar");
+      studentData.aadharCard = extractFilePath("aadharCard");
+      studentData.previousSchoolTC = extractFilePath("previousSchoolTC");
+      studentData.medicalCertificate = extractFilePath("medicalCertificate");
+      studentData.birthCertificate = extractFilePath("birthCertificate");
     }
 
     const newStudent = new Student(studentData);
@@ -345,7 +365,7 @@ exports.getStudentsByClassAndSection = async (req, res) => {
     if (!classDoc) return res.status(404).json({ error: "Class not found" });
     const students = await Student.find({
       orgId,
-      admissionClass: classDoc.name, 
+      admissionClass: classDoc.name,
       section,
       status: "admitted",
     }).sort({ createdAt: -1 });
@@ -378,7 +398,7 @@ exports.getStudentByOrgUID = async (req, res) => {
 exports.updateStudent = async (req, res) => {
   try {
     const studentId = req.params.id;
-    const orgId = req.user.id; 
+    const orgId = req.user.id;
 
     const student = await Student.findOne({ _id: studentId, orgId });
 

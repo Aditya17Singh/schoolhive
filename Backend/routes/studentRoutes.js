@@ -4,8 +4,7 @@ const multer = require("multer");
 const studentController = require("../controllers/studentController");
 const verifyToken = require("../middleware/verifyToken");
 
-const storage = multer.memoryStorage(); 
-const upload = multer({ storage });
+const { upload } = require("../utils/multer-config");
 
 router.get("/", verifyToken, studentController.getAllStudentsForSchool);
 
