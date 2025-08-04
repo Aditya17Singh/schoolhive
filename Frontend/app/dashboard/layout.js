@@ -105,7 +105,7 @@ export default function DashboardLayout({ children }) {
   const isAcademicsActive = [
     "/dashboard/classes",
     "/dashboard/subjects",
-    "/dashboard/exam",
+    "/dashboard/academics/exam",
     "/dashboard/session",
   ].some((path) => pathname.startsWith(path));
 
@@ -235,7 +235,7 @@ export default function DashboardLayout({ children }) {
                   icon={<BookOpen className="w-4 h-4" />}
                 />
                 <MenuItem
-                  href="/dashboard/exam"
+                  href="/dashboard/academics/exam"
                   label="Exam"
                   icon={<ClipboardList className="w-4 h-4" />}
                 />

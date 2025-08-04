@@ -433,17 +433,69 @@ export default function StudentDetailsPage() {
                 )}
 
                 {activeTab === "Documents" && (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FileText className="w-8 h-8 text-purple-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Documents
-                    </h3>
-                    <p className="text-gray-500">
-                      Uploaded documents and certificates will be available
-                      here.
-                    </p>
+                  <div className="py-6 px-4 space-y-6">
+                    <Section title="Documents" icon={FileText}>
+                      {[
+                        { label: "Aadhaar Card", field: "aadharCard" },
+                        {
+                          label: "Birth Certificate",
+                          field: "birthCertificate",
+                        },
+                        {
+                          label: "Medical Certificate",
+                          field: "medicalCertificate",
+                        },
+                        {
+                          label: "Previous School TC",
+                          field: "previousSchoolTC",
+                        },
+                        { label: "Avatar", field: "avatar" },
+                      ].map(({ label, field }) => {
+                        const filePath = student?.[field];
+
+                        const getFileName = (fullPath) =>
+                          fullPath?.split(/[/\\]/).pop(); // handle Windows and POSIX
+
+                        const fileName = getFileName(filePath);
+                        const fileUrl = fileName
+                          ? `http://localhost:5000/uploads/students/${fileName}`
+                          : null;
+
+                        const isImage = fileName?.match(
+                          /\.(jpeg|jpg|png|gif|bmp|svg|webp)$/i
+                        );
+
+                        return (
+                          <div key={field} className="flex flex-col space-y-2">
+                            <span className="text-sm font-semibold text-gray-700">
+                              {label}
+                            </span>
+                            {fileUrl ? (
+                              isImage ? (
+                                <img
+                                  src={fileUrl}
+                                  alt={label}
+                                  className="w-60 h-auto rounded border"
+                                />
+                              ) : (
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline text-sm"
+                                >
+                                  View / Download {fileName}
+                                </a>
+                              )
+                            ) : (
+                              <span className="text-gray-400 italic text-sm">
+                                Not uploaded
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </Section>
                   </div>
                 )}
               </div>

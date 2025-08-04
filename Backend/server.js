@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 
 // Import Routes
@@ -28,6 +29,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+app.use("/uploads/students", express.static(path.join(__dirname, "uploads/students")));
+
 
 app.use("/api/teachers", teacherRoutes);
 app.use("/api/academics" , academicRoutes);
