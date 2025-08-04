@@ -158,7 +158,7 @@ const Dialog = ({ student, onClose }) => {
                   <div className="flex items-start gap-3 py-2">
                     <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
                     <span className="text-gray-900">
-                      {`${student.permanentAddress.line1}, ${student.permanentAddress.city}, ${student.permanentAddress.state}`}
+                      {`${student?.permanentAddress?.line1}, ${student?.permanentAddress?.city}, ${student?.permanentAddress?.state}`}
                     </span>
                   </div>
                 </div>
