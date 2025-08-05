@@ -90,7 +90,9 @@ exports.createStudent = async (req, res) => {
     }
 
     if (!selectedSection) {
-      return res.status(400).json({ error: "All sections for this class are full." });
+      return res
+        .status(400)
+        .json({ error: "All sections for this class are full." });
     }
 
     const rollCount = await Student.countDocuments({
@@ -164,6 +166,12 @@ exports.createStudent = async (req, res) => {
           section: selectedSection,
           orgId,
           status: "pending",
+          avatar: req.files?.avatar?.[0]?.path || null,
+          aadharCard: req.files?.aadharCard?.[0]?.path || null,
+          previousSchoolTC: req.files?.previousSchoolTC?.[0]?.path || null,
+          medicalCertificate:
+            req.files?.medicalCertificate?.[0]?.path || null,
+          birthCertificate: req.files?.birthCertificate?.[0]?.path || null,
         };
 
         newStudent = new Student(studentData);
@@ -352,7 +360,10 @@ exports.promoteStudents = async (req, res) => {
     if (studentsToPromote.length === 0) {
       return res
         .status(400)
-        .json({ error: "No students need promotion. All are already in this class and section." });
+        .json({
+          error:
+            "No students need promotion. All are already in this class and section.",
+        });
     }
 
     const idsToPromote = studentsToPromote.map((s) => s._id);
@@ -434,15 +445,33 @@ exports.updateStudent = async (req, res) => {
     }
 
     const updatableFields = [
-      "fName", "mName", "lName", "dob", "gender", "religion", "nationality",
-      "category", "admissionClass", "contactNumber", "email",
-      "permanentAddress", "residentialAddress", "sameAsPermanent",
-      "fatherName", "fatherPhone", "fatherEmail",
-      "motherName", "motherPhone", "motherEmail",
-      "guardianName", "guardianPhone", "aadhaarNumber", "abcId",
+      "fName",
+      "mName",
+      "lName",
+      "dob",
+      "gender",
+      "religion",
+      "nationality",
+      "category",
+      "admissionClass",
+      "contactNumber",
+      "email",
+      "permanentAddress",
+      "residentialAddress",
+      "sameAsPermanent",
+      "fatherName",
+      "fatherPhone",
+      "fatherEmail",
+      "motherName",
+      "motherPhone",
+      "motherEmail",
+      "guardianName",
+      "guardianPhone",
+      "aadhaarNumber",
+      "abcId",
     ];
 
-    updatableFields.forEach(field => {
+    updatableFields.forEach((field) => {
       if (req.body[field] !== undefined) {
         student[field] = req.body[field];
       }
@@ -450,10 +479,14 @@ exports.updateStudent = async (req, res) => {
 
     if (req.files) {
       if (req.files.avatar) student.avatar = req.files.avatar[0].path;
-      if (req.files.aadharCard) student.aadharCard = req.files.aadharCard[0].path;
-      if (req.files.previousSchoolTC) student.previousSchoolTC = req.files.previousSchoolTC[0].path;
-      if (req.files.medicalCertificate) student.medicalCertificate = req.files.medicalCertificate[0].path;
-      if (req.files.birthCertificate) student.birthCertificate = req.files.birthCertificate[0].path;
+      if (req.files.aadharCard)
+        student.aadharCard = req.files.aadharCard[0].path;
+      if (req.files.previousSchoolTC)
+        student.previousSchoolTC = req.files.previousSchoolTC[0].path;
+      if (req.files.medicalCertificate)
+        student.medicalCertificate = req.files.medicalCertificate[0].path;
+      if (req.files.birthCertificate)
+        student.birthCertificate = req.files.birthCertificate[0].path;
     }
 
     await student.save();
@@ -461,7 +494,9 @@ exports.updateStudent = async (req, res) => {
     res.status(200).json({ message: "Student updated successfully", student });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error updating student", details: err.message });
+    res
+      .status(500)
+      .json({ error: "Error updating student", details: err.message });
   }
 };
 
