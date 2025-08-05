@@ -13,6 +13,11 @@ export default function ApplicationForm({ orgId }) {
   const [isAdmissionOpen, setIsAdmissionOpen] = useState(null);
   const [copied, setCopied] = useState(false);
   const [success, setSuccess] = useState("");
+  const [errors, setErrors] = useState({});
+
+  const MAX_FILE_SIZE_MB = 5;
+  const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
 
   const user = useMemo(
     () => JSON.parse(localStorage.getItem("user") || "{}"),
@@ -81,13 +86,12 @@ export default function ApplicationForm({ orgId }) {
   );
 
   const [form, setForm] = useState(initialState);
-  console.log(form, 'form');
 
   const handleChange = useCallback((e) => {
     const { id, value, type, checked, files } = e.target;
 
-    setForm((prev) => {
-      if (type === "checkbox") {
+    if (type === "checkbox") {
+      setForm((prev) => {
         if (id === "sameAsPermanent") {
           const residentialAddress = checked
             ? { ...prev.permanentAddress }
@@ -106,26 +110,53 @@ export default function ApplicationForm({ orgId }) {
             residentialAddress,
           };
         }
+
         return { ...prev, [id]: checked };
-      }
+      });
+      return;
+    }
 
-      if (type === "file") {
-        const file = files[0];
-        if (!file) return prev;
+    if (type === "file") {
+      const file = files[0];
+      if (!file) return;
 
-        const previewUrl = URL.createObjectURL(file);
-        return {
+      // Validate file type
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        setErrors((prev) => ({
           ...prev,
-          [id]: file,
-          [`${id}Preview`]: previewUrl,
-        };
+          [id]: "Unsupported file type. Only JPG, PNG, or PDF allowed.",
+        }));
+        return;
       }
 
-      if (
-        id.startsWith("permanentAddress.") ||
-        id.startsWith("residentialAddress.")
-      ) {
-        const [section, field] = id.split(".");
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        setErrors((prev) => ({
+          ...prev,
+          [id]: `File size exceeds ${MAX_FILE_SIZE_MB}MB limit.`,
+        }));
+        return;
+      }
+
+      // Clear previous error if file is valid
+      setErrors((prev) => ({
+        ...prev,
+        [id]: null,
+      }));
+
+      const previewUrl = URL.createObjectURL(file);
+      setForm((prev) => ({
+        ...prev,
+        [id]: file,
+        [`${id}Preview`]: previewUrl,
+      }));
+
+      return;
+    }
+
+    if (id.startsWith("permanentAddress.") || id.startsWith("residentialAddress.")) {
+      const [section, field] = id.split(".");
+      setForm((prev) => {
         const updatedSection = {
           ...prev[section],
           [field]: value,
@@ -144,10 +175,15 @@ export default function ApplicationForm({ orgId }) {
         }
 
         return updated;
-      }
+      });
 
-      return { ...prev, [id]: value };
-    });
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
   }, []);
 
   const handleSubmit = useCallback(
@@ -223,7 +259,6 @@ export default function ApplicationForm({ orgId }) {
     },
     [form, user.id, orgId, initialState]
   );
-
 
   const fetchClasses = useCallback(async () => {
     const currentOrgId = user.id ? user.id : orgId;
@@ -927,6 +962,10 @@ export default function ApplicationForm({ orgId }) {
                       pattern="[0-9]{12}"
                       title="Enter 12 digit Aadhaar number"
                     />
+                    {errors.avatar && (
+                      <p className="text-sm text-red-600 mt-1">{errors.avatar}</p>
+                    )}
+
                   </div>
 
                   <div className="space-y-2">
@@ -982,14 +1021,28 @@ export default function ApplicationForm({ orgId }) {
                       </label>
                     </div>
                     {form.avatarPreview && (
-                      <div className="mt-2 flex justify-center">
+                      <div className="mt-2 flex justify-center relative w-24 h-24">
                         <img
                           src={form.avatarPreview}
                           alt="Avatar Preview"
-                          className="h-24 w-24 object-cover rounded-full border"
+                          className="h-full w-full object-cover rounded-full border"
                         />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              avatar: null,
+                              avatarPreview: null,
+                            }))
+                          }
+                          className="absolute top-0 cursor-pointer right-0 bg-black bg-opacity-60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-opacity-80"
+                        >
+                          ✕
+                        </button>
                       </div>
                     )}
+
                   </div>
 
                   {/* Document Grid */}
@@ -1016,20 +1069,35 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
+                      <p className="text-xs text-gray-400 mt-1">Allowed types: PDF, JPG, PNG, JPEG</p>
+
                       {form.aadharCardPreview && (
-                        <div className="mt-2">
+                        <div className="mt-2 relative">
                           {form.aadharCard?.type === "application/pdf" ? (
                             <iframe src={form.aadharCardPreview} className="w-full h-48 border rounded" />
                           ) : (
                             <img
                               src={form.aadharCardPreview}
                               alt="Aadhaar Preview"
-                              className="h-24 w-auto object-contain border rounded"
                             />
                           )}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                aadharCard: null,
+                                aadharCardPreview: null,
+                              }))
+                            }
+                            className="absolute top-0 cursor-pointer right-0 bg-black bg-opacity-60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-opacity-80"
+                          >
+                            ✕
+                          </button>
                         </div>
                       )}
                     </div>
+
 
                     {/* Previous School TC */}
                     <div className="space-y-2">
@@ -1053,17 +1121,30 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
+                      <p className="text-xs text-gray-400 mt-1">Allowed types: PDF, JPG, PNG, JPEG</p>
                       {form.previousSchoolTCPreview && (
-                        <div className="mt-2">
+                        <div className="mt-2 relative">
                           {form.previousSchoolTC?.type === "application/pdf" ? (
                             <iframe src={form.previousSchoolTCPreview} className="w-full h-48 border rounded" />
                           ) : (
                             <img
                               src={form.previousSchoolTCPreview}
                               alt="TC Preview"
-                              className="h-24 w-auto object-contain border rounded"
                             />
                           )}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                previousSchoolTC: null,
+                                previousSchoolTCPreview: null,
+                              }))
+                            }
+                            className="absolute top-0 cursor-pointer right-0 bg-black bg-opacity-60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-opacity-80"
+                          >
+                            ✕
+                          </button>
                         </div>
                       )}
                     </div>
@@ -1090,19 +1171,33 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
+                      <p className="text-xs text-gray-400 mt-1">Allowed types: PDF, JPG, PNG, JPEG</p>
                       {form.medicalCertificatePreview && (
-                        <div className="mt-2">
+                        <div className="mt-2 relative">
                           {form.medicalCertificate?.type === "application/pdf" ? (
                             <iframe src={form.medicalCertificatePreview} className="w-full h-48 border rounded" />
                           ) : (
                             <img
                               src={form.medicalCertificatePreview}
                               alt="Medical Cert Preview"
-                              className="h-24 w-auto object-contain border rounded"
                             />
                           )}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                medicalCertificate: null,
+                                medicalCertificatePreview: null,
+                              }))
+                            }
+                            className="absolute top-0 cursor-pointer right-0 bg-black bg-opacity-60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-opacity-80"
+                          >
+                            ✕
+                          </button>
                         </div>
                       )}
+
                     </div>
 
                     {/* Birth Certificate */}
@@ -1127,17 +1222,30 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
+                      <p className="text-xs text-gray-400 mt-1">Allowed types: PDF, JPG, PNG, JPEG</p>
                       {form.birthCertificatePreview && (
-                        <div className="mt-2">
+                        <div className="mt-2 relative">
                           {form.birthCertificate?.type === "application/pdf" ? (
                             <iframe src={form.birthCertificatePreview} className="w-full h-48 border rounded" />
                           ) : (
                             <img
                               src={form.birthCertificatePreview}
                               alt="Birth Cert Preview"
-                              className="h-24 w-auto object-contain border rounded"
                             />
                           )}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                birthCertificate: null,
+                                birthCertificatePreview: null,
+                              }))
+                            }
+                            className="absolute cursor-pointer top-0 right-0 bg-black bg-opacity-60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-opacity-80"
+                          >
+                            ✕
+                          </button>
                         </div>
                       )}
                     </div>
@@ -1148,12 +1256,6 @@ export default function ApplicationForm({ orgId }) {
               {/* Submit Button */}
               <div className="p-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-end">
-                  {/* <button
-                  type="button"
-                  className="px-8 py-3 cursor-pointer border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
-                >
-                  Save as Draft
-                </button> */}
                   <button
                     type="submit"
                     className="px-8 py-3 cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
