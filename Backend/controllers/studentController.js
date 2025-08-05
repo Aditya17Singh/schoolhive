@@ -9,8 +9,8 @@ exports.createStudent = async (req, res) => {
     if (!req.body) {
       return res.status(400).json({ error: "No form data received" });
     }
-    const orgId = req.user.id;
 
+    const orgId = req.user.id;
     const org = await Organization.findById(orgId);
     if (!org) return res.status(404).json({ error: "Organization not found" });
 
@@ -20,22 +20,21 @@ exports.createStudent = async (req, res) => {
     const unflatten = (data) => {
       const result = {};
       Object.entries(data).forEach(([key, value]) => {
-  const keys = key.split(".");
-  keys.reduce((acc, part, index) => {
-    if (index === keys.length - 1) {
-      acc[part] = value;
-      return;
-    }
-    if (!acc[part]) acc[part] = {};
-    return acc[part];
-  }, result);
-});
+        const keys = key.split(".");
+        keys.reduce((acc, part, index) => {
+          if (index === keys.length - 1) {
+            acc[part] = value;
+            return;
+          }
+          if (!acc[part]) acc[part] = {};
+          return acc[part];
+        }, result);
+      });
 
       return result;
     };
 
-   const body = unflatten(req.body);
-
+    const body = unflatten(req.body);
     const {
       classId,
       fName,
@@ -66,11 +65,6 @@ exports.createStudent = async (req, res) => {
     } = body;
 
     const startYear = session.split("-")[0];
-    // Count previous students for this org & session
-    const count = await Student.countDocuments({ orgId, session });
-    const nextNumber = (count + 1).toString().padStart(5, "0");
-
-    const orgUID = `${orgName}${startYear}${nextNumber}`;
 
     const classDoc = await Class.findOne({ name: admissionClass, orgId });
     if (!classDoc) {
@@ -95,6 +89,12 @@ exports.createStudent = async (req, res) => {
       }
     }
 
+    if (!selectedSection) {
+      return res
+        .status(400)
+        .json({ error: "All sections for this class are full." });
+    }
+
     const rollCount = await Student.countDocuments({
       orgId,
       admissionClass,
@@ -102,68 +102,103 @@ exports.createStudent = async (req, res) => {
       session,
       status: { $in: ["pending", "admitted"] },
     });
+
     const rollNumber = rollCount + 1;
 
-    if (!selectedSection) {
-      return res
-        .status(400)
-        .json({ error: "All sections for this class are full." });
-    }
-
-    const studentData = {
-      fName,
-      mName,
-      lName,
-      dob,
-      gender,
-      religion,
-      nationality,
-      category,
-      admissionClass,
-      contactNumber,
-      email,
-      permanentAddress,
-      residentialAddress,
-      sameAsPermanent,
-      fatherName,
-      fatherPhone,
-      fatherEmail,
-      motherName,
-      motherPhone,
-      motherEmail,
-      guardianName,
-      guardianPhone,
-      session,
-      aadhaarNumber,
-      abcId,
-      orgUID,
-      rollNumber,
-      class: classId,
-      section: selectedSection,
-      orgId,
-      status: "pending",
-    };
-
+    // Calculate total file size
     if (req.files) {
-      const extractFilePath = (field) =>
-        req.files[field] && req.files[field][0] ? req.files[field][0].path : null;
+      let totalSize = 0;
+      for (const field in req.files) {
+        req.files[field].forEach((file) => {
+          totalSize += file.size;
+        });
+      }
 
-      studentData.avatar = extractFilePath("avatar");
-      studentData.aadharCard = extractFilePath("aadharCard");
-      studentData.previousSchoolTC = extractFilePath("previousSchoolTC");
-      studentData.medicalCertificate = extractFilePath("medicalCertificate");
-      studentData.birthCertificate = extractFilePath("birthCertificate");
+      const maxTotalSize = 10 * 1024 * 1024; // 10 MB total
+      if (totalSize > maxTotalSize) {
+        return res.status(400).json({
+          error: "Total uploaded file size exceeds 10MB limit",
+        });
+      }
     }
 
-    const newStudent = new Student(studentData);
-    await newStudent.save();
+    // Retry logic for unique orgUID
+    const MAX_ATTEMPTS = 5;
+    let attempt = 0;
+    let newStudent;
+    let saved = false;
+
+    while (!saved && attempt < MAX_ATTEMPTS) {
+      try {
+        const count = await Student.countDocuments({ orgId, session });
+        const nextNumber = (count + 1 + attempt).toString().padStart(5, "0");
+        const orgUID = `${orgName}${startYear}${nextNumber}`;
+
+        const studentData = {
+          fName,
+          mName,
+          lName,
+          dob,
+          gender,
+          religion,
+          nationality,
+          category,
+          admissionClass,
+          contactNumber,
+          email,
+          permanentAddress,
+          residentialAddress,
+          sameAsPermanent,
+          fatherName,
+          fatherPhone,
+          fatherEmail,
+          motherName,
+          motherPhone,
+          motherEmail,
+          guardianName,
+          guardianPhone,
+          session,
+          aadhaarNumber,
+          abcId,
+          orgUID,
+          rollNumber,
+          class: classId,
+          section: selectedSection,
+          orgId,
+          status: "pending",
+          avatar: req.files?.avatar?.[0]?.path || null,
+          aadharCard: req.files?.aadharCard?.[0]?.path || null,
+          previousSchoolTC: req.files?.previousSchoolTC?.[0]?.path || null,
+          medicalCertificate:
+            req.files?.medicalCertificate?.[0]?.path || null,
+          birthCertificate: req.files?.birthCertificate?.[0]?.path || null,
+        };
+
+        newStudent = new Student(studentData);
+        await newStudent.save();
+        saved = true;
+      } catch (err) {
+        if (err.code === 11000 && err.message.includes("orgUID")) {
+          attempt++; // try again
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    if (!saved) {
+      return res.status(500).json({
+        error: "Failed to generate unique orgUID after multiple attempts.",
+      });
+    }
 
     res.status(201).json(newStudent);
   } catch (err) {
     console.error(err);
-    res
-      .status(400)
-      .json({ error: "Error creating student", details: err.message });
+    res.status(400).json({
+      error: "Error creating student",
+      details: err.message,
+    });
   }
 };
 
@@ -325,7 +360,10 @@ exports.promoteStudents = async (req, res) => {
     if (studentsToPromote.length === 0) {
       return res
         .status(400)
-        .json({ error: "No students need promotion. All are already in this class and section." });
+        .json({
+          error:
+            "No students need promotion. All are already in this class and section.",
+        });
     }
 
     const idsToPromote = studentsToPromote.map((s) => s._id);
@@ -407,15 +445,33 @@ exports.updateStudent = async (req, res) => {
     }
 
     const updatableFields = [
-      "fName", "mName", "lName", "dob", "gender", "religion", "nationality",
-      "category", "admissionClass", "contactNumber", "email",
-      "permanentAddress", "residentialAddress", "sameAsPermanent",
-      "fatherName", "fatherPhone", "fatherEmail",
-      "motherName", "motherPhone", "motherEmail",
-      "guardianName", "guardianPhone", "aadhaarNumber", "abcId",
+      "fName",
+      "mName",
+      "lName",
+      "dob",
+      "gender",
+      "religion",
+      "nationality",
+      "category",
+      "admissionClass",
+      "contactNumber",
+      "email",
+      "permanentAddress",
+      "residentialAddress",
+      "sameAsPermanent",
+      "fatherName",
+      "fatherPhone",
+      "fatherEmail",
+      "motherName",
+      "motherPhone",
+      "motherEmail",
+      "guardianName",
+      "guardianPhone",
+      "aadhaarNumber",
+      "abcId",
     ];
 
-    updatableFields.forEach(field => {
+    updatableFields.forEach((field) => {
       if (req.body[field] !== undefined) {
         student[field] = req.body[field];
       }
@@ -423,10 +479,14 @@ exports.updateStudent = async (req, res) => {
 
     if (req.files) {
       if (req.files.avatar) student.avatar = req.files.avatar[0].path;
-      if (req.files.aadharCard) student.aadharCard = req.files.aadharCard[0].path;
-      if (req.files.previousSchoolTC) student.previousSchoolTC = req.files.previousSchoolTC[0].path;
-      if (req.files.medicalCertificate) student.medicalCertificate = req.files.medicalCertificate[0].path;
-      if (req.files.birthCertificate) student.birthCertificate = req.files.birthCertificate[0].path;
+      if (req.files.aadharCard)
+        student.aadharCard = req.files.aadharCard[0].path;
+      if (req.files.previousSchoolTC)
+        student.previousSchoolTC = req.files.previousSchoolTC[0].path;
+      if (req.files.medicalCertificate)
+        student.medicalCertificate = req.files.medicalCertificate[0].path;
+      if (req.files.birthCertificate)
+        student.birthCertificate = req.files.birthCertificate[0].path;
     }
 
     await student.save();
@@ -434,7 +494,9 @@ exports.updateStudent = async (req, res) => {
     res.status(200).json({ message: "Student updated successfully", student });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error updating student", details: err.message });
+    res
+      .status(500)
+      .json({ error: "Error updating student", details: err.message });
   }
 };
 

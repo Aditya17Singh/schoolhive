@@ -59,7 +59,7 @@ const studentApplicationSchema = new mongoose.Schema({
     enum: ['pending', 'admitted', 'rejected'],
     default: 'pending'
   },
-  orgUID: { type: String, },
+  orgUID: { type: String, unique: true },
   orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
 }, {
   timestamps: true,
