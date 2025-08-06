@@ -17,7 +17,12 @@ export default function ApplicationForm({ orgId }) {
 
   const MAX_FILE_SIZE_MB = 5;
   const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
-  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+  const ALLOWED_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/jpg",
+    "application/pdf",
+  ];
 
   const user = useMemo(
     () => JSON.parse(localStorage.getItem("user") || "{}"),
@@ -96,13 +101,13 @@ export default function ApplicationForm({ orgId }) {
           const residentialAddress = checked
             ? { ...prev.permanentAddress }
             : {
-              line1: "",
-              line2: "",
-              city: "",
-              district: "",
-              state: "",
-              pincode: "",
-            };
+                line1: "",
+                line2: "",
+                city: "",
+                district: "",
+                state: "",
+                pincode: "",
+              };
 
           return {
             ...prev,
@@ -154,7 +159,10 @@ export default function ApplicationForm({ orgId }) {
       return;
     }
 
-    if (id.startsWith("permanentAddress.") || id.startsWith("residentialAddress.")) {
+    if (
+      id.startsWith("permanentAddress.") ||
+      id.startsWith("residentialAddress.")
+    ) {
       const [section, field] = id.split(".");
       setForm((prev) => {
         const updatedSection = {
@@ -250,8 +258,8 @@ export default function ApplicationForm({ orgId }) {
       } catch (err) {
         setError(
           err.response?.data?.message ||
-          err.message ||
-          "Failed to create student"
+            err.message ||
+            "Failed to create student"
         );
       } finally {
         setSubmitting(false);
@@ -320,11 +328,32 @@ export default function ApplicationForm({ orgId }) {
     }
   }, [success]);
 
+  useEffect(() => {
+    const fetchCurrentSession = async () => {
+      try {
+        const response = await API.get("/academics/active");
+
+        if (response.data?.year) {
+          setForm((prev) => ({
+            ...prev,
+            session: response.data.year,
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to fetch academic year:", error);
+      }
+    };
+
+    fetchCurrentSession();
+  }, []);
 
   return (
     <div
-      className={`min-h-screen mt-4 relative rounded-lg py-8 px-4 ${!orgId ? "grid gap-8 lg:grid-cols-[1fr_30%] items-start overflow-x-hidden" : ""
-        }`}
+      className={`min-h-screen mt-4 relative rounded-lg py-8 px-4 ${
+        !orgId
+          ? "grid gap-8 lg:grid-cols-[1fr_30%] items-start overflow-x-hidden"
+          : ""
+      }`}
     >
       <div>
         {/* Header */}
@@ -938,10 +967,10 @@ export default function ApplicationForm({ orgId }) {
                     <input
                       id="session"
                       value={form.session}
-                      onChange={handleChange}
                       placeholder="e.g., 2024-2025"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
-                      required
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100 cursor-not-allowed text-gray-600"
+                      disabled
+                      readOnly
                     />
                   </div>
 
@@ -963,9 +992,10 @@ export default function ApplicationForm({ orgId }) {
                       title="Enter 12 digit Aadhaar number"
                     />
                     {errors.avatar && (
-                      <p className="text-sm text-red-600 mt-1">{errors.avatar}</p>
+                      <p className="text-sm text-red-600 mt-1">
+                        {errors.avatar}
+                      </p>
                     )}
-
                   </div>
 
                   <div className="space-y-2">
@@ -990,14 +1020,19 @@ export default function ApplicationForm({ orgId }) {
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                 <div className="bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-4">
                   <div className="flex items-center space-x-2">
-                    <h2 className="text-xl font-semibold text-white">Document Upload</h2>
+                    <h2 className="text-xl font-semibold text-white">
+                      Document Upload
+                    </h2>
                   </div>
                 </div>
 
                 <div className="p-6 space-y-6">
                   {/* Avatar */}
                   <div className="space-y-2">
-                    <label htmlFor="avatar" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="avatar"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       Upload Student Photo
                     </label>
                     <div className="flex items-center justify-center w-full">
@@ -1007,9 +1042,14 @@ export default function ApplicationForm({ orgId }) {
                       >
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <p className="mb-2 text-sm text-gray-500">
-                            <span className="font-semibold">Click to upload</span> student photo
+                            <span className="font-semibold">
+                              Click to upload
+                            </span>{" "}
+                            student photo
                           </p>
-                          <p className="text-xs text-gray-400">PNG, JPG or JPEG (MAX. 5MB)</p>
+                          <p className="text-xs text-gray-400">
+                            PNG, JPG or JPEG (MAX. 5MB)
+                          </p>
                         </div>
                         <input
                           id="avatar"
@@ -1042,14 +1082,16 @@ export default function ApplicationForm({ orgId }) {
                         </button>
                       </div>
                     )}
-
                   </div>
 
                   {/* Document Grid */}
                   <div className="grid md:grid-cols-2 gap-6">
                     {/* Aadhaar Card */}
                     <div className="space-y-2">
-                      <label htmlFor="aadharCard" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="aadharCard"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Aadhaar Card
                       </label>
                       <div className="flex items-center justify-center w-full">
@@ -1058,7 +1100,9 @@ export default function ApplicationForm({ orgId }) {
                           className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                         >
                           <div className="flex flex-col items-center justify-center pt-3 pb-3">
-                            <p className="text-xs text-gray-500">Upload Aadhaar Card</p>
+                            <p className="text-xs text-gray-500">
+                              Upload Aadhaar Card
+                            </p>
                           </div>
                           <input
                             id="aadharCard"
@@ -1069,12 +1113,17 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">Allowed types: PDF, JPG, PNG, JPEG</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Allowed types: PDF, JPG, PNG, JPEG
+                      </p>
 
                       {form.aadharCardPreview && (
                         <div className="mt-2 relative">
                           {form.aadharCard?.type === "application/pdf" ? (
-                            <iframe src={form.aadharCardPreview} className="w-full h-48 border rounded" />
+                            <iframe
+                              src={form.aadharCardPreview}
+                              className="w-full h-48 border rounded"
+                            />
                           ) : (
                             <img
                               src={form.aadharCardPreview}
@@ -1098,10 +1147,12 @@ export default function ApplicationForm({ orgId }) {
                       )}
                     </div>
 
-
                     {/* Previous School TC */}
                     <div className="space-y-2">
-                      <label htmlFor="previousSchoolTC" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="previousSchoolTC"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Previous School TC
                       </label>
                       <div className="flex items-center justify-center w-full">
@@ -1121,11 +1172,16 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">Allowed types: PDF, JPG, PNG, JPEG</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Allowed types: PDF, JPG, PNG, JPEG
+                      </p>
                       {form.previousSchoolTCPreview && (
                         <div className="mt-2 relative">
                           {form.previousSchoolTC?.type === "application/pdf" ? (
-                            <iframe src={form.previousSchoolTCPreview} className="w-full h-48 border rounded" />
+                            <iframe
+                              src={form.previousSchoolTCPreview}
+                              className="w-full h-48 border rounded"
+                            />
                           ) : (
                             <img
                               src={form.previousSchoolTCPreview}
@@ -1151,7 +1207,10 @@ export default function ApplicationForm({ orgId }) {
 
                     {/* Medical Certificate */}
                     <div className="space-y-2">
-                      <label htmlFor="medicalCertificate" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="medicalCertificate"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Medical Certificate
                       </label>
                       <div className="flex items-center justify-center w-full">
@@ -1160,7 +1219,9 @@ export default function ApplicationForm({ orgId }) {
                           className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                         >
                           <div className="flex flex-col items-center justify-center pt-3 pb-3">
-                            <p className="text-xs text-gray-500">Upload Medical Cert.</p>
+                            <p className="text-xs text-gray-500">
+                              Upload Medical Cert.
+                            </p>
                           </div>
                           <input
                             id="medicalCertificate"
@@ -1171,11 +1232,17 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">Allowed types: PDF, JPG, PNG, JPEG</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Allowed types: PDF, JPG, PNG, JPEG
+                      </p>
                       {form.medicalCertificatePreview && (
                         <div className="mt-2 relative">
-                          {form.medicalCertificate?.type === "application/pdf" ? (
-                            <iframe src={form.medicalCertificatePreview} className="w-full h-48 border rounded" />
+                          {form.medicalCertificate?.type ===
+                          "application/pdf" ? (
+                            <iframe
+                              src={form.medicalCertificatePreview}
+                              className="w-full h-48 border rounded"
+                            />
                           ) : (
                             <img
                               src={form.medicalCertificatePreview}
@@ -1197,12 +1264,14 @@ export default function ApplicationForm({ orgId }) {
                           </button>
                         </div>
                       )}
-
                     </div>
 
                     {/* Birth Certificate */}
                     <div className="space-y-2">
-                      <label htmlFor="birthCertificate" className="block text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="birthCertificate"
+                        className="block text-sm font-medium text-gray-700"
+                      >
                         Birth Certificate
                       </label>
                       <div className="flex items-center justify-center w-full">
@@ -1211,7 +1280,9 @@ export default function ApplicationForm({ orgId }) {
                           className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                         >
                           <div className="flex flex-col items-center justify-center pt-3 pb-3">
-                            <p className="text-xs text-gray-500">Upload Birth Cert.</p>
+                            <p className="text-xs text-gray-500">
+                              Upload Birth Cert.
+                            </p>
                           </div>
                           <input
                             id="birthCertificate"
@@ -1222,11 +1293,16 @@ export default function ApplicationForm({ orgId }) {
                           />
                         </label>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">Allowed types: PDF, JPG, PNG, JPEG</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Allowed types: PDF, JPG, PNG, JPEG
+                      </p>
                       {form.birthCertificatePreview && (
                         <div className="mt-2 relative">
                           {form.birthCertificate?.type === "application/pdf" ? (
-                            <iframe src={form.birthCertificatePreview} className="w-full h-48 border rounded" />
+                            <iframe
+                              src={form.birthCertificatePreview}
+                              className="w-full h-48 border rounded"
+                            />
                           ) : (
                             <img
                               src={form.birthCertificatePreview}
@@ -1284,8 +1360,9 @@ export default function ApplicationForm({ orgId }) {
               Add Student Automatically
             </h3>
             <p className="text-sm text-muted-foreground">
-              Share this link with student to fill out the form. After submission, you'll receive a
-              notification to review and approve their addition to the organization.
+              Share this link with student to fill out the form. After
+              submission, you'll receive a notification to review and approve
+              their addition to the organization.
             </p>
           </div>
           <div className="p-6 pt-0">
