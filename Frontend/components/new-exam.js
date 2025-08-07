@@ -1,36 +1,108 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronsUpDown } from "lucide-react";
+import API from "@/lib/api";
 
 export default function CreateExam() {
   const [examName, setExamName] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
   const [classes, setClasses] = useState([]);
+  const [formData, setFormData] = useState([]);
+  const [allTeachers, setAllTeachers] = useState([]);
 
+  // Fetch all classes
   useEffect(() => {
-    // Replace with actual API call to get classes
-    setClasses([
-      { id: "6822f16b8a0c9dee94e269f8", name: "Nursery" },
-      { id: "6822f16b8a0c9dee94e269fa", name: "PG" },
-      { id: "6822f16b8a0c9dee94e269fc", name: "LKG" },
-      { id: "6822f16b8a0c9dee94e269fe", name: "1st" },
-      { id: "6822f16b8a0c9dee94e26a00", name: "2nd" },
-      { id: "6822f16b8a0c9dee94e26a02", name: "7th" },
-      { id: "6822f16b8a0c9dee94e26a04", name: "11th Science" },
-      { id: "6822f16b8a0c9dee94e26a06", name: "11th Commerce" },
-    ]);
+    async function fetchClasses() {
+      try {
+        const res = await API.get("/classes");
+        setClasses(res.data);
+      } catch (err) {
+        console.error("Failed to load classes", err);
+      }
+    }
+
+    fetchClasses();
   }, []);
+
+  // Fetch subjects when class is selected
+  useEffect(() => {
+    async function fetchSubjectsForClass() {
+      if (!selectedClassId) return;
+
+      try {
+        const classRes = await API.get(`/classes/${selectedClassId}`);
+        const subjectIds = classRes.data.subjects || [];
+
+        // Fetch subject details in parallel
+        const subjectPromises = subjectIds.map((id) =>
+          API.get(`/subjects/${id}`).then((res) => res.data)
+        );
+
+        const subjectData = await Promise.all(subjectPromises);
+
+        const initializedFormData = subjectData.map((subject) => ({
+          subjectId: subject._id,
+          subjectName: subject.name,
+          teacher: "",
+          maxMarks: "",
+          date: "",
+        }));
+
+        setFormData(initializedFormData);
+      } catch (err) {
+        console.error("Error fetching subjects:", err);
+        setFormData([]);
+      }
+    }
+
+    fetchSubjectsForClass();
+  }, [selectedClassId]);
+
+  const handleChange = (index, field, value) => {
+    const updated = [...formData];
+    updated[index][field] = value;
+    setFormData(updated);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Add actual POST logic here
-    console.log("Creating exam:", { examName, selectedClassId });
+    const payload = {
+      examName,
+      classId: selectedClassId,
+      subjects: formData.map((item) => ({
+        subjectId: item.subjectId,
+        teacher: item.teacher,
+        maxMarks: item.maxMarks,
+        date: item.date,
+      })),
+    };
 
-    // Reset form
-    setExamName("");
-    setSelectedClassId("");
+    console.log("Submitting:", payload);
+
+    // TODO: POST to your API endpoint here
   };
+
+  useEffect(() => {
+    async function fetchTeachers() {
+      try {
+        const res = await API.get("/teachers");
+        if (res.data.success) {
+          setAllTeachers(res.data.data);
+        } else {
+          console.error("⚠️ Unexpected response:", res.data);
+        }
+      } catch (err) {
+        console.error(
+          "❌ Failed to fetch teachers:",
+          err.response?.data || err.message
+        );
+      }
+    }
+
+    fetchTeachers();
+  }, []);
 
   return (
     <div className="pl-6 pt-4">
@@ -39,33 +111,25 @@ export default function CreateExam() {
       <form className="space-y-4" onSubmit={handleSubmit}>
         {/* Exam Name */}
         <div>
-          <label
-            htmlFor="examName"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Exam Name
           </label>
           <input
-            id="examName"
             type="text"
-            placeholder="e.g. First Term Exam"
             value={examName}
             onChange={(e) => setExamName(e.target.value)}
-            className="w-full h-9 px-3 py-1 border border-gray-400 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="e.g. First Term Exam"
             required
+            className="w-full h-9 px-3 py-1 border border-gray-400 rounded-md text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
         {/* Class Select */}
         <div>
-          <label
-            htmlFor="class"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Class
           </label>
           <select
-            id="class"
             value={selectedClassId}
             onChange={(e) => setSelectedClassId(e.target.value)}
             className="w-full h-9 px-3 py-2 border border-gray-400 rounded-md text-sm bg-[#F7F8FA] shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -73,21 +137,77 @@ export default function CreateExam() {
           >
             <option value="">Select class</option>
             {classes.map((cls) => (
-              <option key={cls.id} value={cls.id}>
+              <option key={cls._id} value={cls._id}>
                 {cls.name}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Subjects Message */}
-        {selectedClassId && (
-          <p className="text-gray-500 font-sans pl-1 text-sm">
-            Select class to see subjects (feature coming soon)
-          </p>
+        {/* Subjects */}
+        {formData.length > 0 && (
+          <div className="space-y-2">
+            {formData.map((data, index) => (
+              <div
+                key={data.subjectId}
+                className="px-1 gap-1 py-1 w-full border flex justify-between items-center rounded-md shadow-sm border-gray-400"
+              >
+                <div className="flex-1">
+                  <span className="font-semibold text-[#333333] pl-2 text-sm">
+                    {data.subjectName}
+                  </span>
+                </div>
+
+                {/* Teacher Selector (placeholder button for now) */}
+                <div className="flex-[2]">
+                  <select
+                    multiple
+                    value={data.teacher}
+                    onChange={(e) => {
+                      const selectedOptions = Array.from(
+                        e.target.selectedOptions
+                      ).map((opt) => opt.value);
+                      handleChange(index, "teacher", selectedOptions);
+                    }}
+                    className="flex h-9 w-full rounded-md border px-2 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border-gray-400"
+                  >
+                    {allTeachers.map((teacher) => (
+                      <option key={teacher._id} value={teacher._id}>
+                        {teacher.fname}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Max Marks */}
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    placeholder="Max Marks"
+                    value={data.maxMarks}
+                    onChange={(e) =>
+                      handleChange(index, "maxMarks", e.target.value)
+                    }
+                    className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border-gray-400 min-w-[150px]"
+                  />
+                </div>
+
+                {/* Exam Date */}
+                <div className="flex-1">
+                  <input
+                    type="date"
+                    value={data.date}
+                    onChange={(e) =>
+                      handleChange(index, "date", e.target.value)
+                    }
+                    className="flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border-gray-400 min-w-[150px]"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         )}
 
-        {/* Submit Button */}
         <button
           type="submit"
           className="inline-flex items-center justify-center gap-2 px-4 py-2 h-9 rounded-md bg-yellow-400 text-black hover:bg-yellow-500 text-sm font-medium shadow"

@@ -6,7 +6,7 @@ exports.getAllClasses = async (req, res) => {
   try {
     const orgId = req.user.id;
     const classes = await Class.find({ orgId })
-      .populate({ path: "subjects", select: "name code employee" })
+      .populate({ path: "subjects", select: "name code teacher" })
       .populate({ path: "students", select: "firstName lastName rollNo" });
     res.json(classes);
   } catch (error) {
@@ -165,5 +165,17 @@ exports.deleteClass = async (req, res) => {
     res.json({ message: "Class deleted, student references cleared." });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getClassById = async (req, res) => {
+  try {
+    const classData = await Class.findById(req.params.id);
+    if (!classData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+    res.json(classData);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

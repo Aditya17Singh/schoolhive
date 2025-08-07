@@ -87,7 +87,7 @@ exports.assignOrRemoveTeacher = async (req, res) => {
 exports.getSubjectById = async (req, res) => {
   try {
     const subject = await Subject.findById(req.params.id)
-      .populate("employee", "firstName lastName")
+      .populate("teacher", "firstName lastName")
       .populate("class");
     if (!subject) return res.status(404).json({ error: "Subject not found" });
     res.json(subject);

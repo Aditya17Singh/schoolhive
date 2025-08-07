@@ -20,5 +20,6 @@ router.put("/:id", classController.updateClass);
 router.put("/add-student", classController.addStudentToClass);
 // router.post("/:classId/students", studentController.createStudentInClass);
 // router.get("/:classId/students", studentController.getStudentsByClass);
+router.get("/:id", verifyToken, classController.getClassById);
 
 module.exports = router;
