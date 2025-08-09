@@ -6,6 +6,7 @@ import { CirclePlus } from "lucide-react";
 import axios from "axios";
 import { AddSubjectsDialog } from "./add-subject-dialog";
 import SectionDialog from "./class-section";
+import API from "../lib/api";
 
 export default function ClassList() {
   const router = useRouter();
@@ -29,10 +30,7 @@ export default function ClassList() {
 
   const fetchClasses = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/classes", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await API.get("/classes"); 
       setClasses(res.data);
     } catch (error) {
       console.error(error);
@@ -221,278 +219,71 @@ export default function ClassList() {
 
   return (
     <div className="relative p-3 sm:p-6">
-    {/* Toasts */}
-    <div className="fixed top-4 right-4 z-50 space-y-2">
-      {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          className={`px-4 py-2 rounded shadow-md text-white ${
-            toast.type === "error" ? "bg-red-600" : "bg-green-600"
-          }`}
-        >
-          {toast.message}
-        </div>
-      ))}
-    </div>
-
-    <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Manage Classes & Students</h1>
-
-    <div className="grid gap-4 sm:gap-6">
-      {/* Search input */}
-      <div className="relative">
-        <input
-          type="text"
-          value={search}
-          onChange={handleClassSearch}
-          className="w-[34%] border px-3 py-2 pl-10 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-          placeholder="Search ClassName..."
-        />
-        <svg
-          className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
+      {/* Toasts */}
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`px-4 py-2 rounded shadow-md text-white ${
+              toast.type === "error" ? "bg-red-600" : "bg-green-600"
+            }`}
+          >
+            {toast.message}
+          </div>
+        ))}
       </div>
 
-      {/* Class Table */}
-      <div className="bg-white p-3 sm:p-6 shadow-md rounded-lg">
-        {/* Desktop Table View */}
-        <div className="hidden lg:block">
-          <div className="w-full max-h-[500px] overflow-y-auto rounded-md custom-scrollbar">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 sticky top-0 z-10 text-gray-700">
-                <tr>
-                  <th className="px-6 py-4 text-left font-semibold">
-                    Class Name
-                  </th>
-                  <th className="px-6 py-4 text-left font-semibold">
-                    Subjects
-                  </th>
-                  <th className="px-6 py-4 text-left font-semibold">
-                    Add Subjects
-                  </th>
-                  <th className="px-6 py-4 text-center font-semibold">
-                    Sections
-                  </th>
-                  <th className="px-6 py-4 text-left font-semibold">
-                    Class Type
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredClasses.map((cls, idx) => (
-                  <tr
-                    key={cls._id}
-                    className={`${
-                      idx !== filteredClasses.length - 1 ? "border-b" : ""
-                    } ${
-                      idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    } hover:bg-gray-100`}
-                  >
-                    <td className="px-4 py-3 capitalize text-center">
-                      {cls.name}
-                    </td>
-                    <td className="px-4 py-3">
-                      {cls.subjects.length === 0 ? (
-                        <span className="text-xs font-medium px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">
-                          No subjects added yet
-                        </span>
-                      ) : (
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {cls.subjects.map((subject) => (
-                            <span
-                              key={subject._id}
-                              className="text-xs font-medium px-2 py-1 rounded bg-green-100 text-green-800 border border-green-300"
-                              title={subject.name}
-                            >
-                              {subject.name.length > 20
-                                ? subject.name.slice(0, 20) + "…"
-                                : subject.name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleOpenDialog(cls._id)}
-                        className="cursor-pointer inline-flex gap-2 items-center px-4 py-2 text-sm font-medium shadow-sm rounded-md bg-background hover:bg-accent hover:text-accent-foreground"
-                      >
-                        <span className="text-xs font-medium px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded">
-                          {cls.subjects.length}
-                        </span>
-                        <CirclePlus />
-                        Add Subjects
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex justify-center items-center gap-1 flex-wrap">
-                        {[...cls.sections].sort().map((sec) => (
-                          <div
-                            key={sec}
-                            className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-sm font-medium"
-                          >
-                            {sec}
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => {
-                            setSelectedClassId(cls._id);
-                            setSelectedSections(cls.sections || ["A"]);
-                            setShowSectionDialog(true);
-                          }}
-                          className="hover:text-blue-600 cursor-pointer"
-                        >
-                          <svg
-                            className="w-7 h-7"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M8 12h8M12 8v8" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 capitalize">
-                      {cls.type.replace("-", " ")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+        Manage Classes & Students
+      </h1>
+
+      <div className="grid gap-4 sm:gap-6">
+        {/* Search input */}
+        <div className="relative">
+          <input
+            type="text"
+            value={search}
+            onChange={handleClassSearch}
+            className="w-[34%] border px-3 py-2 pl-10 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            placeholder="Search ClassName..."
+          />
+          <svg
+            className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
         </div>
 
-        {/* Mobile Card View */}
-        <div className="lg:hidden">
-          <div className="max-h-[500px] overflow-y-auto space-y-4 custom-scrollbar">
-            {filteredClasses.map((cls, idx) => (
-              <div
-                key={cls._id}
-                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-              >
-                {/* Class Header */}
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="text-lg font-semibold capitalize text-gray-900">
-                      {cls.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 capitalize">
-                      {cls.type.replace("-", " ")}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded">
-                      {cls.subjects.length} subjects
-                    </span>
-                  </div>
-                </div>
-
-                {/* Subjects Section */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Subjects:</h4>
-                  {cls.subjects.length === 0 ? (
-                    <span className="text-xs font-medium px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">
-                      No subjects added yet
-                    </span>
-                  ) : (
-                    <div className="flex flex-wrap gap-1">
-                      {cls.subjects.map((subject) => (
-                        <span
-                          key={subject._id}
-                          className="text-xs font-medium px-2 py-1 rounded bg-green-100 text-green-800 border border-green-300"
-                          title={subject.name}
-                        >
-                          {subject.name.length > 15
-                            ? subject.name.slice(0, 15) + "…"
-                            : subject.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Sections */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Sections:</h4>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {[...cls.sections].sort().map((sec) => (
-                      <div
-                        key={sec}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-sm font-medium"
-                      >
-                        {sec}
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => {
-                        setSelectedClassId(cls._id);
-                        setSelectedSections(cls.sections || ["A"]);
-                        setShowSectionDialog(true);
-                      }}
-                      className="hover:text-blue-600 cursor-pointer p-1"
-                    >
-                      <svg
-                        className="w-7 h-7"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M8 12h8M12 8v8" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Action Button */}
-                <div className="pt-3 border-t border-gray-100">
-                  <button
-                    onClick={() => handleOpenDialog(cls._id)}
-                    className="w-full cursor-pointer inline-flex justify-center gap-2 items-center px-4 py-2 text-sm font-medium shadow-sm rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
-                  >
-                    <CirclePlus className="w-4 h-4" />
-                    Add Subjects
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Tablet Horizontal Scroll View */}
-        <div className="hidden lg:hidden">
-          <div className="overflow-x-auto">
-            <div className="min-w-[800px]">
+        {/* Class Table */}
+        <div className="bg-white p-3 sm:p-6 shadow-md rounded-lg">
+          {/* Desktop Table View */}
+          <div className="hidden lg:block">
+            <div className="w-full max-h-[500px] overflow-y-auto rounded-md custom-scrollbar">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-700">
+                <thead className="bg-gray-50 sticky top-0 z-10 text-gray-700">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold">
+                    <th className="px-6 py-4 text-left font-semibold">
                       Class Name
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold">
+                    <th className="px-6 py-4 text-left font-semibold">
                       Subjects
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold">
+                    <th className="px-6 py-4 text-left font-semibold">
                       Add Subjects
                     </th>
-                    <th className="px-4 py-3 text-center font-semibold">
+                    <th className="px-6 py-4 text-center font-semibold">
                       Sections
                     </th>
-                    <th className="px-4 py-3 text-left font-semibold">
+                    <th className="px-6 py-4 text-left font-semibold">
                       Class Type
                     </th>
                   </tr>
@@ -507,48 +298,48 @@ export default function ClassList() {
                         idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                       } hover:bg-gray-100`}
                     >
-                      <td className="px-3 py-3 capitalize text-center">
+                      <td className="px-4 py-3 capitalize text-center">
                         {cls.name}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-4 py-3">
                         {cls.subjects.length === 0 ? (
-                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">
-                            No subjects
+                          <span className="text-xs font-medium px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">
+                            No subjects added yet
                           </span>
                         ) : (
-                          <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          <div className="flex flex-wrap gap-1 max-w-xs">
                             {cls.subjects.map((subject) => (
                               <span
                                 key={subject._id}
                                 className="text-xs font-medium px-2 py-1 rounded bg-green-100 text-green-800 border border-green-300"
                                 title={subject.name}
                               >
-                                {subject.name.length > 15
-                                  ? subject.name.slice(0, 15) + "…"
+                                {subject.name.length > 20
+                                  ? subject.name.slice(0, 20) + "…"
                                   : subject.name}
                               </span>
                             ))}
                           </div>
                         )}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-4 py-3">
                         <button
                           onClick={() => handleOpenDialog(cls._id)}
-                          className="cursor-pointer inline-flex gap-1 items-center px-3 py-2 text-sm font-medium shadow-sm rounded-md bg-background hover:bg-accent hover:text-accent-foreground"
+                          className="cursor-pointer inline-flex gap-2 items-center px-4 py-2 text-sm font-medium shadow-sm rounded-md bg-background hover:bg-accent hover:text-accent-foreground"
                         >
-                          <span className="text-xs font-medium px-2 py-0.5 bg-blue-100 text-blue-800 rounded">
+                          <span className="text-xs font-medium px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded">
                             {cls.subjects.length}
                           </span>
-                          <CirclePlus className="w-4 h-4" />
-                          <span className="hidden sm:inline">Add</span>
+                          <CirclePlus />
+                          Add Subjects
                         </button>
                       </td>
-                      <td className="px-3 py-3 text-center">
+                      <td className="px-4 py-3 text-center">
                         <div className="flex justify-center items-center gap-1 flex-wrap">
                           {[...cls.sections].sort().map((sec) => (
                             <div
                               key={sec}
-                              className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-xs font-medium"
+                              className="w-7 h-7 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-sm font-medium"
                             >
                               {sec}
                             </div>
@@ -562,7 +353,7 @@ export default function ClassList() {
                             className="hover:text-blue-600 cursor-pointer"
                           >
                             <svg
-                              className="w-6 h-6"
+                              className="w-7 h-7"
                               fill="none"
                               stroke="currentColor"
                               strokeWidth="1"
@@ -574,7 +365,7 @@ export default function ClassList() {
                           </button>
                         </div>
                       </td>
-                      <td className="px-3 py-3 capitalize text-sm">
+                      <td className="px-4 py-3 capitalize">
                         {cls.type.replace("-", " ")}
                       </td>
                     </tr>
@@ -583,27 +374,240 @@ export default function ClassList() {
               </table>
             </div>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden">
+            <div className="max-h-[500px] overflow-y-auto space-y-4 custom-scrollbar">
+              {filteredClasses.map((cls, idx) => (
+                <div
+                  key={cls._id}
+                  className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  {/* Class Header */}
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="text-lg font-semibold capitalize text-gray-900">
+                        {cls.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 capitalize">
+                        {cls.type.replace("-", " ")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded">
+                        {cls.subjects.length} subjects
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Subjects Section */}
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      Subjects:
+                    </h4>
+                    {cls.subjects.length === 0 ? (
+                      <span className="text-xs font-medium px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">
+                        No subjects added yet
+                      </span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {cls.subjects.map((subject) => (
+                          <span
+                            key={subject._id}
+                            className="text-xs font-medium px-2 py-1 rounded bg-green-100 text-green-800 border border-green-300"
+                            title={subject.name}
+                          >
+                            {subject.name.length > 15
+                              ? subject.name.slice(0, 15) + "…"
+                              : subject.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sections */}
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      Sections:
+                    </h4>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {[...cls.sections].sort().map((sec) => (
+                        <div
+                          key={sec}
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-sm font-medium"
+                        >
+                          {sec}
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setSelectedClassId(cls._id);
+                          setSelectedSections(cls.sections || ["A"]);
+                          setShowSectionDialog(true);
+                        }}
+                        className="hover:text-blue-600 cursor-pointer p-1"
+                      >
+                        <svg
+                          className="w-7 h-7"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M8 12h8M12 8v8" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <div className="pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => handleOpenDialog(cls._id)}
+                      className="w-full cursor-pointer inline-flex justify-center gap-2 items-center px-4 py-2 text-sm font-medium shadow-sm rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
+                    >
+                      <CirclePlus className="w-4 h-4" />
+                      Add Subjects
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Tablet Horizontal Scroll View */}
+          <div className="hidden lg:hidden">
+            <div className="overflow-x-auto">
+              <div className="min-w-[800px]">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-700">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold">
+                        Class Name
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold">
+                        Subjects
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold">
+                        Add Subjects
+                      </th>
+                      <th className="px-4 py-3 text-center font-semibold">
+                        Sections
+                      </th>
+                      <th className="px-4 py-3 text-left font-semibold">
+                        Class Type
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredClasses.map((cls, idx) => (
+                      <tr
+                        key={cls._id}
+                        className={`${
+                          idx !== filteredClasses.length - 1 ? "border-b" : ""
+                        } ${
+                          idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        } hover:bg-gray-100`}
+                      >
+                        <td className="px-3 py-3 capitalize text-center">
+                          {cls.name}
+                        </td>
+                        <td className="px-3 py-3">
+                          {cls.subjects.length === 0 ? (
+                            <span className="text-xs font-medium px-2 py-1 rounded-full bg-red-50 text-red-600 border border-red-200">
+                              No subjects
+                            </span>
+                          ) : (
+                            <div className="flex flex-wrap gap-1 max-w-[200px]">
+                              {cls.subjects.map((subject) => (
+                                <span
+                                  key={subject._id}
+                                  className="text-xs font-medium px-2 py-1 rounded bg-green-100 text-green-800 border border-green-300"
+                                  title={subject.name}
+                                >
+                                  {subject.name.length > 15
+                                    ? subject.name.slice(0, 15) + "…"
+                                    : subject.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3 py-3">
+                          <button
+                            onClick={() => handleOpenDialog(cls._id)}
+                            className="cursor-pointer inline-flex gap-1 items-center px-3 py-2 text-sm font-medium shadow-sm rounded-md bg-background hover:bg-accent hover:text-accent-foreground"
+                          >
+                            <span className="text-xs font-medium px-2 py-0.5 bg-blue-100 text-blue-800 rounded">
+                              {cls.subjects.length}
+                            </span>
+                            <CirclePlus className="w-4 h-4" />
+                            <span className="hidden sm:inline">Add</span>
+                          </button>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <div className="flex justify-center items-center gap-1 flex-wrap">
+                            {[...cls.sections].sort().map((sec) => (
+                              <div
+                                key={sec}
+                                className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200 text-xs font-medium"
+                              >
+                                {sec}
+                              </div>
+                            ))}
+                            <button
+                              onClick={() => {
+                                setSelectedClassId(cls._id);
+                                setSelectedSections(cls.sections || ["A"]);
+                                setShowSectionDialog(true);
+                              }}
+                              className="hover:text-blue-600 cursor-pointer"
+                            >
+                              <svg
+                                className="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M8 12h8M12 8v8" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 capitalize text-sm">
+                          {cls.type.replace("-", " ")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <AddSubjectsDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            onSave={handleSaveSubjects}
+            classSubjectNames={classSubjectNames}
+          />
+
+          <SectionDialog
+            show={showSectionDialog}
+            onClose={() => setShowSectionDialog(false)}
+            selectedSections={selectedSections}
+            compulsorySections={compulsorySections}
+            allSections={allSections}
+            handleRemoveSection={handleRemoveSection}
+            handleToggleSection={handleToggleSection}
+            handleSaveSections={handleSaveSections}
+          />
         </div>
-
-        <AddSubjectsDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          onSave={handleSaveSubjects}
-          classSubjectNames={classSubjectNames}
-        />
-
-        <SectionDialog
-          show={showSectionDialog}
-          onClose={() => setShowSectionDialog(false)}
-          selectedSections={selectedSections}
-          compulsorySections={compulsorySections}
-          allSections={allSections}
-          handleRemoveSection={handleRemoveSection}
-          handleToggleSection={handleToggleSection}
-          handleSaveSections={handleSaveSections}
-        />
       </div>
     </div>
-  </div>
   );
 }

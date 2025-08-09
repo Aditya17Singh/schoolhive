@@ -11,5 +11,6 @@ router.put("/:id", verifyToken, subjectController.updateSubject);
 router.delete("/:id", verifyToken, subjectController.deleteSubject);
 // routes/subject.js
 router.put('/assign-teacher/:id',verifyToken, subjectController.assignOrRemoveTeacher);
+router.get("/teachers/:subjectId", verifyToken, subjectController.getTeachersBySubject);
 
 module.exports = router;
