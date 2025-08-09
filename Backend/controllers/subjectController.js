@@ -117,3 +117,33 @@ exports.deleteSubject = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.getTeachersBySubject = async (req, res) => {
+  try {
+    const { subjectId } = req.params;
+    const orgId = req.user.id;
+
+    const subject = await Subject.findOne({ _id: subjectId, orgId }).populate(
+      "teacher",
+      "fName lName"
+    );
+
+    if (!subject) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Subject not found or unauthorized" });
+    }
+
+    res.json({
+      success: true,
+      message: "Teachers fetched successfully",
+      data: subject.teacher.map((t) => ({
+        _id: t._id,
+        fName: t.fName,
+        lName: t.lName,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};

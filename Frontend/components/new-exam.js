@@ -9,14 +9,14 @@ export default function CreateExam() {
   const [selectedClassId, setSelectedClassId] = useState("");
   const [classes, setClasses] = useState([]);
   const [formData, setFormData] = useState([]);
-  const [allTeachers, setAllTeachers] = useState([]);
+  const [teachers, setTeachers] = useState([]);
 
   // Fetch all classes
   useEffect(() => {
     async function fetchClasses() {
       try {
         const res = await API.get("/classes");
-        setClasses(res.data);
+        setClasses(res.data.sort((a, b) => a.order - b.order));
       } catch (err) {
         console.error("Failed to load classes", err);
       }
@@ -84,25 +84,22 @@ export default function CreateExam() {
     // TODO: POST to your API endpoint here
   };
 
-  useEffect(() => {
-    async function fetchTeachers() {
-      try {
-        const res = await API.get("/teachers");
-        if (res.data.success) {
-          setAllTeachers(res.data.data);
-        } else {
-          console.error("⚠️ Unexpected response:", res.data);
-        }
-      } catch (err) {
-        console.error(
-          "❌ Failed to fetch teachers:",
-          err.response?.data || err.message
-        );
-      }
-    }
+//  useEffect(() => {
+//    if (!subjectId) return;
 
-    fetchTeachers();
-  }, []);
+//    const fetchTeachers = async () => {
+//      try {
+//        const res = await API.get(`/subjects/teachers/${subjectId}`);
+//        if (res.data.success) {
+//          setTeachers(res.data.data);
+//        }
+//      } catch (err) {
+//        console.error("Error fetching teachers:", err);
+//      }
+//    };
+
+//    fetchTeachers();
+//  }, [subjectId]);
 
   return (
     <div className="pl-6 pt-4">
@@ -163,17 +160,28 @@ export default function CreateExam() {
                   <select
                     multiple
                     value={data.teacher}
+                    onFocus={async () => {
+                      try {
+                        const res = await API.get(
+                          `/subjects/teachers/${data.subjectId}`
+                        );
+                        if (res.data.success) {
+                          setTeachers(res.data.data); // you'll need a teachers array per row if they differ
+                        }
+                      } catch (err) {
+                        console.error("Error fetching teachers:", err);
+                      }
+                    }}
                     onChange={(e) => {
                       const selectedOptions = Array.from(
                         e.target.selectedOptions
                       ).map((opt) => opt.value);
                       handleChange(index, "teacher", selectedOptions);
                     }}
-                    className="flex h-9 w-full rounded-md border px-2 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border-gray-400"
                   >
-                    {allTeachers.map((teacher) => (
+                    {teachers.map((teacher) => (
                       <option key={teacher._id} value={teacher._id}>
-                        {teacher.fname}
+                        {teacher.fName} {teacher.lName}
                       </option>
                     ))}
                   </select>

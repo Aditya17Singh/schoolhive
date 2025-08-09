@@ -1,13 +1,10 @@
 'use client';
 
-import axios from 'axios';
+import API from '@/lib/api'; 
 
 export async function registerOrganization(body) {
   try {
-    const response = await axios.post('http://localhost:5000/api/organization/register', body, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-
+    const response = await API.post('/organization/register', body);
     const data = response.data;
 
     return {
@@ -17,7 +14,10 @@ export async function registerOrganization(body) {
   } catch (err) {
     return {
       success: false,
-      error: err.response?.data?.message || err.message || 'Something went wrong with organization registration',
+      error:
+        err.response?.data?.message ||
+        err.message ||
+        'Something went wrong with organization registration',
     };
   }
 }
@@ -44,10 +44,7 @@ export async function registerClasses(classes, organizationId) {
       };
 
       try {
-        const response = await axios.post('http://localhost:5000/api/classes', classData, {
-          headers: { 'Content-Type': 'application/json' },
-        });
-
+        const response = await API.post('/classes', classData);
         classResults.push(response.data);
       } catch (err) {
         console.error(`Failed to create class ${className}:`, err.response?.data || err.message);
@@ -76,10 +73,7 @@ export async function registerAcademicYear(academicYear, organizationId) {
       orgId: organizationId,
     };
 
-    const response = await axios.post('http://localhost:5000/api/academics', payload, {
-      headers: { 'Content-Type': 'application/json' },
-    });
-
+    const response = await API.post('/academics', payload);
     const data = response.data;
 
     return {
@@ -89,7 +83,10 @@ export async function registerAcademicYear(academicYear, organizationId) {
   } catch (err) {
     return {
       success: false,
-      error: err.response?.data?.message || err.message || 'Something went wrong with academic year registration',
+      error:
+        err.response?.data?.message ||
+        err.message ||
+        'Something went wrong with academic year registration',
     };
   }
 }
