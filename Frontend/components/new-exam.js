@@ -10,7 +10,7 @@ export default function CreateExam() {
   const [classes, setClasses] = useState([]);
   const [formData, setFormData] = useState([]);
   const [teachers, setTeachers] = useState([]);
-
+console.log(teachers, 'teachers')
   // Fetch all classes
   useEffect(() => {
     async function fetchClasses() {
@@ -24,40 +24,53 @@ export default function CreateExam() {
 
     fetchClasses();
   }, []);
+ 
+  
+useEffect(() => {
+  async function fetchSubjectsForClass() {
+    if (!selectedClassId) return;
 
-  // Fetch subjects when class is selected
-  useEffect(() => {
-    async function fetchSubjectsForClass() {
-      if (!selectedClassId) return;
+    try {
+      const classRes = await API.get(`/classes/${selectedClassId}`);
+      const subjectIds = classRes.data.subjects || [];
 
-      try {
-        const classRes = await API.get(`/classes/${selectedClassId}`);
-        const subjectIds = classRes.data.subjects || [];
+      // Fetch subject details
+      const subjectData = await Promise.all(
+        subjectIds.map((id) => API.get(`/subjects/${id}`).then((res) => res.data))
+      );
 
-        // Fetch subject details in parallel
-        const subjectPromises = subjectIds.map((id) =>
-          API.get(`/subjects/${id}`).then((res) => res.data)
-        );
+      // Create initial rows without teachers
+      let subjectsWithTeachers = subjectData.map((subject) => ({
+        subjectId: subject._id,
+        subjectName: subject.name,
+        teacher: [],
+        teachers: [],
+        maxMarks: [],
+        date: "",
+      }));
 
-        const subjectData = await Promise.all(subjectPromises);
+      // Fetch teachers for each subject (using your existing function)
+      subjectsWithTeachers = await Promise.all(
+        subjectsWithTeachers.map(async (subjectRow, index) => {
+          const res = await API.get(`/subjects/${subjectRow.subjectId}`);
+          if (res.data.success) {
+            subjectRow.teachers = res.data.data;
+          }
+          return subjectRow;
+        })
+      );
 
-        const initializedFormData = subjectData.map((subject) => ({
-          subjectId: subject._id,
-          subjectName: subject.name,
-          teacher: "",
-          maxMarks: "",
-          date: "",
-        }));
-
-        setFormData(initializedFormData);
-      } catch (err) {
-        console.error("Error fetching subjects:", err);
-        setFormData([]);
-      }
+      setFormData(subjectsWithTeachers);
+    } catch (err) {
+      console.error("Error fetching subjects:", err);
+      setFormData([]);
     }
+  }
 
-    fetchSubjectsForClass();
-  }, [selectedClassId]);
+  fetchSubjectsForClass();
+}, [selectedClassId]);
+
+
 
   const handleChange = (index, field, value) => {
     const updated = [...formData];
@@ -100,6 +113,22 @@ export default function CreateExam() {
 
 //    fetchTeachers();
 //  }, [subjectId]);
+
+const fetchTeachersForSubject = async (subjectId, index) => {
+  console.log('subjectId')
+  try {
+    const res = await API.get(`/subjects/${subjectId}`);
+    if (res.data.success) {
+      const updated = [...formData];
+      updated[index].teachers = res.data.data; // store in that subject's row
+      setFormData(updated);
+    }
+  } catch (err) {
+    console.error("Error fetching teachers:", err);
+  }
+};
+
+
 
   return (
     <div className="pl-6 pt-4">
@@ -160,18 +189,8 @@ export default function CreateExam() {
                   <select
                     multiple
                     value={data.teacher}
-                    onFocus={async () => {
-                      try {
-                        const res = await API.get(
-                          `/subjects/teachers/${data.subjectId}`
-                        );
-                        if (res.data.success) {
-                          setTeachers(res.data.data); // you'll need a teachers array per row if they differ
-                        }
-                      } catch (err) {
-                        console.error("Error fetching teachers:", err);
-                      }
-                    }}
+                      onClick={() => fetchTeachersForSubject(data.subjectId, index)}
+
                     onChange={(e) => {
                       const selectedOptions = Array.from(
                         e.target.selectedOptions
@@ -179,7 +198,7 @@ export default function CreateExam() {
                       handleChange(index, "teacher", selectedOptions);
                     }}
                   >
-                    {teachers.map((teacher) => (
+                    {data.teachers.map((teacher) => (
                       <option key={teacher._id} value={teacher._id}>
                         {teacher.fName} {teacher.lName}
                       </option>

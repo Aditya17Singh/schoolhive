@@ -118,30 +118,38 @@ exports.deleteSubject = async (req, res) => {
   }
 };
 
-exports.getTeachersBySubject = async (req, res) => {
+exports.getSubjectsByTeacher = async (req, res) => {
   try {
-    const { subjectId } = req.params;
+    const { teacherId } = req.params;
     const orgId = req.user.id;
 
-    const subject = await Subject.findOne({ _id: subjectId, orgId }).populate(
-      "teacher",
-      "fName lName"
-    );
-
-    if (!subject) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Subject not found or unauthorized" });
+    if (!mongoose.Types.ObjectId.isValid(teacherId)) {
+      return res.status(400).json({ success: false, message: "Invalid teacher ID" });
     }
+
+    const teacherObjId = new mongoose.Types.ObjectId(teacherId);
+
+    const subjects = await Subject.find({ teacher: teacherObjId, orgId })
+      .populate("teacher", "fName lName")
+      .populate("class", "name");
+    console.log(subjects, 'subjects')
+    const formatted = subjects.map(s => ({
+      _id: s._id,
+      subjectName: s.subjectName || s.name,
+      class: s.class?.name || null,
+      teachers: Array.isArray(s.teacher)
+        ? s.teacher.map(t => ({
+            _id: t._id,
+            fName: t.fName,
+            lName: t.lName
+          }))
+        : []
+    }));
 
     res.json({
       success: true,
-      message: "Teachers fetched successfully",
-      data: subject.teacher.map((t) => ({
-        _id: t._id,
-        fName: t.fName,
-        lName: t.lName,
-      })),
+      message: "Subjects fetched successfully",
+      data: formatted
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
