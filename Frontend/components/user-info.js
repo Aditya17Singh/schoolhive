@@ -14,6 +14,7 @@ import {
   Legend,
 } from "recharts";
 import API from "@/lib/api";
+import { Cake, CalendarDays } from "lucide-react";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -23,7 +24,11 @@ export default function Dashboard() {
     totalClasses: 0,
     totalTeachers: 0,
     feeCollection: 0,
+    totalAdmins: 0,
+    todaysBirthdays: [],
+    upcomingBirthdays: [],
   });
+console.log(stats, 'stats');
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingNotice, setEditingNotice] = useState(null);
@@ -40,7 +45,7 @@ export default function Dashboard() {
     const userData = localStorage.getItem("user");
 
     if (!token || !userData) {
-      router.push("/"); 
+      router.push("/");
     } else {
       setUser(JSON.parse(userData));
       fetchStatsAndNotices(token);
@@ -75,7 +80,6 @@ export default function Dashboard() {
       console.error("Error deleting notice:", error);
     }
   };
-
 
   const handleEdit = (notice) => {
     setEditingNotice(notice);
@@ -118,7 +122,6 @@ export default function Dashboard() {
     );
   }
 
-
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -126,6 +129,7 @@ export default function Dashboard() {
       </div>
     );
   }
+  const maxVisible = 5;
 
   return (
     <>
@@ -166,16 +170,126 @@ export default function Dashboard() {
             </div>
             <div className="p-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <QuickAction href="/dashboard/attendance/dashboard" icon="clock" label="Attendance" />
-                <QuickAction href="/dashboard/admission/stats" icon="users" label="Admission" />
-                <QuickAction href="/dashboard/fee/dashboard" icon="badge-indian-rupee" label="Fees" />
-                <QuickAction href="/dashboard/result/dashboard" icon="chart-no-axes-combined" label="Result" />
-                <QuickAction href="/dashboard/classes" icon="users" label="Classes" />
-                <QuickAction href="/dashboard/subjects" icon="book-open" label="Subjects" />
-                <QuickAction href="/dashboard/students" icon="graduation-cap" label="Students" />
-                <QuickAction href="/dashboard/teachers/dashboard" icon="user" label="Teachers" />
+                <QuickAction
+                  href="/dashboard/attendance/dashboard"
+                  icon="clock"
+                  label="Attendance"
+                />
+                <QuickAction
+                  href="/dashboard/admission/stats"
+                  icon="users"
+                  label="Admission"
+                />
+                <QuickAction
+                  href="/dashboard/fee/dashboard"
+                  icon="badge-indian-rupee"
+                  label="Fees"
+                />
+                <QuickAction
+                  href="/dashboard/result/dashboard"
+                  icon="chart-no-axes-combined"
+                  label="Result"
+                />
+                <QuickAction
+                  href="/dashboard/classes"
+                  icon="users"
+                  label="Classes"
+                />
+                <QuickAction
+                  href="/dashboard/subjects"
+                  icon="book-open"
+                  label="Subjects"
+                />
+                <QuickAction
+                  href="/dashboard/students"
+                  icon="graduation-cap"
+                  label="Students"
+                />
+                <QuickAction
+                  href="/dashboard/teachers/dashboard"
+                  icon="user"
+                  label="Teachers"
+                />
               </div>
             </div>
+          </div>
+
+          {/* Today's Birthdays */}
+          <div className="bg-white shadow-lg rounded-2xl p-5 border border-gray-100 flex flex-col">
+            <div className="flex items-center gap-2 mb-4">
+              <Cake className="text-pink-500" size={22} />
+              <h2 className="text-lg font-semibold">Today's Birthdays</h2>
+            </div>
+
+            {stats.todaysBirthdays?.length > 0 ? (
+              <ul
+                className={`space-y-3 overflow-y-auto pr-2`}
+                style={{
+                  maxHeight:
+                    stats.todaysBirthdays.length > maxVisible
+                      ? "300px"
+                      : "auto",
+                }}
+              >
+                {stats.todaysBirthdays.map((student, idx) => (
+                  <li
+                    key={idx}
+                    className="border-b last:border-0 pb-3 last:pb-0 flex flex-col"
+                  >
+                    <span className="font-medium text-gray-800">
+                      {student.fName} {student.lName}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      Class {student.admissionClass} - {student.section}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(student.dob).toLocaleDateString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 italic">No birthdays today 🎈</p>
+            )}
+          </div>
+
+          {/* Upcoming Birthdays */}
+          <div className="bg-white shadow-lg rounded-2xl p-5 border border-gray-100 flex flex-col">
+            <div className="flex items-center gap-2 mb-4">
+              <CalendarDays className="text-blue-500" size={22} />
+              <h2 className="text-lg font-semibold">Upcoming Birthdays</h2>
+            </div>
+
+            {stats.upcomingBirthdays?.length > 0 ? (
+              <ul
+                className={`space-y-3 overflow-y-auto pr-2`}
+                style={{
+                  maxHeight:
+                    stats.upcomingBirthdays.length > maxVisible
+                      ? "300px"
+                      : "auto",
+                }}
+              >
+                {stats.upcomingBirthdays.map((student, idx) => (
+                  <li
+                    key={idx}
+                    className="border-b last:border-0 pb-3 last:pb-0 flex flex-col"
+                  >
+                    <span className="font-medium text-gray-800">
+                      {student.fName} {student.lName}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      Class {student.admissionClass} - {student.section}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(student.dob).toLocaleDateString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 italic">No upcoming birthdays 📅</p>
+            )}
           </div>
 
           <div className="bg-white shadow-lg rounded-lg p-4">
@@ -317,8 +431,9 @@ function StatCard({ title, value, color, link }) {
 
   return (
     <div
-      className={`bg-white px-1 py-4 flex justify-center gap-2 items-center rounded-lg shadow-lg text-center cursor-${link ? "pointer" : "default"
-        } hover:shadow-xl transition`}
+      className={`bg-white px-1 py-4 flex justify-center gap-2 items-center rounded-lg shadow-lg text-center cursor-${
+        link ? "pointer" : "default"
+      } hover:shadow-xl transition`}
       onClick={handleClick}
     >
       <h2 className="text-xl font-semibold text-gray-700">{title}</h2>
