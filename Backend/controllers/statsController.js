@@ -19,17 +19,19 @@ exports.getStats = async (req, res) => {
     }
 
     const [totalStudents, totalTeachers, totalAdmins] = await Promise.all([
-      Student.countDocuments({ orgId }),
+      Student.countDocuments({ orgId, status: "admitted" }),
       Teacher.countDocuments({ orgId }),
       Admin.countDocuments({ orgId }),
     ]);
 
     const today = new Date();
-    const todayMonth = today.getMonth() + 1; 
+    const todayMonth = today.getMonth() + 1;
     const todayDate = today.getDate();
 
+    // Today's Birthdays - Only admitted students
     const todaysBirthdays = await Student.find({
       orgId,
+      status: "admitted",
       $expr: {
         $and: [
           { $eq: [{ $dayOfMonth: "$dob" }, todayDate] },
@@ -38,7 +40,14 @@ exports.getStats = async (req, res) => {
       }
     }, { fName: 1, lName: 1, dob: 1, section: 1, admissionClass: 1 });
 
+    // Upcoming Birthdays - Only admitted students
     const upcomingBirthdays = await Student.aggregate([
+      {
+        $match: {
+          orgId: new mongoose.Types.ObjectId(orgId),
+          status: "admitted"
+        }
+      },
       {
         $addFields: {
           dobThisYear: {
@@ -52,7 +61,6 @@ exports.getStats = async (req, res) => {
       },
       {
         $match: {
-          orgId: new mongoose.Types.ObjectId(orgId),
           dobThisYear: {
             $gt: today,
             $lte: new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000))
@@ -75,7 +83,7 @@ exports.getStats = async (req, res) => {
       totalStudents,
       totalTeachers,
       totalAdmins,
-      feeCollection: 0, 
+      feeCollection: 0,
       todaysBirthdays,
       upcomingBirthdays
     });
@@ -85,3 +93,4 @@ exports.getStats = async (req, res) => {
     res.status(500).json({ message: "Error fetching stats" });
   }
 };
+
