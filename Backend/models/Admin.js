@@ -8,6 +8,7 @@ const AdminSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   phone: { type: String, required: true, unique: true },
   address: { type: String },
+  dob: { type: Date, required: true },
   orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
   permissions: { type: [String], default: [] },
 }, { timestamps: true });

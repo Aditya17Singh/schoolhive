@@ -27,21 +27,49 @@ exports.getStats = async (req, res) => {
     const today = new Date();
     const todayMonth = today.getMonth() + 1;
     const todayDate = today.getDate();
+    const nextWeek = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
 
-    // Today's Birthdays - Only admitted students
-    const todaysBirthdays = await Student.find({
-      orgId,
-      status: "admitted",
-      $expr: {
-        $and: [
-          { $eq: [{ $dayOfMonth: "$dob" }, todayDate] },
-          { $eq: [{ $month: "$dob" }, todayMonth] }
-        ]
-      }
-    }, { fName: 1, lName: 1, dob: 1, section: 1, admissionClass: 1 });
+    const [studentToday, teacherToday, adminToday] = await Promise.all([
+      Student.find({
+        orgId,
+        status: "admitted",
+        $expr: {
+          $and: [
+            { $eq: [{ $dayOfMonth: "$dob" }, todayDate] },
+            { $eq: [{ $month: "$dob" }, todayMonth] }
+          ]
+        }
+      }, { fName: 1, lName: 1, dob: 1, section: 1, admissionClass: 1 }),
 
-    // Upcoming Birthdays - Only admitted students
-    const upcomingBirthdays = await Student.aggregate([
+      Teacher.find({
+        orgId,
+        status: "approved",
+        $expr: {
+          $and: [
+            { $eq: [{ $dayOfMonth: "$dob" }, todayDate] },
+            { $eq: [{ $month: "$dob" }, todayMonth] }
+          ]
+        }
+      }, { fName: 1, lName: 1, dob: 1, assignedClass: 1, assignedSection: 1 }),
+
+      Admin.find({
+        orgId,
+        $expr: {
+          $and: [
+            { $eq: [{ $dayOfMonth: "$dob" }, todayDate] },
+            { $eq: [{ $month: "$dob" }, todayMonth] }
+          ]
+        }
+      }, { firstName: 1, lastName: 1, dob: 1 })
+    ]);
+
+    const todaysBirthdays = [
+      ...studentToday.map(s => ({ type: "student", ...s.toObject() })),
+      ...teacherToday.map(t => ({ type: "teacher", ...t.toObject() })),
+      ...adminToday.map(a => ({ type: "admin", ...a.toObject() })),
+    ];
+
+    const upcomingStudents = await Student.aggregate([
       {
         $match: {
           orgId: new mongoose.Types.ObjectId(orgId),
@@ -61,23 +89,86 @@ exports.getStats = async (req, res) => {
       },
       {
         $match: {
-          dobThisYear: {
-            $gt: today,
-            $lte: new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000))
-          }
+          dobThisYear: { $gt: today, $lte: nextWeek }
         }
       },
       {
         $project: {
-          fName: 1,
-          lName: 1,
-          dob: 1,
-          section: 1,
-          admissionClass: 1
+          fName: 1, lName: 1, dob: 1, section: 1, admissionClass: 1,
+          type: { $literal: "student" }
         }
       },
       { $sort: { dobThisYear: 1 } }
     ]);
+
+    const upcomingTeachers = await Teacher.aggregate([
+      {
+        $match: {
+          orgId: new mongoose.Types.ObjectId(orgId),
+          status: "approved"
+        }
+      },
+      {
+        $addFields: {
+          dobThisYear: {
+            $dateFromParts: {
+              year: today.getFullYear(),
+              month: { $month: "$dob" },
+              day: { $dayOfMonth: "$dob" }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          dobThisYear: { $gt: today, $lte: nextWeek }
+        }
+      },
+      {
+        $project: {
+          fName: 1, lName: 1, dob: 1, assignedClass: 1, assignedSection: 1,
+          type: { $literal: "teacher" }
+        }
+      },
+      { $sort: { dobThisYear: 1 } }
+    ]);
+
+    const upcomingAdmins = await Admin.aggregate([
+      {
+        $match: {
+          orgId: new mongoose.Types.ObjectId(orgId)
+        }
+      },
+      {
+        $addFields: {
+          dobThisYear: {
+            $dateFromParts: {
+              year: today.getFullYear(),
+              month: { $month: "$dob" },
+              day: { $dayOfMonth: "$dob" }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          dobThisYear: { $gt: today, $lte: nextWeek }
+        }
+      },
+      {
+        $project: {
+          firstName: 1, lastName: 1, dob: 1,
+          type: { $literal: "admin" }
+        }
+      },
+      { $sort: { dobThisYear: 1 } }
+    ]);
+
+    const upcomingBirthdays = [
+      ...upcomingStudents,
+      ...upcomingTeachers,
+      ...upcomingAdmins
+    ].sort((a, b) => new Date(a.dob) - new Date(b.dob));
 
     res.json({
       totalStudents,

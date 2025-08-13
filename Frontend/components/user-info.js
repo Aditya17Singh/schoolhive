@@ -215,15 +215,17 @@ console.log(stats, 'stats');
           </div>
 
           {/* Today's Birthdays */}
-          <div className="bg-white shadow-lg rounded-2xl p-5 border border-gray-100 flex flex-col">
+          <div className="bg-gradient-to-br from-pink-50 to-white shadow-xl rounded-2xl p-5 border border-pink-100 flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <Cake className="text-pink-500" size={22} />
-              <h2 className="text-lg font-semibold">Today's Birthdays</h2>
+              <h2 className="text-lg font-bold text-pink-700">
+                Today's Birthdays
+              </h2>
             </div>
 
             {stats.todaysBirthdays?.length > 0 ? (
-              <ul
-                className={`space-y-3 overflow-y-auto pr-2`}
+              <div
+                className="space-y-4 overflow-y-auto pr-2"
                 style={{
                   maxHeight:
                     stats.todaysBirthdays.length > maxVisible
@@ -231,38 +233,110 @@ console.log(stats, 'stats');
                       : "auto",
                 }}
               >
-                {stats.todaysBirthdays.map((student, idx) => (
-                  <li
-                    key={idx}
-                    className="border-b last:border-0 pb-3 last:pb-0 flex flex-col"
-                  >
-                    <span className="font-medium text-gray-800">
-                      {student.fName} {student.lName}
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      Class {student.admissionClass} - {student.section}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(student.dob).toLocaleDateString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                {/* Students */}
+                {stats.todaysBirthdays.some((p) => p.type === "student") && (
+                  <div className="bg-green-50 p-3 rounded-xl border border-green-100">
+                    <h3 className="font-semibold text-green-700 mb-2">
+                      🎓 Students
+                    </h3>
+                    <ul className="space-y-3">
+                      {stats.todaysBirthdays
+                        .filter((p) => p.type === "student")
+                        .map((p, idx) => (
+                          <li
+                            key={idx}
+                            className="bg-white p-3 rounded-lg shadow-sm border border-gray-100"
+                          >
+                            <span className="font-medium text-gray-800">
+                              {p.fName} {p.lName}
+                            </span>
+                            <span className="block text-sm text-gray-600">
+                              Class {p.admissionClass} - {p.section}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(p.dob).toLocaleDateString()}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Teachers */}
+                {stats.todaysBirthdays.some((p) => p.type === "teacher") && (
+                  <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                    <h3 className="font-semibold text-blue-700 mb-2">
+                      👩‍🏫 Teachers
+                    </h3>
+                    <ul className="space-y-3">
+                      {stats.todaysBirthdays
+                        .filter((p) => p.type === "teacher")
+                        .map((p, idx) => (
+                          <li
+                            key={idx}
+                            className="bg-white p-3 rounded-lg shadow-sm border border-gray-100"
+                          >
+                            <span className="font-medium text-gray-800">
+                              {p.fName} {p.lName}
+                            </span>
+                            <span className="block text-sm text-gray-600">
+                              Teacher ({p.assignedClass}-{p.assignedSection})
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(p.dob).toLocaleDateString()}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Admins */}
+                {stats.todaysBirthdays.some((p) => p.type === "admin") && (
+                  <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                    <h3 className="font-semibold text-purple-700 mb-2">
+                      🛠 Admins
+                    </h3>
+                    <ul className="space-y-3">
+                      {stats.todaysBirthdays
+                        .filter((p) => p.type === "admin")
+                        .map((p, idx) => (
+                          <li
+                            key={idx}
+                            className="bg-white p-3 rounded-lg shadow-sm border border-gray-100"
+                          >
+                            <span className="font-medium text-gray-800">
+                              {p.firstName} {p.lastName}
+                            </span>
+                            <span className="block text-sm text-gray-600">
+                              Admin
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(p.dob).toLocaleDateString()}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             ) : (
               <p className="text-gray-500 italic">No birthdays today 🎈</p>
             )}
           </div>
 
           {/* Upcoming Birthdays */}
-          <div className="bg-white shadow-lg rounded-2xl p-5 border border-gray-100 flex flex-col">
+          <div className="bg-gradient-to-br from-blue-50 to-white shadow-xl rounded-2xl p-5 border border-blue-100 flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <CalendarDays className="text-blue-500" size={22} />
-              <h2 className="text-lg font-semibold">Upcoming Birthdays</h2>
+              <h2 className="text-lg font-bold text-blue-700">
+                Upcoming Birthdays
+              </h2>
             </div>
 
             {stats.upcomingBirthdays?.length > 0 ? (
-              <ul
-                className={`space-y-3 overflow-y-auto pr-2`}
+              <div
+                className="space-y-4 overflow-y-auto pr-2"
                 style={{
                   maxHeight:
                     stats.upcomingBirthdays.length > maxVisible
@@ -270,28 +344,98 @@ console.log(stats, 'stats');
                       : "auto",
                 }}
               >
-                {stats.upcomingBirthdays.map((student, idx) => (
-                  <li
-                    key={idx}
-                    className="border-b last:border-0 pb-3 last:pb-0 flex flex-col"
-                  >
-                    <span className="font-medium text-gray-800">
-                      {student.fName} {student.lName}
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      Class {student.admissionClass} - {student.section}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {new Date(student.dob).toLocaleDateString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+                {/* Students */}
+                {stats.upcomingBirthdays.some((p) => p.type === "student") && (
+                  <div className="bg-green-50 p-3 rounded-xl border border-green-100">
+                    <h3 className="font-semibold text-green-700 mb-2">
+                      🎓 Students
+                    </h3>
+                    <ul className="space-y-3">
+                      {stats.upcomingBirthdays
+                        .filter((p) => p.type === "student")
+                        .map((p, idx) => (
+                          <li
+                            key={idx}
+                            className="bg-white p-3 rounded-lg shadow-sm border border-gray-100"
+                          >
+                            <span className="font-medium text-gray-800">
+                              {p.fName} {p.lName}
+                            </span>
+                            <span className="block text-sm text-gray-600">
+                              Class {p.admissionClass} - {p.section}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(p.dob).toLocaleDateString()}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Teachers */}
+                {stats.upcomingBirthdays.some((p) => p.type === "teacher") && (
+                  <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                    <h3 className="font-semibold text-blue-700 mb-2">
+                      👩‍🏫 Teachers
+                    </h3>
+                    <ul className="space-y-3">
+                      {stats.upcomingBirthdays
+                        .filter((p) => p.type === "teacher")
+                        .map((p, idx) => (
+                          <li
+                            key={idx}
+                            className="bg-white p-3 rounded-lg shadow-sm border border-gray-100"
+                          >
+                            <span className="font-medium text-gray-800">
+                              {p.fName} {p.lName}
+                            </span>
+                            <span className="block text-sm text-gray-600">
+                              Teacher ({p.assignedClass}-{p.assignedSection})
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(p.dob).toLocaleDateString()}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Admins */}
+                {stats.upcomingBirthdays.some((p) => p.type === "admin") && (
+                  <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                    <h3 className="font-semibold text-purple-700 mb-2">
+                      🛠 Admins
+                    </h3>
+                    <ul className="space-y-3">
+                      {stats.upcomingBirthdays
+                        .filter((p) => p.type === "admin")
+                        .map((p, idx) => (
+                          <li
+                            key={idx}
+                            className="bg-white p-3 rounded-lg shadow-sm border border-gray-100"
+                          >
+                            <span className="font-medium text-gray-800">
+                              {p.firstName} {p.lastName}
+                            </span>
+                            <span className="block text-sm text-gray-600">
+                              Admin
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(p.dob).toLocaleDateString()}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             ) : (
               <p className="text-gray-500 italic">No upcoming birthdays 📅</p>
             )}
           </div>
-
+          
           <div className="bg-white shadow-lg rounded-lg p-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Latest Notices</h2>

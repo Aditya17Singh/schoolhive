@@ -21,6 +21,7 @@ export default function Admins() {
     email: "",
     phone: "",
     address: "",
+    dob: "",
   });
 
   const permissions = [
@@ -157,7 +158,7 @@ export default function Admins() {
     setSubmitting(true);
     setError("");
 
-    const { firstName, middleName, lastName, email, phone, address } = formData;
+    const { firstName, middleName, lastName, email, phone, address, dob } = formData;
 
     if (!firstName || !lastName || !email || !phone) {
       setError("Please fill in all required fields.");
@@ -175,6 +176,7 @@ export default function Admins() {
         email,
         phone,
         address,
+        dob,
       });
 
       await fetchAdmins();
@@ -186,6 +188,7 @@ export default function Admins() {
         email: "",
         phone: "",
         address: "",
+        dob : "",
       });
     } catch (err) {
       setError(
@@ -222,10 +225,11 @@ export default function Admins() {
             type="button"
             disabled={!isDeleteEnabled}
             onClick={handleDelete}
-            className={`w-full sm:w-auto flex items-center justify-center gap-1 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium shadow-sm transition ${isDeleteEnabled
+            className={`w-full sm:w-auto flex items-center justify-center gap-1 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium shadow-sm transition ${
+              isDeleteEnabled
                 ? "bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
                 : "bg-red-300 text-red-700 cursor-not-allowed"
-              }`}
+            }`}
           >
             Delete Selected
           </button>
@@ -246,12 +250,24 @@ export default function Admins() {
                   className="h-4 w-4 rounded border-gray-400 text-blue-600 focus:ring-blue-500"
                 />
               </th>
-              <th className="p-2 text-left font-medium whitespace-nowrap">Organization UID</th>
-              <th className="p-2 text-left font-medium whitespace-nowrap">Admin Name</th>
-              <th className="p-2 text-left font-medium whitespace-nowrap">Email Address</th>
-              <th className="p-2 text-left font-medium whitespace-nowrap">Phone Number</th>
-              <th className="p-2 text-left font-medium whitespace-nowrap">Permissions</th>
-              <th className="p-2 text-left font-medium whitespace-nowrap">Actions</th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">
+                Organization UID
+              </th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">
+                Admin Name
+              </th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">
+                Email Address
+              </th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">
+                Phone Number
+              </th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">
+                Permissions
+              </th>
+              <th className="p-2 text-left font-medium whitespace-nowrap">
+                Actions
+              </th>
             </tr>
           </thead>
 
@@ -328,7 +344,9 @@ export default function Admins() {
                               <input
                                 type="checkbox"
                                 checked={admin.permissions.includes(perm)}
-                                onChange={() => togglePermission(admin.id, perm)}
+                                onChange={() =>
+                                  togglePermission(admin.id, perm)
+                                }
                                 className="accent-blue-600"
                               />
                               <span>{perm}</span>
@@ -409,6 +427,20 @@ export default function Admins() {
                     />
                   </div>
                 ))}
+              </div>
+
+              {/* Date of Birth */}
+              <div className="flex flex-col">
+                <label className="mb-1 text-sm font-medium text-gray-700">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  name="dob"
+                  value={formData.dob}
+                  onChange={handleChange}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
 
               {/* Email and Phone */}
