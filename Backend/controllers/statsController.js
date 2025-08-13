@@ -24,19 +24,27 @@ exports.getStats = async (req, res) => {
       Admin.countDocuments({ orgId }),
     ]);
 
+    const timeZone = "Asia/Kolkata";
     const today = new Date();
-    const todayMonth = today.getMonth() + 1;
-    const todayDate = today.getDate();
-    const nextWeek = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
+    const localToday = new Date(today.toLocaleString("en-US", { timeZone }));
+    localToday.setHours(0, 0, 0, 0);
 
+    const nextWeek = new Date(localToday);
+    nextWeek.setDate(localToday.getDate() + 7);
+    nextWeek.setHours(23, 59, 59, 999);
+
+    const todayDay = localToday.getDate();
+    const todayMonth = localToday.getMonth() + 1;
+
+    // ------------------- Today's Birthdays -------------------
     const [studentToday, teacherToday, adminToday] = await Promise.all([
       Student.find({
         orgId,
         status: "admitted",
         $expr: {
           $and: [
-            { $eq: [{ $dayOfMonth: "$dob" }, todayDate] },
-            { $eq: [{ $month: "$dob" }, todayMonth] }
+            { $eq: [{ $dayOfMonth: { date: "$dob", timezone: timeZone } }, todayDay] },
+            { $eq: [{ $month: { date: "$dob", timezone: timeZone } }, todayMonth] }
           ]
         }
       }, { fName: 1, lName: 1, dob: 1, section: 1, admissionClass: 1 }),
@@ -46,8 +54,8 @@ exports.getStats = async (req, res) => {
         status: "approved",
         $expr: {
           $and: [
-            { $eq: [{ $dayOfMonth: "$dob" }, todayDate] },
-            { $eq: [{ $month: "$dob" }, todayMonth] }
+            { $eq: [{ $dayOfMonth: { date: "$dob", timezone: timeZone } }, todayDay] },
+            { $eq: [{ $month: { date: "$dob", timezone: timeZone } }, todayMonth] }
           ]
         }
       }, { fName: 1, lName: 1, dob: 1, assignedClass: 1, assignedSection: 1 }),
@@ -56,8 +64,8 @@ exports.getStats = async (req, res) => {
         orgId,
         $expr: {
           $and: [
-            { $eq: [{ $dayOfMonth: "$dob" }, todayDate] },
-            { $eq: [{ $month: "$dob" }, todayMonth] }
+            { $eq: [{ $dayOfMonth: { date: "$dob", timezone: timeZone } }, todayDay] },
+            { $eq: [{ $month: { date: "$dob", timezone: timeZone } }, todayMonth] }
           ]
         }
       }, { firstName: 1, lastName: 1, dob: 1 })
@@ -69,18 +77,28 @@ exports.getStats = async (req, res) => {
       ...adminToday.map(a => ({ type: "admin", ...a.toObject() })),
     ];
 
-    const upcomingStudents = await Student.aggregate([
+    // ------------------- Upcoming Birthdays -------------------
+    const excludeTodayMatch = {
+      $not: {
+        $and: [
+          { $eq: [{ $dayOfMonth: { date: "$dob", timezone: timeZone } }, todayDay] },
+          { $eq: [{ $month: { date: "$dob", timezone: timeZone } }, todayMonth] }
+        ]
+      }
+    };
+
+    const createUpcomingPipeline = (statusFilter, extraMatch = {}) => [
       {
         $match: {
           orgId: new mongoose.Types.ObjectId(orgId),
-          status: "admitted"
+          ...extraMatch
         }
       },
       {
         $addFields: {
           dobThisYear: {
             $dateFromParts: {
-              year: today.getFullYear(),
+              year: localToday.getFullYear(),
               month: { $month: "$dob" },
               day: { $dayOfMonth: "$dob" }
             }
@@ -89,87 +107,32 @@ exports.getStats = async (req, res) => {
       },
       {
         $match: {
-          dobThisYear: { $gt: today, $lte: nextWeek }
-        }
-      },
-      {
-        $project: {
-          fName: 1, lName: 1, dob: 1, section: 1, admissionClass: 1,
-          type: { $literal: "student" }
+          dobThisYear: { $gt: localToday, $lte: nextWeek },
+          $expr: excludeTodayMatch
         }
       },
       { $sort: { dobThisYear: 1 } }
-    ]);
+    ];
 
-    const upcomingTeachers = await Teacher.aggregate([
-      {
-        $match: {
-          orgId: new mongoose.Types.ObjectId(orgId),
-          status: "approved"
-        }
-      },
-      {
-        $addFields: {
-          dobThisYear: {
-            $dateFromParts: {
-              year: today.getFullYear(),
-              month: { $month: "$dob" },
-              day: { $dayOfMonth: "$dob" }
-            }
-          }
-        }
-      },
-      {
-        $match: {
-          dobThisYear: { $gt: today, $lte: nextWeek }
-        }
-      },
-      {
-        $project: {
-          fName: 1, lName: 1, dob: 1, assignedClass: 1, assignedSection: 1,
-          type: { $literal: "teacher" }
-        }
-      },
-      { $sort: { dobThisYear: 1 } }
-    ]);
+    const upcomingStudents = await Student.aggregate(createUpcomingPipeline(
+      "admitted",
+      { status: "admitted" }
+    ));
 
-    const upcomingAdmins = await Admin.aggregate([
-      {
-        $match: {
-          orgId: new mongoose.Types.ObjectId(orgId)
-        }
-      },
-      {
-        $addFields: {
-          dobThisYear: {
-            $dateFromParts: {
-              year: today.getFullYear(),
-              month: { $month: "$dob" },
-              day: { $dayOfMonth: "$dob" }
-            }
-          }
-        }
-      },
-      {
-        $match: {
-          dobThisYear: { $gt: today, $lte: nextWeek }
-        }
-      },
-      {
-        $project: {
-          firstName: 1, lastName: 1, dob: 1,
-          type: { $literal: "admin" }
-        }
-      },
-      { $sort: { dobThisYear: 1 } }
-    ]);
+    const upcomingTeachers = await Teacher.aggregate(createUpcomingPipeline(
+      "approved",
+      { status: "approved" }
+    ));
+
+    const upcomingAdmins = await Admin.aggregate(createUpcomingPipeline());
 
     const upcomingBirthdays = [
-      ...upcomingStudents,
-      ...upcomingTeachers,
-      ...upcomingAdmins
+      ...upcomingStudents.map(s => ({ type: "student", ...s })),
+      ...upcomingTeachers.map(t => ({ type: "teacher", ...t })),
+      ...upcomingAdmins.map(a => ({ type: "admin", ...a }))
     ].sort((a, b) => new Date(a.dob) - new Date(b.dob));
 
+    // ------------------- Response -------------------
     res.json({
       totalStudents,
       totalTeachers,
@@ -184,4 +147,3 @@ exports.getStats = async (req, res) => {
     res.status(500).json({ message: "Error fetching stats" });
   }
 };
-
