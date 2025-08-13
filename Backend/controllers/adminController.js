@@ -1,12 +1,19 @@
 // controllers/adminController.js
-const Admin = require('../models/Admin');
+const Admin = require("../models/Admin");
 
 exports.createAdmin = async (req, res) => {
   try {
-    const { orgId, firstName, middleName, lastName, email, phone, address } = req.body;
+    const orgId = req.user.id;
+    if (!orgId) {
+      return res.status(400).json({ message: "orgId is required" });
+    }
+    const { firstName, middleName, lastName, email, phone, address, dob } =
+      req.body;
 
-    if (!orgId || !firstName || !lastName || !email || !phone) {
-      return res.status(400).json({ message: "Please provide all required fields including orgId" });
+    if (!orgId || !firstName || !lastName || !email || !phone || !dob) {
+      return res.status(400).json({
+        message: "Please provide all required fields including orgId and dob",
+      });
     }
 
     const existingAdmin = await Admin.findOne({ email });
@@ -21,7 +28,8 @@ exports.createAdmin = async (req, res) => {
       lastName,
       email,
       phone,
-      address
+      address,
+      dob,
     });
 
     await admin.save();
@@ -61,7 +69,7 @@ exports.updateAdminPermissions = async (req, res) => {
 
 exports.getAdmins = async (req, res) => {
   try {
-   const orgId = req.user.id;
+    const orgId = req.user.id;
     if (!orgId) {
       return res.status(400).json({ message: "orgId is required" });
     }
