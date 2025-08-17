@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 
 import { useRouter } from "next/navigation";
-import CanvasBackground from "./canvas-background";
 import { Mail, Lock, Phone, Building2, Loader2 } from "lucide-react";
 
 export default function LoginForm() {
@@ -82,7 +81,6 @@ export default function LoginForm() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
-      {/* <CanvasBackground /> */}
       <div className="z-10 w-full max-w-md rounded-xl bg-white p-8 shadow-xl border border-gray-100">
         <h2 className="text-center text-3xl font-bold text-gray-800 tracking-tight">
           Sign In
