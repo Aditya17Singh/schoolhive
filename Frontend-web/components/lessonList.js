@@ -10,7 +10,7 @@ const LessonList = () => {
   useEffect(() => {
     const fetchLessons = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/lessons');
+        const response = await fetch('http://localhost:5001/api/lessons');
         const data = await response.json();
         setLessons(data);
       } catch (error) {

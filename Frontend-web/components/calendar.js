@@ -45,7 +45,7 @@ const CalendarSchedule = () => {
   const fetchEvents = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/schedule/${user.id}`,
+        `http://localhost:5001/api/schedule/${user.id}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -94,7 +94,7 @@ const CalendarSchedule = () => {
     try {
       if (selectedEvent) {
         await axios.put(
-          `http://localhost:5000/api/schedule/${selectedEvent._id}`,
+          `http://localhost:5001/api/schedule/${selectedEvent._id}`,
           { ...form, orgId: user.id, createdBy: user.id },
           {
             headers: {
@@ -104,7 +104,7 @@ const CalendarSchedule = () => {
         );
       } else {
         await axios.post(
-          "http://localhost:5000/api/schedule",
+          "http://localhost:5001/api/schedule",
           { ...form, orgId: user.id, createdBy: user.id },
           {
             headers: {
@@ -124,7 +124,7 @@ const CalendarSchedule = () => {
     if (!selectedEvent) return;
     try {
       await axios.delete(
-        `http://localhost:5000/api/schedule/${selectedEvent._id}`,
+        `http://localhost:5001/api/schedule/${selectedEvent._id}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }

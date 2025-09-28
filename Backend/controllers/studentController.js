@@ -408,7 +408,6 @@ exports.getStudentsByClassAndSection = async (req, res) => {
       status: "admitted",
     }).sort({ createdAt: -1 });
 
-    console.log(students, classDoc.name, section, orgId, "students");
     res.status(200).json(students);
   } catch (error) {
     console.error("Error fetching students:", error);

@@ -83,7 +83,7 @@
 
 //     try {
 //       const res = await axios.post(
-//         `http://localhost:5000/api/students/class/${studentForm.classId}`,
+//         `http://localhost:5001/api/students/class/${studentForm.classId}`,
 //         formData,
 //         {
 //           headers: {
@@ -104,7 +104,7 @@
 
 //   const fetchClasses = async () => {
 //     try {
-//       const res = await axios.get("http://localhost:5000/api/classes", {
+//       const res = await axios.get("http://localhost:5001/api/classes", {
 //         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
 //       });
 //       const data = res.data;

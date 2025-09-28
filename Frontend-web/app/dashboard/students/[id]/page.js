@@ -454,11 +454,11 @@ export default function StudentDetailsPage() {
                         const filePath = student?.[field];
 
                         const getFileName = (fullPath) =>
-                          fullPath?.split(/[/\\]/).pop(); // handle Windows and POSIX
+                          fullPath?.split(/[/\\]/).pop();
 
                         const fileName = getFileName(filePath);
                         const fileUrl = fileName
-                          ? `http://localhost:5000/uploads/students/${fileName}`
+                          ? `http://localhost:5001/uploads/students/${fileName}`
                           : null;
 
                         const isImage = fileName?.match(

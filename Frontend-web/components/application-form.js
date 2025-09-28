@@ -241,9 +241,8 @@ export default function ApplicationForm({ orgId }) {
         if (form.birthCertificate)
           formDataToSend.append("birthCertificate", form.birthCertificate);
 
-        // Send as multipart/form-data
         await axios.post(
-          `http://localhost:5000/api/students?orgId=${currentOrgId}&public_key=letmein12345`,
+          `http://localhost:5001/api/students?orgId=${currentOrgId}&public_key=letmein12345`,
           formDataToSend,
           {
             headers: {

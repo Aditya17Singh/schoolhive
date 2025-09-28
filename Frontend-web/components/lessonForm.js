@@ -23,13 +23,13 @@ const LessonForm = ({ lessonId }) => {
       const token = localStorage.getItem("token");
 
       const [subjectsRes, teachersRes, classesRes] = await Promise.all([
-        fetch("http://localhost:5000/api/subjects", {
+        fetch("http://localhost:5001/api/subjects", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("http://localhost:5000/api/employees?role=Teacher", {
+        fetch("http://localhost:5001/api/employees?role=Teacher", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("http://localhost:5000/api/classes", {
+        fetch("http://localhost:5001/api/classes", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -46,7 +46,7 @@ const LessonForm = ({ lessonId }) => {
 
       if (lessonId) {
         const res = await fetch(
-          `http://localhost:5000/api/lessons/${lessonId}`,
+          `http://localhost:5001/api/lessons/${lessonId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -97,7 +97,6 @@ const LessonForm = ({ lessonId }) => {
       );
 
       const data = await response.json();
-      console.log(data);
       // After successful submission, maybe redirect or show a success message.
     } catch (error) {
       console.error("Error saving lesson:", error);
