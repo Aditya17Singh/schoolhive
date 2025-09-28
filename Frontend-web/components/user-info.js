@@ -28,7 +28,6 @@ export default function Dashboard() {
     todaysBirthdays: [],
     upcomingBirthdays: [],
   });
-console.log(stats, 'stats');
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingNotice, setEditingNotice] = useState(null);

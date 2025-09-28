@@ -96,7 +96,7 @@ export default function ClassList() {
         const user = JSON.parse(localStorage.getItem("user"));
         const orgId = user?.id;
         const res = await fetch(
-          "http://localhost:5000/api/classes/add-subject",
+          "http://localhost:5001/api/classes/add-subject",
           {
             method: "PUT",
             headers: {
@@ -155,7 +155,7 @@ export default function ClassList() {
   const handleSaveSections = useCallback(async () => {
     try {
       const res = await axios.put(
-        `http://localhost:5000/api/classes/${selectedClassId}/sections`,
+        `http://localhost:5001/api/classes/${selectedClassId}/sections`,
         { sections: selectedSections },
         {
           headers: {
