@@ -18,10 +18,13 @@ exports.registerOrganization = async (req, res) => {
     // Check if an organization already exists with this email
     const existingOrg = await Organization.findOne({ orgEmail });
     if (existingOrg) {
-      return res.status(400).json({ message: "Organization already exists with this email" });
+      return res
+        .status(400)
+        .json({ message: "Organization already exists with this email" });
     }
 
     // Create the organization (password will be hashed via pre-save hook)
+    const logoValue = typeof logo === "string" ? logo : "";
     const organization = await Organization.create({
       orgName,
       shortName,
@@ -29,7 +32,7 @@ exports.registerOrganization = async (req, res) => {
       orgEmail,
       phoneNumber,
       password,
-      logo,
+      logo: logoValue,
       address,
     });
 
@@ -111,7 +114,7 @@ exports.getOrganizationStats = async (req, res) => {
   try {
     const orgId = req.params.id;
 
-    const studentCount = await Student.countDocuments({  orgId });
+    const studentCount = await Student.countDocuments({ orgId });
     const teacherCount = await Teacher.countDocuments({ orgId });
 
     res.status(200).json({

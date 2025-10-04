@@ -32,7 +32,7 @@ export default function LoginForm() {
     setError("");
     setLoading(true);
 
-    let payload = { role, password };
+    let payload = { role: role.toLowerCase(), password };
 
     if (role === "admin") {
       payload = {
