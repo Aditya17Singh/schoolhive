@@ -23,8 +23,14 @@ const otpRoute = require("./routes/otpRoute");
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://schoolhive.vercel.app",
+  "https://www.schoolhive.in" 
+];
+
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: allowedOrigins,
   credentials: true,
 }));
 
