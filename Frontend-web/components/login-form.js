@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Phone, Building2, Loader2 } from "lucide-react";
+import API from "@/lib/api";
 
 export default function LoginForm() {
   const [role, setRole] = useState("organization");
@@ -17,67 +18,119 @@ export default function LoginForm() {
 
   const router = useRouter();
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   if (
+  //     (role === "admin" && ((!email && !orgUid) || !password)) ||
+  //     (role === "teacher" && ((!phone && !orgUid) || !password)) ||
+  //     (role === "organization" && (!email || !password))
+  //   ) {
+  //     setError("All fields are required.");
+  //     return;
+  //   }
+
+  //   setError("");
+  //   setLoading(true);
+
+  //   let payload = { role: role.toLowerCase(), password };
+
+  //   if (role === "admin") {
+  //     payload = {
+  //       email: email || orgUid,
+  //       password,
+  //       role,
+  //     };
+  //   } else if (role === "teacher") {
+  //     payload = {
+  //       phoneOrOrgUid: phone || orgUid,
+  //       password,
+  //       role,
+  //     };
+  //   } else if (role === "organization") {
+  //     payload = {
+  //       organizationEmail: email,
+  //       password,
+  //       role,
+  //     };
+  //   }
+
+  //   try {
+  //     const res = await fetch("http://localhost:5001/api/login", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       credentials: "include",
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (res.ok) {
+  //       localStorage.setItem("token", data.token);
+  //       localStorage.setItem("user", JSON.stringify(data.user));
+  //       router.push("/dashboard");
+  //     } else {
+  //       setError(data.message || "Login failed");
+  //       setLoading(false);
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     setError("Something went wrong");
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (
-      (role === "admin" && ((!email && !orgUid) || !password)) ||
-      (role === "teacher" && ((!phone && !orgUid) || !password)) ||
-      (role === "organization" && (!email || !password))
-    ) {
-      setError("All fields are required.");
-      return;
-    }
+  if (
+    (role === "admin" && ((!email && !orgUid) || !password)) ||
+    (role === "teacher" && ((!phone && !orgUid) || !password)) ||
+    (role === "organization" && (!email || !password))
+  ) {
+    setError("All fields are required.");
+    return;
+  }
 
-    setError("");
-    setLoading(true);
+  setError("");
+  setLoading(true);
 
-    let payload = { role: role.toLowerCase(), password };
+  let payload = { role: role.toLowerCase(), password };
 
-    if (role === "admin") {
-      payload = {
-        email: email || orgUid,
-        password,
-        role,
-      };
-    } else if (role === "teacher") {
-      payload = {
-        phoneOrOrgUid: phone || orgUid,
-        password,
-        role,
-      };
-    } else if (role === "organization") {
-      payload = {
-        organizationEmail: email,
-        password,
-        role,
-      };
-    }
+  if (role === "admin") {
+    payload = {
+      email: email || orgUid,
+      password,
+      role,
+    };
+  } else if (role === "teacher") {
+    payload = {
+      phoneOrOrgUid: phone || orgUid,
+      password,
+      role,
+    };
+  } else if (role === "organization") {
+    payload = {
+      organizationEmail: email,
+      password,
+      role,
+    };
+  }
 
-    try {
-      const res = await fetch("http://localhost:5001/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
+  try {
+    const { data } = await API.post("/login", payload);
 
-      const data = await res.json();
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
 
-      if (res.ok) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        router.push("/dashboard");
-      } else {
-        setError(data.message || "Login failed");
-        setLoading(false);
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Something went wrong");
-      setLoading(false);
-    }
-  };
+    router.push("/dashboard");
+  } catch (err) {
+    console.error(err);
+    setError(err.response?.data?.message || "Login failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
