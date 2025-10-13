@@ -26,7 +26,8 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "https://schoolhive.vercel.app",
-  "https://www.schoolhive.in" 
+  "https://schoolhive-z7v9.vercel.app",
+  "https://www.schoolhive.in"
 ];
 
 app.use(cors({
