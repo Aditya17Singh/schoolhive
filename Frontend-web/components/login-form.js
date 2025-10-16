@@ -18,68 +18,6 @@ export default function LoginForm() {
 
   const router = useRouter();
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   if (
-  //     (role === "admin" && ((!email && !orgUid) || !password)) ||
-  //     (role === "teacher" && ((!phone && !orgUid) || !password)) ||
-  //     (role === "organization" && (!email || !password))
-  //   ) {
-  //     setError("All fields are required.");
-  //     return;
-  //   }
-
-  //   setError("");
-  //   setLoading(true);
-
-  //   let payload = { role: role.toLowerCase(), password };
-
-  //   if (role === "admin") {
-  //     payload = {
-  //       email: email || orgUid,
-  //       password,
-  //       role,
-  //     };
-  //   } else if (role === "teacher") {
-  //     payload = {
-  //       phoneOrOrgUid: phone || orgUid,
-  //       password,
-  //       role,
-  //     };
-  //   } else if (role === "organization") {
-  //     payload = {
-  //       organizationEmail: email,
-  //       password,
-  //       role,
-  //     };
-  //   }
-
-  //   try {
-  //     const res = await fetch("http://localhost:5001/api/login", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       credentials: "include",
-  //       body: JSON.stringify(payload),
-  //     });
-
-  //     const data = await res.json();
-
-  //     if (res.ok) {
-  //       localStorage.setItem("token", data.token);
-  //       localStorage.setItem("user", JSON.stringify(data.user));
-  //       router.push("/dashboard");
-  //     } else {
-  //       setError(data.message || "Login failed");
-  //       setLoading(false);
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     setError("Something went wrong");
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleSubmit = async (e) => {
   e.preventDefault();
 

@@ -206,7 +206,7 @@ export default function ApplicationForm({ orgId }) {
       try {
         const formDataToSend = new FormData();
 
-        // Append all form fields except files
+        // ✅ Append all form fields except files
         Object.entries(form).forEach(([key, value]) => {
           if (
             [
@@ -217,8 +217,7 @@ export default function ApplicationForm({ orgId }) {
               "birthCertificate",
             ].includes(key)
           ) {
-            // skip files for now
-            return;
+            return; // skip files for now
           }
 
           if (typeof value === "object" && value !== null) {
@@ -230,7 +229,7 @@ export default function ApplicationForm({ orgId }) {
           }
         });
 
-        // Append files
+        // ✅ Append files
         if (form.avatar) formDataToSend.append("avatar", form.avatar);
         if (form.aadharCard)
           formDataToSend.append("aadharCard", form.aadharCard);
@@ -241,12 +240,12 @@ export default function ApplicationForm({ orgId }) {
         if (form.birthCertificate)
           formDataToSend.append("birthCertificate", form.birthCertificate);
 
-        await axios.post(
-          `http://localhost:5001/api/students?orgId=${currentOrgId}&public_key=letmein12345`,
+        // ✅ Use your API instance instead of axios
+        await API.post(
+          `/students?orgId=${currentOrgId}&public_key=letmein12345`,
           formDataToSend,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
               "Content-Type": "multipart/form-data",
             },
           }

@@ -30,37 +30,28 @@ export default function ExamList() {
     <div className="p-4">
       <h2 className="text-xl font-semibold mb-4">Exams</h2>
 
-      {/* Exam Toolbar */}
-      <div className="flex items-center justify-between gap-6 flex-wrap md:flex-nowrap mb-4">
-        <div className="flex gap-4 flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        {/* Search + Button Wrapper */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto sm:flex-1">
           {/* Search Input */}
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
               placeholder="Search exams..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-3 py-1 h-9 w-full rounded-md border border-gray-300 bg-white text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500 focus:outline-none"
+              className="pl-10 pr-3 py-2 h-10 w-full rounded-md border border-gray-300 bg-white text-sm shadow-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500 focus:outline-none"
             />
           </div>
 
           {/* Create Button */}
-          <Link href="/dashboard/academics/new">
-            <button className="inline-flex items-center gap-2 px-4 py-2 h-9 rounded-md bg-blue-500 text-white text-sm font-medium shadow-sm hover:bg-blue-700 transition">
+          <Link href="/dashboard/academics/new" className="w-full sm:w-auto">
+            <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 h-10 rounded-md bg-blue-500 text-white text-sm font-medium shadow-sm hover:bg-blue-700 whitespace-nowrap transition">
               Create New Exam
             </button>
           </Link>
         </div>
-
-        {/* Class Dropdown Placeholder */}
-        <button
-          type="button"
-          className="flex h-9 items-center justify-between w-[200px] rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-black shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          <span className="truncate">Select Class</span>
-          <ChevronDown className="w-4 h-4 opacity-50" />
-        </button>
       </div>
 
       {/* Exam Table */}
