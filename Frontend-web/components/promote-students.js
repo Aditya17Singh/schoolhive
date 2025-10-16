@@ -123,9 +123,9 @@ export default function PromoteStudents() {
   return (
     <div className="flex flex-col gap-4 w-full mt-8 pl-4 pr-4">
       {/* Controls */}
-      <div className="flex justify-between items-center w-full gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center w-full gap-4 flex-wrap">
         {/* Left side - Search Controls */}
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full lg:w-auto">
           <DropdownButton
             label="Select Class"
             value={currentClass}
@@ -141,20 +141,20 @@ export default function PromoteStudents() {
           <button
             onClick={handleSearch}
             disabled={!currentClass || !currentSection || loading}
-            className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-blue-600 text-white shadow hover:bg-blue-700 h-9 px-4 py-2 transition-colors disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-blue-600 text-white shadow hover:bg-blue-700 h-9 px-4 py-2 transition-colors disabled:opacity-50 w-full sm:w-auto"
           >
             {loading ? "Searching..." : "Search Students"}
           </button>
         </div>
 
         {/* Right side - Promotion Controls */}
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full lg:w-auto">
           <button
             onClick={handlePromote}
             disabled={
               selectedStudents.length === 0 || !futureClass || !futureSection
             }
-            className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-green-600 text-white shadow hover:bg-green-700 h-9 px-4 py-2 transition-colors disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium bg-green-600 text-white shadow hover:bg-green-700 h-9 px-4 py-2 transition-colors disabled:opacity-50 w-full sm:w-auto"
           >
             Promote Selected
           </button>

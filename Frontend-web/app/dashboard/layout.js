@@ -196,7 +196,7 @@ export default function DashboardLayout({ children }) {
             <h2 className="text-xl font-bold">School Hive</h2>
             <button
               onClick={closeMobileMenu}
-              className="lg:hidden text-white hover:text-gray-300"
+              className="lg:hidden text-black hover:text-gray-300"
               aria-label="Close menu"
             >
               <X className="w-6 h-6" />
@@ -410,7 +410,7 @@ export default function DashboardLayout({ children }) {
         <header className="fixed top-0 right-0 left-0 lg:left-[250px] z-20 bg-white shadow-sm">
           <div className="px-4 py-3">
             <div className="flex items-center justify-between gap-4">
-              <div>
+              <div className="hidden lg:none">
                 <Link href="/dashboard/ai">
                   <button
                     type="button"

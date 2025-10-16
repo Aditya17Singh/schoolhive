@@ -452,13 +452,16 @@ export default function StudentDetailsPage() {
                         { label: "Avatar", field: "avatar" },
                       ].map(({ label, field }) => {
                         const filePath = student?.[field];
-
                         const getFileName = (fullPath) =>
                           fullPath?.split(/[/\\]/).pop();
-
                         const fileName = getFileName(filePath);
+
+                        const baseURL = API.defaults.baseURL?.replace(
+                          /\/api$/,
+                          ""
+                        );
                         const fileUrl = fileName
-                          ? `http://localhost:5001/uploads/students/${fileName}`
+                          ? `${baseURL}/uploads/students/${fileName}`
                           : null;
 
                         const isImage = fileName?.match(

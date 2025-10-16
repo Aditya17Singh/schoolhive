@@ -12,6 +12,7 @@ import {
 import enUS from "date-fns/locale/en-US";
 import axios from "axios";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import API from "@/lib/api";
 
 const locales = {
   "en-US": enUS,
@@ -44,12 +45,7 @@ const CalendarSchedule = () => {
 
   const fetchEvents = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:5001/api/schedule/${user.id}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
+      const res = await API.get(`/schedule/${user.id}`);
       const events = res.data.data.map((e) => ({
         ...e,
         start: new Date(e.start),
@@ -67,7 +63,7 @@ const CalendarSchedule = () => {
     endDate.setDate(endDate.getDate() + 1);
     const localEnd = formatDateFns(endDate, "yyyy-MM-dd");
 
-    setSelectedEvent(null); 
+    setSelectedEvent(null);
     setForm({
       title: "",
       description: "",
@@ -93,25 +89,17 @@ const CalendarSchedule = () => {
   const handleSubmit = async () => {
     try {
       if (selectedEvent) {
-        await axios.put(
-          `http://localhost:5001/api/schedule/${selectedEvent._id}`,
-          { ...form, orgId: user.id, createdBy: user.id },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        await API.put(`/schedule/${selectedEvent._id}`, {
+          ...form,
+          orgId: user.id,
+          createdBy: user.id,
+        });
       } else {
-        await axios.post(
-          "http://localhost:5001/api/schedule",
-          { ...form, orgId: user.id, createdBy: user.id },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        await API.post("/schedule", {
+          ...form,
+          orgId: user.id,
+          createdBy: user.id,
+        });
       }
       setModalOpen(false);
       fetchEvents();
@@ -123,12 +111,7 @@ const CalendarSchedule = () => {
   const handleDelete = async () => {
     if (!selectedEvent) return;
     try {
-      await axios.delete(
-        `http://localhost:5001/api/schedule/${selectedEvent._id}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
+      await API.delete(`/schedule/${selectedEvent._id}`);
       setModalOpen(false);
       fetchEvents();
     } catch (err) {

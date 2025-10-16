@@ -30,7 +30,7 @@ export default function ClassList() {
 
   const fetchClasses = useCallback(async () => {
     try {
-      const res = await API.get("/classes"); 
+      const res = await API.get("/classes");
       setClasses(res.data);
     } catch (error) {
       console.error(error);
@@ -95,25 +95,16 @@ export default function ClassList() {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
         const orgId = user?.id;
-        const res = await fetch(
-          "http://localhost:5001/api/classes/add-subject",
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-              classId: selectedClassId,
-              subjectNames: subjects,
-              orgId,
-            }),
-          }
-        );
 
-        const data = await res.json();
+        const res = await API.put(`/api/classes/add-subject`, {
+          classId: selectedClassId,
+          subjectNames: subjects,
+          orgId,
+        });
 
-        if (res.ok && data.classData?.subjects) {
+        const data = res.data;
+
+        if (res.status === 200 && data.classData?.subjects) {
           setClasses((prev) =>
             prev.map((cls) =>
               cls._id === selectedClassId
@@ -154,15 +145,9 @@ export default function ClassList() {
 
   const handleSaveSections = useCallback(async () => {
     try {
-      const res = await axios.put(
-        `http://localhost:5001/api/classes/${selectedClassId}/sections`,
-        { sections: selectedSections },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const res = await API.put(`/api/classes/${selectedClassId}/sections`, {
+        sections: selectedSections,
+      });
 
       if (res.status === 200) {
         setClasses((prev) =>
@@ -244,7 +229,7 @@ export default function ClassList() {
             type="text"
             value={search}
             onChange={handleClassSearch}
-            className="w-[34%] border px-3 py-2 pl-10 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            className="border px-3 py-2 pl-10 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
             placeholder="Search ClassName..."
           />
           <svg
